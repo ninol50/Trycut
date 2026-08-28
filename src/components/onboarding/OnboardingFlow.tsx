@@ -342,7 +342,7 @@ function ScreenBody({
             variants={variants}
             initial="hidden"
             animate="visible"
-            className="mt-6 text-display-md"
+            className="mt-6 text-display-md font-bold text-violet-900"
           >
             {cutCount} coupes sélectionnées pour toi
           </motion.p>
