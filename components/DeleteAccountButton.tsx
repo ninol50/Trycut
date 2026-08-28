@@ -34,7 +34,7 @@ export default function DeleteAccountButton() {
         type="button"
         whileTap={tap}
         onClick={() => setConfirming(true)}
-        className="w-full py-3 text-sm font-semibold text-slate-500 underline"
+        className="min-h-[48px] w-full py-3 text-sm font-semibold text-slate-500 underline"
       >
         Supprimer mon compte
       </motion.button>

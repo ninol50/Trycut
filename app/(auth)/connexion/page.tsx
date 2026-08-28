@@ -29,7 +29,7 @@ export default async function SignInPage({
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Pas encore de compte ?{' '}
-          <Link href="/inscription" className="font-semibold text-violet-600 underline">
+          <Link href="/inscription" className="inline-flex min-h-[48px] items-center font-semibold text-violet-600 underline">
             Créer un compte
           </Link>
         </p>

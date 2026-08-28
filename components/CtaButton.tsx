@@ -11,6 +11,8 @@ interface CtaButtonProps {
   href?: string;
   variant?: 'primary' | 'secondary' | 'inverse';
   fullWidth?: boolean;
+  /** `compact` réduit le padding sans jamais descendre sous 48px de hauteur. */
+  size?: 'default' | 'compact';
 }
 
 const MotionLink = motion.create(Link);
@@ -21,8 +23,11 @@ export default function CtaButton({
   href = '/onboarding',
   variant = 'primary',
   fullWidth = false,
+  size = 'default',
 }: CtaButtonProps) {
   const tap = useTapScale();
+
+  const compact = size === 'compact' ? ' !min-h-[48px] !px-5 !py-3 text-sm' : '';
 
   const className =
     variant === 'inverse'
@@ -36,7 +41,7 @@ export default function CtaButton({
       href={href}
       whileTap={tap}
       onClick={() => track('landing_cta_clicked', { location, href })}
-      className={`${className}${fullWidth ? ' w-full' : ''}`}
+      className={`${className}${compact}${fullWidth ? ' w-full' : ''}`}
     >
       {children}
     </MotionLink>

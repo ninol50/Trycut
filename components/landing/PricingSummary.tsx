@@ -47,7 +47,7 @@ export default function PricingSummary() {
 
       <Link
         href="/tarifs"
-        className="mt-4 block text-center text-sm font-semibold text-violet-600 underline"
+        className="mt-4 flex min-h-[48px] items-center justify-center text-center text-sm font-semibold text-violet-600 underline"
       >
         Voir le détail des offres
       </Link>

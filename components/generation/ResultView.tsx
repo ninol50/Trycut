@@ -101,7 +101,7 @@ export default function ResultView({
           type="button"
           whileTap={tap}
           onClick={onRetry}
-          className="w-full py-3 text-center text-sm font-semibold text-violet-600 underline"
+          className="min-h-[48px] w-full py-3 text-center text-sm font-semibold text-violet-600 underline"
         >
           Essayer une autre coupe
         </motion.button>

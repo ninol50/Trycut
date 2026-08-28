@@ -21,7 +21,7 @@ export default function SignUpPage() {
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Déjà un compte ?{' '}
-          <Link href="/connexion" className="font-semibold text-violet-600 underline">
+          <Link href="/connexion" className="inline-flex min-h-[48px] items-center font-semibold text-violet-600 underline">
             Se connecter
           </Link>
         </p>

@@ -205,3 +205,15 @@ par la donnée plutôt que de le supposer.
 Aucune image n'est générée par le code. Voir **`public/demo/README.md`** pour la liste des
 fichiers attendus et leurs specs. Tant qu'ils sont absents, l'app affiche des placeholders
 violets aux dimensions explicites — pas de layout shift, pas de `<video>` cassé.
+
+## Vérifications
+
+```bash
+npm run typecheck    # tsc --noEmit
+npm run lint         # ESLint, bloquant
+npm test             # logique pure : catalogue, prompts, MIME, jeton anonyme
+npm run audit:mobile # viewport 390px, cibles 48px, scroll horizontal
+```
+
+`audit:mobile` a besoin d'un serveur lancé (`npm run build && npm start -- -p 3100`)
+et de Playwright (`npm i -D playwright`).

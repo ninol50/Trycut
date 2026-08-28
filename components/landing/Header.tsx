@@ -22,12 +22,15 @@ export default function Header() {
       }`}
     >
       <div className="section flex items-center justify-between py-3">
-        <Link href="/" className="font-display text-lg font-bold text-violet-900">
+        <Link
+          href="/"
+          className="inline-flex min-h-[48px] items-center font-display text-lg font-bold text-violet-900"
+        >
           trycut
         </Link>
-        <div className="origin-right scale-90">
-          <CtaButton location="header">Tester ma coupe</CtaButton>
-        </div>
+        <CtaButton location="header" size="compact">
+          Tester ma coupe
+        </CtaButton>
       </div>
     </header>
   );

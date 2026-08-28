@@ -88,7 +88,7 @@ export default function AuthForm({ mode, action, defaultFirstName }: AuthFormPro
           <input
             name="age_confirmed"
             type="checkbox"
-            className="mt-1 h-5 w-5 shrink-0 accent-violet-600"
+            className="mt-0.5 h-6 w-6 shrink-0 accent-violet-600"
           />
           <span className="text-sm text-slate-500">
             Je déclare avoir 15 ans ou plus et j’accepte la{' '}

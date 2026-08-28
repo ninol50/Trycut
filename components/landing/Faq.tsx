@@ -43,7 +43,7 @@ export default function Faq() {
             key={q}
             className="group rounded-2xl border border-violet-50 bg-white p-4 shadow-violet"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-violet-900 marker:hidden">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 font-semibold text-violet-900 marker:hidden">
               {q}
               <span className="shrink-0 text-violet-600 transition-transform group-open:rotate-45">
                 +

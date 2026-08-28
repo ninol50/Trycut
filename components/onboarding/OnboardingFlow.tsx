@@ -117,13 +117,13 @@ export default function OnboardingFlow({ variant, recommendedCount }: Onboarding
       <ProgressBar current={index + 1} total={total} />
 
       <div className="section flex flex-1 flex-col pb-8 pt-2">
-        <div className="min-h-[44px]">
+        <div className="min-h-[48px]">
           {index > 0 ? (
             <motion.button
               type="button"
               onClick={goBack}
               whileTap={tap}
-              className="-ml-2 inline-flex min-h-[44px] items-center gap-1 px-2 text-sm text-slate-500"
+              className="-ml-2 inline-flex min-h-[48px] items-center gap-1 px-2 text-sm text-slate-500"
             >
               ← Retour
             </motion.button>

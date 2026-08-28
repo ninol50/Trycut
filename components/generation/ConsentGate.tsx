@@ -51,7 +51,7 @@ export default function ConsentGate({ onAccept }: { onAccept: () => void }) {
           type="checkbox"
           checked={checked}
           onChange={(event) => setChecked(event.target.checked)}
-          className="mt-1 h-5 w-5 shrink-0 accent-violet-600"
+          className="mt-0.5 h-6 w-6 shrink-0 accent-violet-600"
         />
         <span className="text-sm text-violet-900">
           J’accepte que ma photo soit traitée pour générer un rendu, dans les conditions
