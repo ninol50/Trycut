@@ -1,14 +1,10 @@
 /**
- * Régénère le seed SQL depuis lib/catalog-data.ts (source de vérité).
+ * Régénère le seed SQL depuis lib/catalog.json (source de vérité).
  * Usage : node scripts/generate-seed.mjs
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const ts = readFileSync('lib/catalog-data.ts', 'utf8');
-const start = ts.indexOf('CATALOG_SEED: readonly CatalogSeed[] = ');
-const open = ts.indexOf('= [', start) + 2;
-const close = ts.indexOf('\n];', open);
-const items = JSON.parse(ts.slice(open, close + 2));
+const items = JSON.parse(readFileSync('lib/catalog.json', 'utf8'));
 
 const q = (value) => `'${String(value).replace(/'/g, "''")}'`;
 const arr = (values) => `array[${values.map(q).join(',')}]`;
@@ -19,7 +15,7 @@ const rows = items.map(
 );
 
 const sql = `-- Seed du catalogue : ${items.length} entrées (${items.filter((i) => i.category === 'cut').length} coupes, ${items.filter((i) => i.category === 'color').length} colorations, ${items.filter((i) => i.category === 'accessory').length} accessoires).
--- GÉNÉRÉ depuis lib/catalog-data.ts — ne pas éditer à la main.
+-- GÉNÉRÉ depuis lib/catalog.json — ne pas éditer à la main.
 -- Régénérer : node scripts/generate-seed.mjs
 -- Descriptions strictement génériques, aucune marque déposée. Rejouable (upsert sur le slug).
 

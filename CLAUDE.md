@@ -53,7 +53,7 @@ simple fade d'opacité. Easing standard `[0.16, 1, 0.3, 1]`. Jamais de scale ni 
   `create or replace`, upsert sur le slug).
 - Postgres accorde `EXECUTE` à `PUBLIC` par défaut : toute fonction `security definer`
   doit être révoquée **sur `public`**, pas seulement sur `anon`/`authenticated`.
-- Le catalogue a une seule source de vérité : `lib/catalog-data.ts`. Le seed SQL est
+- Le catalogue a une seule source de vérité : `lib/catalog.json`. Le seed SQL est
   généré (`node scripts/generate-seed.mjs`), ne pas l'éditer à la main.
 - Aucun bucket public. Tout accès fichier passe par une URL signée 60 s émise après
   vérification serveur de la propriété de la ligne.

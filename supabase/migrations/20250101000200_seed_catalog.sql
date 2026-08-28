@@ -1,5 +1,5 @@
 -- Seed du catalogue : 38 entrées (20 coupes, 8 colorations, 10 accessoires).
--- GÉNÉRÉ depuis lib/catalog-data.ts — ne pas éditer à la main.
+-- GÉNÉRÉ depuis lib/catalog.json — ne pas éditer à la main.
 -- Régénérer : node scripts/generate-seed.mjs
 -- Descriptions strictement génériques, aucune marque déposée. Rejouable (upsert sur le slug).
 

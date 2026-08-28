@@ -68,7 +68,7 @@ Toutes sont documentées dans `.env.example`. Les indispensables :
    sans.
 
 Le seed du catalogue (`20250101000200_seed_catalog.sql`) est **généré** depuis
-`lib/catalog-data.ts`. Pour modifier le catalogue, éditer le fichier TypeScript puis :
+`lib/catalog.json`. Pour modifier le catalogue, éditer ce fichier puis :
 
 ```bash
 node scripts/generate-seed.mjs
