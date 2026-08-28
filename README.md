@@ -216,4 +216,9 @@ npm run audit:mobile # viewport 390px, cibles 48px, scroll horizontal
 ```
 
 `audit:mobile` a besoin d'un serveur lancé (`npm run build && npm start -- -p 3100`)
-et de Playwright (`npm i -D playwright`).
+et de Playwright, volontairement **hors dépendances** : son postinstall télécharge des
+navigateurs, inutile sur un build de déploiement. À installer à la demande :
+
+```bash
+npm i -D --no-save playwright
+```
