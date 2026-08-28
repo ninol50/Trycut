@@ -157,3 +157,16 @@ test('les prix sont ceux du brief', () => {
   assert.equal(byId['pass']?.credits, 80);
   assert.equal(byId['pack']?.highlighted, true);
 });
+
+// ------------------------------------------------- authentification du webhook
+test('le jeton de rappel du webhook IA est signé par génération', async () => {
+  const { signWebhookToken, verifyWebhookToken } = await import('@/lib/anon-token');
+  const id = 'b3f1c0de-0000-4000-8000-000000000001';
+  const autre = 'b3f1c0de-0000-4000-8000-000000000002';
+
+  assert.ok(verifyWebhookToken(id, signWebhookToken(id)));
+  // Un jeton valide pour une génération ne vaut pas pour une autre.
+  assert.equal(verifyWebhookToken(autre, signWebhookToken(id)), false);
+  assert.equal(verifyWebhookToken(id, null), false);
+  assert.equal(verifyWebhookToken(id, 'court'), false);
+});

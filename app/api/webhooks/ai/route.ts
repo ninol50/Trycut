@@ -3,6 +3,7 @@ import { createAdminSupabase } from '@/lib/supabase/server';
 import { env, isSupabaseConfigured } from '@/lib/env';
 import { RESULT_BUCKET, UPLOAD_BUCKET } from '@/lib/storage';
 import { releaseSpend } from '@/lib/limits';
+import { verifyWebhookToken } from '@/lib/anon-token';
 import type { Generation } from '@/types/db';
 
 export const runtime = 'nodejs';
@@ -15,10 +16,6 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured) {
     return NextResponse.json({ error: 'indisponible' }, { status: 503 });
-  }
-
-  if (request.headers.get('x-ai-signature') !== env.aiWebhookSecret) {
-    return NextResponse.json({ error: 'signature' }, { status: 401 });
   }
 
   const payload: unknown = await request.json().catch(() => null);
@@ -39,6 +36,15 @@ export async function POST(request: NextRequest) {
   const generationId = body.generation_id ?? url.searchParams.get('generation_id');
   if (!generationId) {
     return NextResponse.json({ error: 'generation_id manquant' }, { status: 400 });
+  }
+
+  // Deux formes d'authentification : l'en-tête partagé (MockProvider, providers
+  // qui acceptent des en-têtes personnalisés) ou le jeton signé passé dans
+  // l'URL de rappel (fal.ai, qui ne relaie pas nos en-têtes).
+  const headerOk = request.headers.get('x-ai-signature') === env.aiWebhookSecret;
+  const tokenOk = verifyWebhookToken(generationId, url.searchParams.get('token'));
+  if (!headerOk && !tokenOk) {
+    return NextResponse.json({ error: 'signature' }, { status: 401 });
   }
 
   const admin = createAdminSupabase();

@@ -1,4 +1,5 @@
 import { env } from '@/lib/env';
+import { signWebhookToken } from '@/lib/anon-token';
 
 export interface GenerateInput {
   /** URL signée de la photo source, lisible par le provider. */
@@ -86,7 +87,8 @@ export const falProvider: AiProvider = {
         image_url: input.imageUrl,
         num_images: 1,
         output_format: 'jpeg',
-        fal_webhook: `${input.webhookUrl}?generation_id=${input.generationId}`,
+        // fal.ai ne renvoie pas nos en-têtes : le jeton signé voyage dans l'URL.
+        fal_webhook: `${input.webhookUrl}?generation_id=${input.generationId}&token=${signWebhookToken(input.generationId)}`,
       }),
     });
 

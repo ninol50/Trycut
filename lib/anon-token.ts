@@ -48,3 +48,18 @@ export const anonCookieOptions = {
   path: '/',
   maxAge: MAX_AGE_SECONDS,
 } as const;
+
+/**
+ * Jeton de rappel du provider IA. Les fournisseurs externes ne renvoient pas
+ * nos en-têtes : on signe l'identifiant de génération dans l'URL de webhook.
+ */
+export function signWebhookToken(generationId: string): string {
+  return createHmac('sha256', env.aiWebhookSecret).update(generationId).digest('hex');
+}
+
+export function verifyWebhookToken(generationId: string, token: string | null): boolean {
+  if (!token) return false;
+  const expected = signWebhookToken(generationId);
+  if (token.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+}
