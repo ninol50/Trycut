@@ -1,7 +1,7 @@
 'use client';
 
 import posthog from 'posthog-js';
-import { env } from '@/lib/env';
+import { publicEnv } from '@/lib/public-env';
 
 /** Les 9 events obligatoires (section 12). Aucun autre nom n'est accepté. */
 export type AnalyticsEvent =
@@ -21,12 +21,12 @@ let initialized = false;
 
 export function initAnalytics(): void {
   if (initialized || typeof window === 'undefined') return;
-  if (!env.posthogKey) {
+  if (!publicEnv.posthogKey) {
     initialized = true;
     return;
   }
-  posthog.init(env.posthogKey, {
-    api_host: env.posthogHost,
+  posthog.init(publicEnv.posthogKey, {
+    api_host: publicEnv.posthogHost,
     person_profiles: 'identified_only',
     capture_pageview: true,
     capture_pageleave: true,
@@ -36,8 +36,8 @@ export function initAnalytics(): void {
 
 /** Chaque event porte `variant` pour comparer les deux parcours d'onboarding. */
 export function track(event: AnalyticsEvent, props: Props = {}): void {
-  const payload: Props = { ...props, variant: env.onboardingLength };
-  if (!env.posthogKey) {
+  const payload: Props = { ...props, variant: publicEnv.onboardingLength };
+  if (!publicEnv.posthogKey) {
     console.debug('[analytics]', event, payload);
     return;
   }
@@ -45,11 +45,11 @@ export function track(event: AnalyticsEvent, props: Props = {}): void {
 }
 
 export function identify(userId: string, props: Props = {}): void {
-  if (!env.posthogKey) return;
+  if (!publicEnv.posthogKey) return;
   posthog.identify(userId, props);
 }
 
 export function resetAnalytics(): void {
-  if (!env.posthogKey) return;
+  if (!publicEnv.posthogKey) return;
   posthog.reset();
 }

@@ -4,6 +4,8 @@
  * (mode mock) et n'échouer que là où la variable est réellement nécessaire.
  */
 
+import { publicEnv } from '@/lib/public-env';
+
 function optional(name: string): string | undefined {
   const value = process.env[name];
   return value && value.length > 0 ? value : undefined;
@@ -31,10 +33,10 @@ function bool(name: string, fallback: boolean): boolean {
 }
 
 export const env = {
-  siteUrl: optional('NEXT_PUBLIC_SITE_URL') ?? 'http://localhost:3000',
+  siteUrl: publicEnv.siteUrl,
 
-  supabaseUrl: optional('NEXT_PUBLIC_SUPABASE_URL'),
-  supabaseAnonKey: optional('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  supabaseUrl: publicEnv.supabaseUrl || undefined,
+  supabaseAnonKey: publicEnv.supabaseAnonKey || undefined,
   supabaseServiceRoleKey: optional('SUPABASE_SERVICE_ROLE_KEY'),
 
   aiProvider: (optional('AI_PROVIDER') ?? 'mock') as 'mock' | 'fal',
@@ -50,8 +52,8 @@ export const env = {
   resendApiKey: optional('RESEND_API_KEY'),
   emailFrom: optional('EMAIL_FROM') ?? 'Trycut <onboarding@trycut.local>',
 
-  posthogKey: optional('NEXT_PUBLIC_POSTHOG_KEY'),
-  posthogHost: optional('NEXT_PUBLIC_POSTHOG_HOST') ?? 'https://eu.i.posthog.com',
+  posthogKey: publicEnv.posthogKey || undefined,
+  posthogHost: publicEnv.posthogHost,
 
   cronSecret: optional('CRON_SECRET'),
   anonTokenSecret: optional('ANON_TOKEN_SECRET') ?? 'dev-anon-token-secret',
@@ -62,7 +64,7 @@ export const env = {
   costPerGenerationCents: int('COST_PER_GENERATION_CENTS', 4),
 
   // Feature flags
-  onboardingLength: (optional('NEXT_PUBLIC_ONBOARDING_LENGTH') ?? 'full') as 'full' | 'short',
+  onboardingLength: publicEnv.onboardingLength,
   enableOneTimePack: bool('ENABLE_ONE_TIME_PACK', false),
 } as const;
 
