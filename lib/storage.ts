@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export const UPLOAD_BUCKET = 'uploads';
+export const UPLOAD_BUCKET = 'selfies';
 export const RESULT_BUCKET = 'generations';
 const SIGNED_URL_TTL = 60; // secondes
 

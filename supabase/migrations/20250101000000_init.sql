@@ -361,8 +361,18 @@ begin
 end;
 $$;
 
-revoke execute on function public.consume_credit(uuid, uuid) from anon, authenticated;
-revoke execute on function public.refund_credit(uuid, uuid) from anon, authenticated;
-revoke execute on function public.grant_credits(uuid, int, credit_reason) from anon, authenticated;
-revoke execute on function public.check_and_reserve_spend(int, int, int) from anon, authenticated;
-revoke execute on function public.release_spend(int) from anon, authenticated;
+-- Postgres accorde EXECUTE à PUBLIC par défaut : révoquer sur anon/authenticated
+-- ne suffit pas, il faut révoquer sur PUBLIC. Sans ça, la clé anon suffit à
+-- appeler grant_credits et se créditer librement.
+revoke all on function public.consume_credit(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.refund_credit(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.grant_credits(uuid, int, credit_reason) from public, anon, authenticated;
+revoke all on function public.check_and_reserve_spend(int, int, int) from public, anon, authenticated;
+revoke all on function public.release_spend(int) from public, anon, authenticated;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+
+grant execute on function public.consume_credit(uuid, uuid) to service_role;
+grant execute on function public.refund_credit(uuid, uuid) to service_role;
+grant execute on function public.grant_credits(uuid, int, credit_reason) to service_role;
+grant execute on function public.check_and_reserve_spend(int, int, int) to service_role;
+grant execute on function public.release_spend(int) to service_role;
