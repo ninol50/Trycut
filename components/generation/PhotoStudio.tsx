@@ -1,0 +1,251 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import ConsentGate, { hasStoredConsent } from '@/components/generation/ConsentGate';
+import CatalogPicker from '@/components/generation/CatalogPicker';
+import ErrorState, { type ErrorKind } from '@/components/generation/ErrorState';
+import { useTapScale } from '@/components/motion';
+import { prepareUpload } from '@/lib/upload-client';
+import { UPLOAD_MESSAGES } from '@/lib/upload';
+import { rankCatalog } from '@/lib/catalog';
+import { readAnswers, answerAsString } from '@/lib/onboarding';
+import { track } from '@/lib/analytics';
+import type { CatalogItem } from '@/types/db';
+
+interface PhotoStudioProps {
+  items: readonly CatalogItem[];
+  /** Route de suivi. L'id est ajouté en query string. */
+  nextBasePath: string;
+  lockedPremium: boolean;
+  creditsRemaining: number | null;
+}
+
+/** État « vide » : import + consignes + catalogue filtré visible dessous. */
+export default function PhotoStudio({
+  items,
+  nextBasePath,
+  lockedPremium,
+  creditsRemaining,
+}: PhotoStudioProps) {
+  const router = useRouter();
+  const tap = useTapScale();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const [consented, setConsented] = useState<boolean | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [selected, setSelected] = useState<CatalogItem | null>(null);
+  const [error, setError] = useState<{ kind: ErrorKind; message?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [answers, setAnswers] = useState(() => ({}) as ReturnType<typeof readAnswers>);
+
+  useEffect(() => {
+    setConsented(hasStoredConsent());
+    setAnswers(readAnswers());
+  }, []);
+
+  // Le catalogue est réellement réordonné par les réponses d'onboarding.
+  const ranked = useMemo(
+    () => rankCatalog(items, answers).map((scored) => scored.item),
+    [items, answers],
+  );
+
+  const onFile = useCallback(async (file: File) => {
+    setError(null);
+    setBusy(true);
+
+    const prepared = await prepareUpload(file);
+    if (!prepared.ok) {
+      setBusy(false);
+      setError({ kind: 'file', message: UPLOAD_MESSAGES[prepared.code] });
+      return;
+    }
+
+    setPreview(prepared.previewUrl);
+
+    try {
+      const form = new FormData();
+      form.append('file', prepared.file);
+      const response = await fetch('/api/uploads', { method: 'POST', body: form });
+      const data: unknown = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message =
+          typeof data === 'object' && data !== null && 'message' in data
+            ? String((data as { message: unknown }).message)
+            : undefined;
+        setError({ kind: response.status === 400 ? 'file' : 'network', message });
+        return;
+      }
+
+      const path =
+        typeof data === 'object' && data !== null && 'imagePath' in data
+          ? String((data as { imagePath: unknown }).imagePath)
+          : null;
+
+      if (!path) {
+        setError({ kind: 'network' });
+        return;
+      }
+
+      setImagePath(path);
+      track('photo_uploaded', { size: prepared.file.size });
+    } catch {
+      setError({ kind: 'network' });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const launch = useCallback(async () => {
+    if (!imagePath || !selected || busy) return;
+    setBusy(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/generations', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          imagePath,
+          catalogItemId: selected.id,
+          profile: {
+            texture: answerAsString(answers, 'texture'),
+            length: answerAsString(answers, 'length'),
+            beard: answerAsString(answers, 'beard'),
+            face: answerAsString(answers, 'face'),
+            hairline: answerAsString(answers, 'hairline'),
+          },
+        }),
+      });
+
+      const data: unknown = await response.json().catch(() => null);
+      const read = (key: string): string | undefined =>
+        typeof data === 'object' && data !== null && key in data
+          ? String((data as Record<string, unknown>)[key])
+          : undefined;
+
+      if (!response.ok) {
+        const code = read('error');
+        const kind: ErrorKind =
+          code === 'quota' ? 'quota' : code === 'capacity' ? 'capacity' : 'network';
+        setError({ kind, message: read('message') });
+        return;
+      }
+
+      const generationId = read('generationId');
+      if (!generationId) {
+        setError({ kind: 'network' });
+        return;
+      }
+
+      router.push(`${nextBasePath}?id=${generationId}`);
+    } catch {
+      setError({ kind: 'network' });
+    } finally {
+      setBusy(false);
+    }
+  }, [imagePath, selected, busy, answers, router, nextBasePath]);
+
+  if (consented === null) return <div className="section py-16" aria-hidden="true" />;
+  if (!consented) return <ConsentGate onAccept={() => setConsented(true)} />;
+
+  return (
+    <div className="section py-8">
+      <h1 className="text-2xl">Importe ton selfie.</h1>
+      <p className="mt-2 text-base text-slate-500">
+        Visage de face, bien éclairé, sans casquette.
+      </p>
+
+      {creditsRemaining !== null ? (
+        <p className="mt-3 inline-flex rounded-full bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-600">
+          {creditsRemaining} crédit{creditsRemaining > 1 ? 's' : ''} restant
+          {creditsRemaining > 1 ? 's' : ''}
+        </p>
+      ) : null}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void onFile(file);
+        }}
+      />
+
+      <motion.button
+        type="button"
+        whileTap={tap}
+        onClick={() => inputRef.current?.click()}
+        className="mt-5 flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50 p-8"
+      >
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={preview}
+            alt="Aperçu de ta photo"
+            className="h-40 w-40 rounded-2xl object-cover"
+          />
+        ) : (
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--violet-600)"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        )}
+        <span className="text-base font-semibold text-violet-600">
+          {preview ? 'Changer de photo' : 'Choisir une photo'}
+        </span>
+      </motion.button>
+
+      {error ? (
+        <div className="mt-4">
+          <ErrorState
+            kind={error.kind}
+            message={error.message}
+            onRetry={error.kind === 'quota' ? undefined : () => setError(null)}
+          />
+        </div>
+      ) : null}
+
+      <div className="mt-8">
+        <h2 className="text-xl">Choisis un style</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Trié selon les réponses que tu viens de donner.
+        </p>
+        <div className="mt-5">
+          <CatalogPicker
+            items={ranked}
+            selectedId={selected?.id ?? null}
+            onSelect={setSelected}
+            lockedPremium={lockedPremium}
+          />
+        </div>
+      </div>
+
+      <div className="sticky bottom-4 mt-8">
+        <motion.button
+          type="button"
+          whileTap={tap}
+          disabled={!imagePath || !selected || busy}
+          onClick={() => void launch()}
+          className="btn-primary w-full disabled:opacity-50"
+        >
+          {busy ? 'Un instant…' : 'Générer mon rendu'}
+        </motion.button>
+      </div>
+    </div>
+  );
+}
