@@ -14,7 +14,14 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const checks: Record<string, unknown> = {
     siteUrl: env.siteUrl,
-    aiProvider: env.aiProvider,
+    // `AI_PROVIDER=fal` sans clé ne rate pas au démarrage : il rate à la
+    // première coupe. Autant le voir ici.
+    ai: {
+      provider: env.aiProvider,
+      falKey: Boolean(env.falKey),
+      webhookSecret: env.aiWebhookSecret !== 'dev-ai-webhook-secret',
+      readyForRealCuts: env.aiProvider === 'fal' && Boolean(env.falKey),
+    },
   };
 
   // --- Supabase : joignable, catalogue seedé, fonctions en place ----------

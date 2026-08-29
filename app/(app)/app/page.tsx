@@ -17,19 +17,14 @@ export default async function AppPage() {
     loadHistory(session.user.id),
   ]);
 
-  // Un compte en attente ne peut rien générer : on le dit au lieu de le laisser
-  // buter sur un refus après avoir choisi une coupe.
-  if (session.profile.access_status !== 'approved') {
-    const rejected = session.profile.access_status === 'rejected';
+  // Seul un compte banni est arrêté ici. L'inscription ouvre le site ; c'est
+  // le solde de coupes, donc le paiement, qui ouvre la génération.
+  if (session.profile.access_status === 'rejected') {
     return (
       <div className="section py-14">
-        <h1 className="text-2xl">
-          {rejected ? 'Accès refusé.' : 'Ton compte est en attente.'}
-        </h1>
+        <h1 className="text-2xl">Accès refusé.</h1>
         <p className="mt-4 text-base text-slate-500">
-          {rejected
-            ? 'Ce compte n’a pas accès au service. Si tu penses que c’est une erreur, écris-nous.'
-            : 'Chaque inscription est validée à la main. Tu recevras un email dès que ton accès est ouvert.'}
+          Ce compte n’a pas accès au service. Si tu penses que c’est une erreur, écris-nous.
         </p>
       </div>
     );

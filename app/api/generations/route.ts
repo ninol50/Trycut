@@ -32,12 +32,11 @@ const bodySchema = z.object({
 const ERRORS: Record<string, { status: number; message: string }> = {
   auth: { status: 401, message: 'Connecte-toi pour générer une coupe.' },
   file: { status: 400, message: 'Photo introuvable. Reprends-en une.' },
-  quota: { status: 402, message: 'Il te reste 0 coupe. Passe en Pack pour continuer.' },
-  capacity: { status: 503, message: CAPACITY_MESSAGE },
-  pending: {
-    status: 403,
-    message: 'Ton compte attend d’être validé. Tu recevras un email dès qu’il est ouvert.',
+  quota: {
+    status: 402,
+    message: 'Il te reste 0 coupe. Prends un abonnement pour générer.',
   },
+  capacity: { status: 503, message: CAPACITY_MESSAGE },
   rejected: { status: 403, message: 'Ton compte n’a pas accès au service.' },
   payment: {
     status: 402,

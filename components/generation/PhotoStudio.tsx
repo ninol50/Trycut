@@ -134,7 +134,7 @@ export default function PhotoStudio({
       if (!response.ok) {
         const code = read('error');
         const known: readonly ErrorKind[] = [
-          'quota', 'capacity', 'pending', 'rejected', 'payment', 'file',
+          'quota', 'capacity', 'rejected', 'payment', 'file',
         ];
         const kind: ErrorKind = known.includes(code as ErrorKind)
           ? (code as ErrorKind)
@@ -166,11 +166,28 @@ export default function PhotoStudio({
         Visage de face, bien éclairé, sans casquette.
       </p>
 
-      {creditsRemaining !== null ? (
+      {creditsRemaining !== null && creditsRemaining > 0 ? (
         <p className="mt-3 inline-flex rounded-full bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-600">
-          {creditsRemaining} crédit{creditsRemaining > 1 ? 's' : ''} restant
+          {creditsRemaining} coupe{creditsRemaining > 1 ? 's' : ''} restante
           {creditsRemaining > 1 ? 's' : ''}
         </p>
+      ) : null}
+
+      {/* Le compte existe mais n'a aucune coupe : on le dit ici plutôt que de
+          le laisser choisir un style puis buter sur un refus. */}
+      {authenticated && creditsRemaining === 0 ? (
+        <div className="mt-5 rounded-3xl border border-line p-6">
+          <p className="font-display text-lg font-bold text-violet-900">
+            Il te faut un abonnement pour générer.
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Ton compte est actif et le catalogue reste consultable. Le Pack donne 15 coupes
+            par mois, le Pass 50. Résiliable à tout moment.
+          </p>
+          <Link href="/tarifs" className="btn-primary mt-5 w-full">
+            Voir les offres
+          </Link>
+        </div>
       ) : null}
 
       <input

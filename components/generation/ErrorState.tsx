@@ -10,19 +10,17 @@ export type ErrorKind =
   | 'file'
   | 'no_face'
   | 'capacity'
-  | 'pending'
   | 'rejected'
   | 'payment';
 
 /** Messages imposés (section 7.2). Jamais d'écran blanc. */
 export const ERROR_MESSAGES: Record<ErrorKind, string> = {
-  quota: 'Il te reste 0 crédit.',
+  quota: 'Il te reste 0 coupe. Prends un abonnement pour générer.',
   network: 'La connexion a été interrompue. Réessaie.',
   file: 'Format non supporté. Utilise un JPG ou un PNG de moins de 10 Mo.',
   no_face: 'On ne détecte pas de visage sur cette photo. Reprends-en une de face.',
   capacity:
     'Beaucoup de monde en ce moment. Reviens dans quelques heures ou passe en pack pour un accès prioritaire.',
-  pending: 'Ton compte attend d’être validé. Tu recevras un email dès qu’il est ouvert.',
   rejected: 'Ton compte n’a pas accès au service.',
   payment: 'Ton dernier paiement a été refusé. Mets ton moyen de paiement à jour.',
 };

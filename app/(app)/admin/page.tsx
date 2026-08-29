@@ -23,7 +23,9 @@ export default async function AdminPage() {
     <div className="section py-10">
       <h1 className="text-2xl">Inscrits</h1>
       <p className="mt-2 text-base text-slate-500">
-        Un compte ne peut générer aucune coupe tant qu’il n’est pas approuvé.
+        L’accès au site est automatique à l’inscription. Générer une coupe demande
+        un abonnement. Tu peux bloquer un compte ici — il perd alors l’accès,
+        payé ou non.
       </p>
 
       {error ? (
