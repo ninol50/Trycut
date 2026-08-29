@@ -577,6 +577,28 @@ test('une paire d’exemple n’est jamais affichée à moitié', () => {
   }
 });
 
+test('aucune route ne laisse un non-payeur consommer quoi que ce soit', () => {
+  // Le paywall vivait sur les pages seulement. Un compte inscrit sans
+  // abonnement pouvait appeler /api/uploads directement et remplir le
+  // stockage : la porte doit être sur la route, pas sur l'écran.
+  const uploads = readFileSync(join(process.cwd(), 'app/api/uploads/route.ts'), 'utf8');
+  assert.ok(uploads.includes('hasPaidAccess'), '/api/uploads : paiement non vérifié');
+
+  const paywall = readFileSync(join(process.cwd(), 'lib/paywall.ts'), 'utf8');
+  assert.ok(paywall.includes('hasPaidAccess'), 'requirePaidAccess ne vérifie plus le paiement');
+
+  for (const page of [
+    'app/(app)/app/generation/page.tsx',
+    'app/(app)/app/resultat/page.tsx',
+    'app/onboarding/photo/page.tsx',
+    'app/onboarding/generation/page.tsx',
+    'app/onboarding/resultat/page.tsx',
+  ]) {
+    const source = readFileSync(join(process.cwd(), page), 'utf8');
+    assert.ok(source.includes('requirePaidAccess'), `${page} : page ouverte sans abonnement`);
+  }
+});
+
 test('une seule image part au modèle, jamais une photo d’exemple', () => {
   // Régression vue en production : une demande de crâne rasé a rendu le visage
   // du modèle de référence collé sur la photo du client. La variante

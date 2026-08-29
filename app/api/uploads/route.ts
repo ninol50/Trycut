@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerSupabase, getSessionUser } from '@/lib/supabase/server';
+import { loadProfile, hasPaidAccess } from '@/lib/profile';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
   MAX_UPLOAD_BYTES,
@@ -30,6 +31,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: 'auth', message: 'Connecte-toi pour importer une photo.' },
       { status: 401 },
+    );
+  }
+
+  // Sans abonnement, aucun accès — pas même au dépôt d'une photo. La porte
+  // était posée sur les pages seulement : un compte inscrit sans payer pouvait
+  // encore appeler cette route directement et remplir le stockage.
+  const session = await loadProfile();
+  if (!session || !hasPaidAccess(session.profile)) {
+    return NextResponse.json(
+      { error: 'quota', message: 'Il te faut un abonnement pour importer une photo.' },
+      { status: 402 },
     );
   }
 
