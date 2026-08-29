@@ -35,7 +35,7 @@ export default function Footer() {
 
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Contact</p>
-            <p className="mt-2 break-all text-base text-violet-900">contact@trycut.fr</p>
+            <p className="mt-2 break-all text-base text-violet-900">trycutsee@hotmail.com</p>
           </div>
         </div>
 
