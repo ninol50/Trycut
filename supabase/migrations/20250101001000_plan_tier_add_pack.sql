@@ -1,0 +1,12 @@
+-- L'offre Pack manquait à l'énumération en base.
+--
+-- 000000 déclare bien `create type plan_tier as enum ('free','pack','pass')`,
+-- mais un `create type` ne rejoue pas sur une base déjà créée : la valeur
+-- ajoutée après coup n'était jamais arrivée. La base ne connaissait que
+-- 'free' et 'pass'.
+--
+-- Conséquence : après un paiement à 9,99 €, le webhook créditait bien les
+-- 15 coupes puis écrivait `plan = 'pack'` — écriture rejetée par l'énumération,
+-- et dont l'erreur n'était pas relue. L'abonné restait affiché en offre
+-- gratuite, sans accès au catalogue premium.
+alter type plan_tier add value if not exists 'pack';

@@ -81,6 +81,24 @@ export async function POST(request: NextRequest) {
 
 type Admin = NonNullable<ReturnType<typeof createAdminSupabase>>;
 
+/**
+ * Une écriture ratée dans un webhook ne doit jamais passer inaperçue : Stripe
+ * a encaissé, le compte doit suivre. On lève, le webhook répond 500, et Stripe
+ * rejoue — le traitement est idempotent.
+ *
+ * C'est l'absence de ce contrôle qui a laissé passer une écriture `plan = 'pack'`
+ * rejetée par l'énumération : l'abonné restait en offre gratuite.
+ */
+async function must<T extends { error: { message: string } | null }>(
+  label: string,
+  query: PromiseLike<T>,
+): Promise<T> {
+  const result = await query;
+  if (result.error) throw new Error(`${label}: ${result.error.message}`);
+  return result;
+}
+
+
 async function userIdForCustomer(customer: string, admin: Admin): Promise<string | null> {
   const { data } = await admin
     .from('profiles')
@@ -104,10 +122,10 @@ async function handleCheckoutCompleted(
   if (!userId) return;
 
   if (typeof session.customer === 'string') {
-    await admin
-      .from('profiles')
-      .update({ stripe_customer_id: session.customer })
-      .eq('id', userId);
+    await must(
+      'enregistrement du client Stripe',
+      admin.from('profiles').update({ stripe_customer_id: session.customer }).eq('id', userId),
+    );
   }
 
   // Les liens de paiement Stripe ne portent pas d'identifiant de prix connu :
@@ -117,15 +135,21 @@ async function handleCheckoutCompleted(
   const mapped = planForPrice(line?.price?.id, line?.amount_total ?? session.amount_total);
   if (!mapped) return;
 
-  await admin.rpc('grant_credits', {
-    p_user_id: userId,
-    p_amount: mapped.credits,
-    p_reason: session.mode === 'payment' ? 'pack_grant' : 'subscription_grant',
-  });
-  await admin
-    .from('profiles')
-    .update({ plan: mapped.plan, subscription_status: 'active' })
-    .eq('id', userId);
+  await must(
+    'octroi des coupes',
+    admin.rpc('grant_credits', {
+      p_user_id: userId,
+      p_amount: mapped.credits,
+      p_reason: session.mode === 'payment' ? 'pack_grant' : 'subscription_grant',
+    }),
+  );
+  await must(
+    'activation de l’offre',
+    admin
+      .from('profiles')
+      .update({ plan: mapped.plan, subscription_status: 'active' })
+      .eq('id', userId),
+  );
 
   const email = session.customer_details?.email ?? null;
   if (email) {
@@ -166,16 +190,19 @@ async function handleSubscriptionChange(
   const status = STATUS_MAP[subscription.status] ?? 'none';
   const canceled = subscription.status === 'canceled' || status === 'canceled';
 
-  await admin
-    .from('profiles')
-    .update({
-      // L'accès reste actif jusqu'à current_period_end : c'est la date qui tranche,
-      // pas la résiliation elle-même.
-      subscription_status: status,
-      plan: canceled ? 'free' : (mapped?.plan ?? 'free'),
-      current_period_end: periodEnd(subscription),
-    })
-    .eq('id', userId);
+  await must(
+    'mise à jour de l’abonnement',
+    admin
+      .from('profiles')
+      .update({
+        // L'accès reste actif jusqu'à current_period_end : c'est la date qui tranche,
+        // pas la résiliation elle-même.
+        subscription_status: status,
+        plan: canceled ? 'free' : (mapped?.plan ?? 'free'),
+        current_period_end: periodEnd(subscription),
+      })
+      .eq('id', userId),
+  );
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice, admin: Admin): Promise<void> {
@@ -203,17 +230,20 @@ async function handleInvoicePaid(invoice: Stripe.Invoice, admin: Admin): Promise
   const delta = mapped.credits - current;
 
   if (delta !== 0) {
-    await admin.rpc('grant_credits', {
-      p_user_id: userId,
-      p_amount: delta,
-      p_reason: 'subscription_grant',
-    });
+    await must(
+      'recharge mensuelle',
+      admin.rpc('grant_credits', {
+        p_user_id: userId,
+        p_amount: delta,
+        p_reason: 'subscription_grant',
+      }),
+    );
   }
 
-  await admin
-    .from('profiles')
-    .update({ plan: mapped.plan, subscription_status: 'active' })
-    .eq('id', userId);
+  await must(
+    'confirmation de l’offre',
+    admin.from('profiles').update({ plan: mapped.plan, subscription_status: 'active' }).eq('id', userId),
+  );
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice, admin: Admin): Promise<void> {
@@ -223,8 +253,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, admin: Admin): Promi
   const userId = await userIdForCustomer(customer, admin);
   if (!userId) return;
 
-  await admin
-    .from('profiles')
-    .update({ subscription_status: 'past_due' })
-    .eq('id', userId);
+  await must(
+    'coupure de l’accès sur impayé',
+    admin.from('profiles').update({ subscription_status: 'past_due' }).eq('id', userId),
+  );
 }
