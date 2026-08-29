@@ -37,7 +37,7 @@
       "allonge",
       "discret"
     ],
-    "prompt_template": "Shave the person completely bald: smooth clean scalp with no hair at all, natural skin tone and shine on the scalp.",
+    "prompt_template": "Shave the person's head down to the skin with clippers: an even buzzed shadow of very short hair over the whole scalp, clean natural hairline, no length anywhere.",
     "preview_path": "/reference/cut-chauve.jpg",
     "is_premium": false,
     "sort_order": 20
@@ -277,7 +277,7 @@
       "crepus",
       "streetwear"
     ],
-    "prompt_template": "Give the person braided hair: parallel cornrow braids laid flat along the scalp from the forehead to the nape, clean straight partings between them.",
+    "prompt_template": "Give the person braided hair: parallel cornrow braids laid flat along the scalp from the forehead to the nape, clean straight partings between them, braided from the person's own hair whatever its texture.",
     "preview_path": "/reference/cut-tresses.jpg",
     "is_premium": false,
     "sort_order": 130

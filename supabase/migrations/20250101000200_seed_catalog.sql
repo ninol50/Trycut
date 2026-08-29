@@ -13,7 +13,7 @@ values
 
 ('cut-chauve','Crâne rasé','cut',
  array['rase','raides','ondules','boucles','crepus','ovale','rond','carre','allonge','discret'],
- 'Shave the person completely bald: smooth clean scalp with no hair at all, natural skin tone and shine on the scalp.',
+ 'Shave the person''s head down to the skin with clippers: an even buzzed shadow of very short hair over the whole scalp, clean natural hairline, no length anywhere.',
  '/reference/cut-chauve.jpg', false, 20),
 
 ('cut-degrade-espagnol','Dégradé espagnol','cut',
@@ -68,7 +68,7 @@ values
 
 ('cut-tresses','Tresses','cut',
  array['mi-long','raides','ondules','boucles','crepus','ovale','rond','carre','allonge','crepus','streetwear'],
- 'Give the person braided hair: parallel cornrow braids laid flat along the scalp from the forehead to the nape, clean straight partings between them.',
+ 'Give the person braided hair: parallel cornrow braids laid flat along the scalp from the forehead to the nape, clean straight partings between them, braided from the person''s own hair whatever its texture.',
  '/reference/cut-tresses.jpg', false, 130),
 
 ('cut-cheveux-longs','Cheveux longs','cut',
