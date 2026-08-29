@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { env, isStripeConfigured, isSupabaseConfigured } from '@/lib/env';
+import { loadCatalogWithSource } from '@/lib/catalog-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -44,6 +45,17 @@ export async function GET() {
       };
     }
   }
+
+  // Le catalogue doit venir de Supabase : les identifiants du repli sont des
+  // slugs, alors que POST /api/generations exige des UUID. Un repli silencieux
+  // rend donc la génération impossible.
+  const catalog = await loadCatalogWithSource();
+  checks['catalog'] = {
+    source: catalog.source,
+    count: catalog.items.length,
+    firstId: catalog.items[0]?.id ?? null,
+    error: catalog.error,
+  };
 
   // --- Stripe : liens publics présents, secrets pour créditer -------------
   checks['stripe'] = {

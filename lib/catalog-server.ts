@@ -3,12 +3,18 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { FALLBACK_CATALOG } from '@/lib/catalog-data';
 import type { CatalogItem } from '@/types/db';
 
-/**
- * Lecture du catalogue. Repli sur les données statiques si Supabase n'est pas
- * encore branché : la landing et l'onboarding restent parcourables.
- */
-export async function loadCatalog(): Promise<CatalogItem[]> {
-  if (!isSupabaseConfigured) return [...FALLBACK_CATALOG];
+export interface CatalogResult {
+  items: CatalogItem[];
+  /** D'où viennent les entrées. Un repli silencieux casse la génération : les
+   *  identifiants du repli sont des slugs, or l'API attend des UUID. */
+  source: 'supabase' | 'fallback';
+  error: string | null;
+}
+
+export async function loadCatalogWithSource(): Promise<CatalogResult> {
+  if (!isSupabaseConfigured) {
+    return { items: [...FALLBACK_CATALOG], source: 'fallback', error: 'non configuré' };
+  }
 
   try {
     const supabase = await createServerSupabase();
@@ -17,9 +23,22 @@ export async function loadCatalog(): Promise<CatalogItem[]> {
       .select('*')
       .order('sort_order', { ascending: true });
 
-    if (error || !data || data.length === 0) return [...FALLBACK_CATALOG];
-    return data as CatalogItem[];
-  } catch {
-    return [...FALLBACK_CATALOG];
+    if (error) {
+      console.error('[catalog] lecture Supabase', error.message);
+      return { items: [...FALLBACK_CATALOG], source: 'fallback', error: error.message };
+    }
+    if (!data || data.length === 0) {
+      return { items: [...FALLBACK_CATALOG], source: 'fallback', error: 'catalogue vide' };
+    }
+
+    return { items: data as CatalogItem[], source: 'supabase', error: null };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'inconnu';
+    console.error('[catalog] lecture Supabase', message);
+    return { items: [...FALLBACK_CATALOG], source: 'fallback', error: message };
   }
+}
+
+export async function loadCatalog(): Promise<CatalogItem[]> {
+  return (await loadCatalogWithSource()).items;
 }
