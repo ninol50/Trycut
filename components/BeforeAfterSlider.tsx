@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
+import PortraitPlaceholder from '@/components/PortraitPlaceholder';
 
 interface BeforeAfterSliderProps {
   beforeSrc: string | null;
@@ -114,9 +115,7 @@ export default function BeforeAfterSlider({
         style={{ width: '100%', maxWidth: 320, aspectRatio: `${width} / ${height}` }}
       >
         {missing ? (
-          <div className="flex h-full w-full items-center justify-center px-6 text-center text-xs text-violet-600">
-            Paire avant/après à déposer dans /public/demo
-          </div>
+          <PortraitPlaceholder />
         ) : (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}

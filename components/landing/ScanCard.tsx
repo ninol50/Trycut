@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import Placeholder from '@/components/Placeholder';
+import PortraitPlaceholder from '@/components/PortraitPlaceholder';
 
 interface ScanCardProps {
   src: string | null;
@@ -26,12 +26,7 @@ export default function ScanCard({ src, badge = 'Transformation en cours' }: Sca
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" aria-hidden="true" className="h-full w-full object-cover" />
       ) : (
-        <Placeholder
-          width={320}
-          height={427}
-          label="Photo de démo — voir /public/demo/README.md"
-          className="!border-0 !bg-transparent"
-        />
+        <PortraitPlaceholder />
       )}
 
       {/* Équerres aux quatre coins */}

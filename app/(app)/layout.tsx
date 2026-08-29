@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="section py-16">
         <h1 className="text-2xl">Espace indisponible</h1>
         <p className="mt-3 text-base text-slate-500">
-          Supabase n’est pas encore configuré sur cet environnement. Voir le README.
+          L’espace personnel est momentanément indisponible. Réessaie dans quelques minutes.
         </p>
       </main>
     );

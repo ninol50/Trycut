@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider';
+import PortraitPlaceholder from '@/components/PortraitPlaceholder';
 import { useInView } from '@/components/motion';
 
 export interface ExamplePair {
@@ -31,9 +32,7 @@ function SideBySide({ pair }: { pair: ExamplePair }) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="grid h-full w-full place-items-center px-3 text-center text-[11px] text-violet-400">
-                  {side === 'before' ? 'avant' : 'après'}
-                </span>
+                <PortraitPlaceholder />
               )}
               <span
                 className={`badge-dark absolute bottom-3 rounded-lg px-2.5 py-1 text-[11px] font-medium ${
@@ -56,6 +55,7 @@ function SideBySide({ pair }: { pair: ExamplePair }) {
 export default function Examples({ pairs }: ExamplesProps) {
   const anim = useInView();
   const first = pairs[0];
+  const extras = pairs.slice(1).filter((pair) => pair.before || pair.after);
 
   return (
     <motion.section {...anim} className="section py-14">
@@ -70,16 +70,19 @@ export default function Examples({ pairs }: ExamplesProps) {
           <BeforeAfterSlider
             beforeSrc={first.before}
             afterSrc={first.after}
-            label="Glisse pour comparer"
+            label={first.before && first.after ? 'Glisse pour comparer' : undefined}
           />
         </div>
       ) : null}
 
-      <div className="mt-8 space-y-4">
-        {pairs.slice(1).map((pair) => (
-          <SideBySide key={pair.label} pair={pair} />
-        ))}
-      </div>
+      {/* Une paire sans aucun visuel n'apporte rien : on ne l'affiche pas. */}
+      {extras.length > 0 ? (
+        <div className="mt-8 space-y-4">
+          {extras.map((pair) => (
+            <SideBySide key={pair.label} pair={pair} />
+          ))}
+        </div>
+      ) : null}
     </motion.section>
   );
 }
