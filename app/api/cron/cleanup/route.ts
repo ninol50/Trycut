@@ -24,6 +24,14 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = createAdminSupabase();
+  if (!admin) {
+    // La purge traverse tous les comptes : elle ne peut pas passer par la RLS.
+    return NextResponse.json(
+      { error: 'service_role_manquante', message: 'SUPABASE_SERVICE_ROLE_KEY absente.' },
+      { status: 503 },
+    );
+  }
+
   const now = Date.now();
   const cutoffUsers = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
   const cutoffAnon = new Date(now - 24 * 60 * 60 * 1000).toISOString();
@@ -38,7 +46,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-type Admin = ReturnType<typeof createAdminSupabase>;
+type Admin = NonNullable<ReturnType<typeof createAdminSupabase>>;
 
 async function purge(admin: Admin, scope: 'user' | 'anon', cutoff: string): Promise<number> {
   const query = admin

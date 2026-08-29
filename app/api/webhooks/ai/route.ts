@@ -1,17 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createAdminSupabase } from '@/lib/supabase/server';
-import { env, isSupabaseConfigured } from '@/lib/env';
+import { createAnonSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
 import { RESULT_BUCKET, UPLOAD_BUCKET } from '@/lib/storage';
-import { releaseSpend } from '@/lib/limits';
-import { verifyWebhookToken } from '@/lib/anon-token';
-import type { Generation } from '@/types/db';
+import { sendGenerationReadyEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
 /**
- * Rappel du provider. Idempotent : `webhook_events.external_id` est unique,
- * les webhooks arrivent en double systématiquement.
- * En cas d'échec, le crédit est remboursé (section 7.1).
+ * Rappel du provider. Il n'a pas de session : son droit vient du secret propre
+ * à la ligne, généré à la création et jamais exposé au navigateur.
+ * Les fonctions `complete_generation` / `fail_generation` sont idempotentes :
+ * un doublon ne refait rien, et un échec rembourse la coupe.
  */
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured) {
@@ -24,136 +23,111 @@ export async function POST(request: NextRequest) {
   }
 
   const body = payload as {
-    event_id?: string;
-    job_id?: string;
     generation_id?: string;
+    secret?: string;
     status?: string;
     image_url?: string | null;
-    error?: string | null;
+    source_path?: string | null;
   };
 
   const url = new URL(request.url);
   const generationId = body.generation_id ?? url.searchParams.get('generation_id');
-  if (!generationId) {
-    return NextResponse.json({ error: 'generation_id manquant' }, { status: 400 });
+  const secret = body.secret ?? url.searchParams.get('secret');
+
+  if (!generationId || !secret) {
+    return NextResponse.json({ error: 'requete' }, { status: 400 });
   }
 
-  // Deux formes d'authentification : l'en-tête partagé (MockProvider, providers
-  // qui acceptent des en-têtes personnalisés) ou le jeton signé passé dans
-  // l'URL de rappel (fal.ai, qui ne relaie pas nos en-têtes).
-  const headerOk = request.headers.get('x-ai-signature') === env.aiWebhookSecret;
-  const tokenOk = verifyWebhookToken(generationId, url.searchParams.get('token'));
-  if (!headerOk && !tokenOk) {
-    return NextResponse.json({ error: 'signature' }, { status: 401 });
-  }
-
-  const admin = createAdminSupabase();
-  const externalId = body.event_id ?? body.job_id ?? `${generationId}-${body.status ?? 'unknown'}`;
-
-  // Idempotence : un doublon sort en 200 sans rien refaire.
-  const { error: dedupeError } = await admin
-    .from('webhook_events')
-    .insert({ provider: 'ai', external_id: externalId, payload: body });
-
-  if (dedupeError) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
-  const { data } = await admin
-    .from('generations')
-    .select('*')
-    .eq('id', generationId)
-    .maybeSingle();
-
-  const generation = data as Generation | null;
-  if (!generation) {
-    return NextResponse.json({ error: 'introuvable' }, { status: 404 });
-  }
-  if (generation.status === 'succeeded' || generation.status === 'failed') {
-    return NextResponse.json({ ok: true, alreadyFinal: true });
-  }
-
+  const supabase = createAnonSupabase();
   const failed = body.status === 'failed' || body.status === 'error';
 
   if (failed) {
-    await admin
-      .from('generations')
-      .update({
-        status: 'failed',
-        error_code: 'provider',
-        error_message: 'Le rendu a échoué. Ton crédit t’a été rendu.',
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', generationId);
-
-    await releaseSpend(admin);
-    if (generation.user_id) {
-      await admin.rpc('refund_credit', {
-        p_user_id: generation.user_id,
-        p_generation_id: generationId,
-      });
-    }
-    return NextResponse.json({ ok: true, refunded: Boolean(generation.user_id) });
+    const { data } = await supabase.rpc('fail_generation', {
+      p_generation_id: generationId,
+      p_secret: secret,
+      p_error_code: 'provider',
+      p_error_message: 'Le rendu a échoué. Ta coupe t’a été rendue.',
+    });
+    return data === true
+      ? NextResponse.json({ ok: true, refunded: true })
+      : NextResponse.json({ error: 'signature' }, { status: 401 });
   }
 
-  // --- succès : on rapatrie l'image dans le bucket privé --------------------
-  const resultPath = `${generation.user_id ?? `anon/${generation.anon_token}`}/${generationId}.jpg`;
+  // Sans image produite (MockProvider), le résultat pointe sur la photo source :
+  // tout le reste du pipeline — URL signée, comparateur, export — reste réel.
+  let resultPath: string | null = null;
+  let resultBucket = RESULT_BUCKET;
 
-  try {
-    let bytes: Uint8Array;
-    let contentType = 'image/jpeg';
+  if (body.image_url) {
+    const admin = createAdminSupabase();
+    if (!admin) {
+      // Rapatrier une image produite demande d'écrire dans le dossier d'un
+      // autre utilisateur : c'est le seul point qui exige la clé service_role.
+      await supabase.rpc('fail_generation', {
+        p_generation_id: generationId,
+        p_secret: secret,
+        p_error_code: 'provider',
+        p_error_message: 'Le stockage du résultat n’est pas configuré.',
+      });
+      return NextResponse.json({ error: 'service_role_manquante' }, { status: 503 });
+    }
 
-    if (body.image_url) {
+    try {
+      const { data: row } = await admin
+        .from('generations')
+        .select('user_id')
+        .eq('id', generationId)
+        .maybeSingle();
+
+      const owner = (row as { user_id: string | null } | null)?.user_id;
+      if (!owner) throw new Error('propriétaire introuvable');
+
       const response = await fetch(body.image_url);
       if (!response.ok) throw new Error(`téléchargement ${response.status}`);
-      bytes = new Uint8Array(await response.arrayBuffer());
-      contentType = response.headers.get('content-type') ?? 'image/jpeg';
-    } else {
-      // MockProvider : pas d'image générée, on réutilise la photo source
-      // pour que tout le pipeline (stockage, URL signée, export) reste réel.
-      const { data: source, error: downloadError } = await admin.storage
-        .from(UPLOAD_BUCKET)
-        .download(generation.source_path);
-      if (downloadError || !source) throw new Error('source illisible');
-      bytes = new Uint8Array(await source.arrayBuffer());
-      contentType = source.type || 'image/jpeg';
-    }
+      const bytes = new Uint8Array(await response.arrayBuffer());
 
-    const { error: uploadError } = await admin.storage
-      .from(RESULT_BUCKET)
-      .upload(resultPath, bytes, { contentType, upsert: true });
-    if (uploadError) throw new Error(uploadError.message);
-
-    await admin
-      .from('generations')
-      .update({
-        status: 'succeeded',
-        result_path: resultPath,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', generationId);
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('[webhooks/ai]', error);
-
-    await admin
-      .from('generations')
-      .update({
-        status: 'failed',
-        error_code: 'provider',
-        error_message: 'Le rendu a échoué. Ton crédit t’a été rendu.',
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', generationId);
-
-    await releaseSpend(admin);
-    if (generation.user_id) {
-      await admin.rpc('refund_credit', {
-        p_user_id: generation.user_id,
+      resultPath = `${owner}/${generationId}.jpg`;
+      const { error } = await admin.storage
+        .from(RESULT_BUCKET)
+        .upload(resultPath, bytes, {
+          contentType: response.headers.get('content-type') ?? 'image/jpeg',
+          upsert: true,
+        });
+      if (error) throw new Error(error.message);
+    } catch (error) {
+      console.error('[webhooks/ai]', error);
+      await supabase.rpc('fail_generation', {
         p_generation_id: generationId,
+        p_secret: secret,
+        p_error_code: 'provider',
+        p_error_message: 'Le rendu a échoué. Ta coupe t’a été rendue.',
       });
+      return NextResponse.json({ ok: false }, { status: 500 });
     }
-    return NextResponse.json({ ok: false }, { status: 500 });
+  } else {
+    resultPath = body.source_path ?? null;
+    resultBucket = UPLOAD_BUCKET;
+    if (!resultPath) {
+      return NextResponse.json({ error: 'source_path manquant' }, { status: 400 });
+    }
   }
+
+  const { data } = await supabase.rpc('complete_generation', {
+    p_generation_id: generationId,
+    p_secret: secret,
+    p_result_path: resultPath,
+    p_result_bucket: resultBucket,
+  });
+
+  const result = data as { ok?: boolean; email?: string | null; duplicate?: boolean } | null;
+  if (!result?.ok) {
+    return NextResponse.json({ error: 'signature' }, { status: 401 });
+  }
+
+  // L'email ne doit jamais faire échouer le rappel, ni partir deux fois.
+  if (result.email && !result.duplicate) {
+    void sendGenerationReadyEmail(result.email, generationId).catch(() => undefined);
+  }
+
+  return NextResponse.json({ ok: true });
 }

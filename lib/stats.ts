@@ -1,4 +1,4 @@
-import { createAdminSupabase } from '@/lib/supabase/server';
+import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 
 /**
@@ -10,18 +10,11 @@ export async function countCutsToday(): Promise<number | null> {
   if (!isSupabaseConfigured) return null;
 
   try {
-    const admin = createAdminSupabase();
-    const since = new Date();
-    since.setUTCHours(0, 0, 0, 0);
+    const supabase = await createServerSupabase();
+    const { data, error } = await supabase.rpc('count_cuts_today');
 
-    const { count, error } = await admin
-      .from('generations')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'succeeded')
-      .gte('created_at', since.toISOString());
-
-    if (error) return null;
-    return count ?? 0;
+    if (error || typeof data !== 'number') return null;
+    return data;
   } catch {
     return null;
   }

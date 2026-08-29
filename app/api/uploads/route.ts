@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
-import { createAdminSupabase, getSessionUser } from '@/lib/supabase/server';
+import { createServerSupabase, getSessionUser } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
   MAX_UPLOAD_BYTES,
@@ -9,25 +8,28 @@ import {
   isAcceptedMime,
   sniffImageMime,
 } from '@/lib/upload';
-import { UPLOAD_BUCKET, ownerPrefix } from '@/lib/storage';
-import {
-  ANON_COOKIE,
-  anonCookieOptions,
-  createAnonToken,
-  verifyAnonToken,
-} from '@/lib/anon-token';
+import { UPLOAD_BUCKET } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 
 /**
- * Upload de la photo source. Le type MIME est vérifié côté serveur
- * par la signature binaire, pas par le Content-Type déclaré.
+ * Upload de la photo source, avec la session de l'utilisateur : la policy
+ * Storage n'autorise l'écriture que dans son propre dossier.
+ * Le type MIME est vérifié par la signature binaire, pas par le Content-Type.
  */
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured) {
     return NextResponse.json(
-      { error: 'storage_indisponible', message: 'Le stockage n’est pas configuré.' },
+      { error: 'indisponible', message: 'Le stockage n’est pas configuré.' },
       { status: 503 },
+    );
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: 'auth', message: 'Connecte-toi pour importer une photo.' },
+      { status: 401 },
     );
   }
 
@@ -35,38 +37,20 @@ export async function POST(request: NextRequest) {
   const file = form.get('file');
 
   if (!(file instanceof File) || file.size === 0 || file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json(
-      { error: 'file', message: UPLOAD_MESSAGES.file },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'file', message: UPLOAD_MESSAGES.file }, { status: 400 });
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   const sniffed = sniffImageMime(bytes);
 
   if (!sniffed || !isAcceptedMime(sniffed)) {
-    return NextResponse.json(
-      { error: 'file', message: UPLOAD_MESSAGES.file },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'file', message: UPLOAD_MESSAGES.file }, { status: 400 });
   }
 
-  const user = await getSessionUser();
+  const path = `${user.id}/${crypto.randomUUID()}.${extensionFor(sniffed)}`;
+  const supabase = await createServerSupabase();
 
-  // Un visiteur sans compte reçoit un jeton d'essai signé httpOnly.
-  const store = await cookies();
-  const existing = store.get(ANON_COOKIE)?.value;
-  let anonToken: string | null = null;
-
-  if (!user) {
-    anonToken = verifyAnonToken(existing) ? (existing ?? null) : createAnonToken();
-  }
-
-  const prefix = ownerPrefix(user?.id ?? null, anonToken);
-  const path = `${prefix}/${crypto.randomUUID()}.${extensionFor(sniffed)}`;
-
-  const admin = createAdminSupabase();
-  const { error } = await admin.storage
+  const { error } = await supabase.storage
     .from(UPLOAD_BUCKET)
     .upload(path, bytes, { contentType: sniffed, upsert: false });
 
@@ -78,9 +62,5 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const response = NextResponse.json({ imagePath: path });
-  if (anonToken && anonToken !== existing) {
-    response.cookies.set(ANON_COOKIE, anonToken, anonCookieOptions);
-  }
-  return response;
+  return NextResponse.json({ imagePath: path });
 }

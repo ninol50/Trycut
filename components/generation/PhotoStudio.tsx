@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import ConsentNotice, { hasStoredConsent, storeConsent } from '@/components/generation/ConsentGate';
@@ -20,6 +21,8 @@ interface PhotoStudioProps {
   nextBasePath: string;
   lockedPremium: boolean;
   creditsRemaining: number | null;
+  /** Sans compte, on laisse parcourir le catalogue mais pas envoyer de photo. */
+  authenticated: boolean;
 }
 
 /** État « vide » : import + consignes + catalogue filtré visible dessous. */
@@ -28,6 +31,7 @@ export default function PhotoStudio({
   nextBasePath,
   lockedPremium,
   creditsRemaining,
+  authenticated,
 }: PhotoStudioProps) {
   const router = useRouter();
   const tap = useTapScale();
@@ -176,6 +180,26 @@ export default function PhotoStudio({
         }}
       />
 
+      {!authenticated ? (
+        <div className="mt-5 rounded-3xl border border-line p-6 text-center">
+          <p className="font-display text-lg font-bold text-violet-900">
+            Crée ton compte pour envoyer ta photo.
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Ta photo n’est visible que par toi. Le catalogue ci-dessous reste consultable
+            librement.
+          </p>
+          <Link href="/inscription" className="btn-primary mt-5 w-full">
+            Créer mon compte
+          </Link>
+          <Link
+            href="/connexion"
+            className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center text-sm font-semibold text-violet-600 underline"
+          >
+            J’ai déjà un compte
+          </Link>
+        </div>
+      ) : (
       <motion.button
         type="button"
         whileTap={tap}
@@ -208,7 +232,9 @@ export default function PhotoStudio({
           {preview ? 'Changer de photo' : 'Choisir une photo'}
         </span>
       </motion.button>
+      )}
 
+      {authenticated ? (
       <div className="mt-4">
         <ConsentNotice
           checked={consented}
@@ -218,6 +244,7 @@ export default function PhotoStudio({
           }}
         />
       </div>
+      ) : null}
 
       {error ? (
         <div className="mt-4">
@@ -244,6 +271,7 @@ export default function PhotoStudio({
         </div>
       </div>
 
+      {authenticated ? (
       <div className="sticky bottom-4 mt-8">
         <motion.button
           type="button"
@@ -252,9 +280,10 @@ export default function PhotoStudio({
           onClick={() => void launch()}
           className="btn-primary w-full disabled:opacity-50"
         >
-          {busy ? 'Un instant…' : 'Générer mon rendu'}
+          {busy ? 'Un instant…' : 'Générer ma coupe'}
         </motion.button>
       </div>
+      ) : null}
     </div>
   );
 }

@@ -25,6 +25,7 @@ export default async function AppPage() {
         nextBasePath="/app/generation"
         lockedPremium={premiumLocked(session.profile)}
         creditsRemaining={session.profile.credits_remaining}
+        authenticated
       />
       <HistoryStrip items={history} />
     </>

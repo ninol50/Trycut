@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getStripe } from '@/lib/stripe';
-import { createAdminSupabase } from '@/lib/supabase/server';
+import { createServerSupabase } from '@/lib/supabase/server';
 import { loadProfile } from '@/lib/profile';
 import { env, isStripeConfigured } from '@/lib/env';
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   }
 
   const stripe = getStripe();
-  const admin = createAdminSupabase();
+  const supabase = await createServerSupabase();
 
   // Un seul client Stripe par compte.
   let customerId = session.profile.stripe_customer_id;
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       metadata: { user_id: session.user.id },
     });
     customerId = customer.id;
-    await admin
+    await supabase
       .from('profiles')
       .update({ stripe_customer_id: customerId })
       .eq('id', session.user.id);

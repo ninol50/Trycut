@@ -1,56 +1,46 @@
 import { NextResponse } from 'next/server';
-import { createAdminSupabase } from '@/lib/supabase/server';
-import { loadProfile } from '@/lib/profile';
+import { createServerSupabase, getSessionUser } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { RESULT_BUCKET, UPLOAD_BUCKET, removeObjects } from '@/lib/storage';
+import { RESULT_BUCKET, UPLOAD_BUCKET } from '@/lib/storage';
 import type { Generation } from '@/types/db';
 
 export const runtime = 'nodejs';
 
 /**
- * Suppression réelle du compte : profil, générations et tous les fichiers
- * Storage associés. Rien n'est laissé derrière.
+ * Suppression réelle du compte : fichiers, lignes, puis le compte lui-même.
+ * Tout passe par la session de l'utilisateur — `delete_own_account` ne peut
+ * effacer que `auth.uid()`, jamais quelqu'un d'autre.
  */
 export async function DELETE() {
-  if (!isSupabaseConfigured) {
-    return NextResponse.json({ ok: false }, { status: 503 });
-  }
+  if (!isSupabaseConfigured) return NextResponse.json({ ok: false }, { status: 503 });
 
-  const session = await loadProfile();
-  if (!session) return NextResponse.json({ ok: false }, { status: 401 });
+  const user = await getSessionUser();
+  if (!user) return NextResponse.json({ ok: false }, { status: 401 });
 
-  const userId = session.user.id;
-  const admin = createAdminSupabase();
+  const supabase = await createServerSupabase();
 
-  const { data } = await admin
+  const { data } = await supabase
     .from('generations')
-    .select('source_path, result_path')
-    .eq('user_id', userId);
+    .select('source_path, result_path, result_bucket');
 
-  const rows = (data as Pick<Generation, 'source_path' | 'result_path'>[] | null) ?? [];
+  const rows =
+    (data as (Pick<Generation, 'source_path' | 'result_path'> & { result_bucket: string })[] | null) ??
+    [];
 
-  await removeObjects(
-    admin,
-    UPLOAD_BUCKET,
-    rows.map((row) => row.source_path).filter((path): path is string => Boolean(path)),
-  );
-  await removeObjects(
-    admin,
-    RESULT_BUCKET,
-    rows.map((row) => row.result_path).filter((path): path is string => Boolean(path)),
-  );
+  const sources = rows.map((row) => row.source_path).filter(Boolean);
+  const results = rows
+    .filter((row) => row.result_path && row.result_bucket === RESULT_BUCKET)
+    .map((row) => row.result_path as string);
 
-  await admin.from('generations').delete().eq('user_id', userId);
-  await admin.from('onboarding_responses').delete().eq('user_id', userId);
-  await admin.from('credit_ledger').delete().eq('user_id', userId);
-  await admin.from('profiles').delete().eq('id', userId);
+  if (sources.length > 0) await supabase.storage.from(UPLOAD_BUCKET).remove(sources);
+  if (results.length > 0) await supabase.storage.from(RESULT_BUCKET).remove(results);
 
-  // Supprime le compte auth en dernier : le cascade nettoie ce qui resterait.
-  const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) {
-    console.error('[account] suppression auth', error.message);
+  const { data: deleted, error } = await supabase.rpc('delete_own_account');
+  if (error || deleted !== true) {
+    console.error('[account] suppression', error?.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
+  await supabase.auth.signOut();
   return NextResponse.json({ ok: true });
 }

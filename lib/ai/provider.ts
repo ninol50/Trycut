@@ -1,5 +1,4 @@
 import { env } from '@/lib/env';
-import { signWebhookToken } from '@/lib/anon-token';
 
 export interface GenerateInput {
   /** URL signée de la photo source, lisible par le provider. */
@@ -8,6 +7,10 @@ export interface GenerateInput {
   prompt: string;
   /** Identifiant de notre ligne `generations` — renvoyé tel quel par le webhook. */
   generationId: string;
+  /** Secret propre à cette ligne : c'est lui qui autorise le rappel. */
+  callbackSecret: string;
+  /** Chemin de la photo source, réutilisé par le mock comme résultat. */
+  sourcePath: string;
   /** URL de rappel. */
   webhookUrl: string;
 }
@@ -55,9 +58,11 @@ async function scheduleMockCallback(input: GenerateInput, jobId: string): Promis
         event_id: `${jobId}_done`,
         job_id: jobId,
         generation_id: input.generationId,
+        secret: input.callbackSecret,
         status: 'succeeded',
-        // Le mock n'invente pas d'image : le webhook réutilise la photo source.
+        // Le mock n'invente pas d'image : le résultat pointe sur la photo source.
         image_url: null,
+        source_path: input.sourcePath,
       }),
     });
   } catch {
@@ -88,7 +93,7 @@ export const falProvider: AiProvider = {
         num_images: 1,
         output_format: 'jpeg',
         // fal.ai ne renvoie pas nos en-têtes : le jeton signé voyage dans l'URL.
-        fal_webhook: `${input.webhookUrl}?generation_id=${input.generationId}&token=${signWebhookToken(input.generationId)}`,
+        fal_webhook: `${input.webhookUrl}?generation_id=${input.generationId}&secret=${encodeURIComponent(input.callbackSecret)}`,
       }),
     });
 

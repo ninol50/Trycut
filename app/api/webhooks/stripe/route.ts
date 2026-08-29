@@ -4,6 +4,7 @@ import { getStripe, planForPrice } from '@/lib/stripe';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { env, isStripeConfigured, isSupabaseConfigured } from '@/lib/env';
 import type { SubscriptionStatus } from '@/types/db';
+import { sendSubscriptionEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminSupabase();
+  if (!admin) {
+    // Créditer un compte ne peut pas passer par la session d'un client :
+    // sinon n'importe qui se créditerait lui-même.
+    console.error('[webhooks/stripe] SUPABASE_SERVICE_ROLE_KEY absente');
+    return NextResponse.json({ error: 'service_role_manquante' }, { status: 503 });
+  }
 
   const { error: dedupeError } = await admin
     .from('webhook_events')
@@ -66,7 +73,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
-type Admin = ReturnType<typeof createAdminSupabase>;
+type Admin = NonNullable<ReturnType<typeof createAdminSupabase>>;
 
 async function userIdForCustomer(customer: string, admin: Admin): Promise<string | null> {
   const { data } = await admin
@@ -113,6 +120,15 @@ async function handleCheckoutCompleted(
     .from('profiles')
     .update({ plan: mapped.plan, subscription_status: 'active' })
     .eq('id', userId);
+
+  const email = session.customer_details?.email ?? null;
+  if (email) {
+    void sendSubscriptionEmail(
+      email,
+      mapped.plan === 'pack' ? 'Pack' : 'Pass',
+      mapped.credits,
+    ).catch(() => undefined);
+  }
 }
 
 const STATUS_MAP: Record<string, SubscriptionStatus> = {

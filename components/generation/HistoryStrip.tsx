@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { HistoryRow } from '@/lib/profile';
 import type { Generation } from '@/types/db';
 
 const STATUS_LABELS: Record<Generation['status'], string> = {
@@ -9,7 +10,7 @@ const STATUS_LABELS: Record<Generation['status'], string> = {
 };
 
 /** Historique. Les images passent par une URL signée générée à l'ouverture. */
-export default function HistoryStrip({ items }: { items: readonly Generation[] }) {
+export default function HistoryStrip({ items }: { items: readonly HistoryRow[] }) {
   if (items.length === 0) return null;
 
   return (

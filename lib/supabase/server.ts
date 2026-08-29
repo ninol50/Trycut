@@ -3,7 +3,10 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { env, required } from '@/lib/env';
 
-/** Client serveur lié à la session utilisateur (RLS appliquée). */
+/**
+ * Client serveur lié à la session utilisateur. **C'est le client par défaut.**
+ * La RLS s'applique : ce que la base refuse, l'app ne peut pas le contourner.
+ */
 export async function createServerSupabase() {
   const cookieStore = await cookies();
 
@@ -29,13 +32,29 @@ export async function createServerSupabase() {
   );
 }
 
-/** Client service-role : contourne la RLS. Réservé aux routes serveur et aux crons. */
-export function createAdminSupabase() {
+/**
+ * Client sans session, pour les rappels de provider qui prouvent leur droit
+ * autrement (secret par ligne). N'a aucun privilège particulier.
+ */
+export function createAnonSupabase() {
   return createSupabaseClient(
     required('NEXT_PUBLIC_SUPABASE_URL'),
-    required('SUPABASE_SERVICE_ROLE_KEY'),
+    required('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
+}
+
+/**
+ * Client service-role : contourne la RLS. Réservé à ce qui ne peut pas s'en
+ * passer — le cron de purge et l'octroi de crédits après paiement Stripe.
+ * Absent en développement, les appelants doivent gérer le null.
+ */
+export function createAdminSupabase() {
+  if (!env.supabaseServiceRoleKey || !env.supabaseUrl) return null;
+
+  return createSupabaseClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 /** Utilisateur courant, ou null. Toujours vérifié côté serveur. */

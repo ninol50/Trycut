@@ -1,18 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
-import { createAdminSupabase, getSessionUser } from '@/lib/supabase/server';
+import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { RESULT_BUCKET, UPLOAD_BUCKET, signedUrl } from '@/lib/storage';
-import { ANON_COOKIE, verifyAnonToken } from '@/lib/anon-token';
+import { UPLOAD_BUCKET } from '@/lib/storage';
 import type { Generation } from '@/types/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const COLUMNS =
+  'id, status, error_code, error_message, result_path, result_bucket, source_path, watermarked';
+
 /**
- * Fallback de polling (2s côté client, timeout 120s).
- * Les lignes anonymes ne sont jamais lisibles par RLS : la propriété est
- * validée ici, contre le jeton signé.
+ * Suivi de la génération. Aucune vérification de propriété en code : la RLS
+ * ne renvoie que les lignes de l'appelant. Une ligne qui n'est pas la sienne
+ * est simplement introuvable.
  */
 export async function GET(
   _request: NextRequest,
@@ -23,36 +24,32 @@ export async function GET(
   }
 
   const { id } = await params;
-  const admin = createAdminSupabase();
+  const supabase = await createServerSupabase();
 
-  const { data } = await admin.from('generations').select('*').eq('id', id).maybeSingle();
-  const generation = data as Generation | null;
+  const { data } = await supabase
+    .from('generations')
+    .select(COLUMNS)
+    .eq('id', id)
+    .maybeSingle();
+
+  const generation = data as Pick<
+    Generation,
+    'id' | 'status' | 'error_code' | 'error_message' | 'result_path' | 'source_path'
+  > & { result_bucket: string; watermarked: boolean } | null;
 
   if (!generation) {
     return NextResponse.json({ error: 'introuvable' }, { status: 404 });
   }
 
-  const user = await getSessionUser();
-  const store = await cookies();
-  const rawToken = store.get(ANON_COOKIE)?.value;
-
-  const ownedByUser = Boolean(user && generation.user_id === user.id);
-  const ownedByAnon =
-    generation.user_id === null &&
-    Boolean(rawToken) &&
-    verifyAnonToken(rawToken) !== null &&
-    generation.anon_token === rawToken;
-
-  if (!ownedByUser && !ownedByAnon) {
-    return NextResponse.json({ error: 'interdit' }, { status: 403 });
-  }
+  const sign = async (bucket: string, path: string) => {
+    const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 60);
+    return signed?.signedUrl ?? null;
+  };
 
   const resultUrl =
     generation.status === 'succeeded' && generation.result_path
-      ? await signedUrl(admin, RESULT_BUCKET, generation.result_path)
+      ? await sign(generation.result_bucket, generation.result_path)
       : null;
-
-  const sourceUrl = await signedUrl(admin, UPLOAD_BUCKET, generation.source_path);
 
   return NextResponse.json({
     id: generation.id,
@@ -60,8 +57,7 @@ export async function GET(
     errorCode: generation.error_code,
     errorMessage: generation.error_message,
     resultUrl,
-    sourceUrl,
-    /** L'essai anonyme reste en basse résolution et filigrané. */
-    watermarked: generation.user_id === null,
+    sourceUrl: await sign(UPLOAD_BUCKET, generation.source_path),
+    watermarked: generation.watermarked,
   });
 }

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createAdminSupabase, getSessionUser } from '@/lib/supabase/server';
+import { createServerSupabase, getSessionUser } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 
 export const runtime = 'nodejs';
@@ -25,28 +25,28 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
 
   const { answers } = parsed.data;
-  const admin = createAdminSupabase();
+  const supabase = await createServerSupabase();
 
-  const { data: existing } = await admin
+  const { data: existing } = await supabase
     .from('onboarding_responses')
     .select('id')
     .eq('user_id', user.id)
     .maybeSingle();
 
   if (existing) {
-    await admin
+    await supabase
       .from('onboarding_responses')
       .update({ answers, completed_at: new Date().toISOString() })
       .eq('id', (existing as { id: string }).id);
   } else {
-    await admin
+    await supabase
       .from('onboarding_responses')
       .insert({ user_id: user.id, answers, completed_at: new Date().toISOString() });
   }
 
   const firstName = answers['first_name'];
   if (typeof firstName === 'string' && firstName.length > 0) {
-    await admin.from('profiles').update({ first_name: firstName }).eq('id', user.id);
+    await supabase.from('profiles').update({ first_name: firstName }).eq('id', user.id);
   }
 
   return NextResponse.json({ ok: true });
