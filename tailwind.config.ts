@@ -11,12 +11,14 @@ const config: Config = {
       colors: {
         violet: {
           50: 'var(--violet-50)',
-          200: '#DDD6FE',
+          100: '#EDE9FE',
+          200: 'var(--violet-200)',
           400: 'var(--violet-400)',
           600: 'var(--violet-600)',
           900: 'var(--violet-900)',
         },
         ink: 'var(--ink)',
+        line: 'var(--line)',
         slate: { 500: 'var(--slate-500)' },
       },
       fontFamily: {
@@ -30,10 +32,13 @@ const config: Config = {
         lg: ['18px', { lineHeight: '1.6' }],
         xl: ['24px', { lineHeight: '1.3', letterSpacing: '-0.02em' }],
         '2xl': ['32px', { lineHeight: '1.15', letterSpacing: '-0.03em' }],
-        '3xl': ['48px', { lineHeight: '1.05', letterSpacing: '-0.03em' }],
+        '3xl': ['40px', { lineHeight: '1.05', letterSpacing: '-0.035em' }],
+        '4xl': ['48px', { lineHeight: '1.02', letterSpacing: '-0.035em' }],
       },
       borderRadius: {
-        '2xl': '20px',
+        xl: '14px',
+        '2xl': '18px',
+        '3xl': '24px',
       },
       boxShadow: {
         violet: '0 8px 30px rgba(124,58,237,0.12)',

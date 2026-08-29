@@ -33,7 +33,7 @@ export default function CtaButton({
     variant === 'inverse'
       ? 'inline-flex min-h-[52px] items-center justify-center rounded-full bg-white px-6 py-4 text-base font-semibold text-violet-600'
       : variant === 'secondary'
-        ? 'btn-secondary'
+        ? 'btn-outline'
         : 'btn-primary';
 
   return (

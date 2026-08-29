@@ -68,7 +68,7 @@ export default function DeleteAccountButton() {
           type="button"
           whileTap={tap}
           onClick={() => setConfirming(false)}
-          className="btn-secondary w-full"
+          className="btn-outline w-full"
         >
           Annuler
         </motion.button>

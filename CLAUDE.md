@@ -19,13 +19,16 @@ App Router), marché français, cible technique **390 px de viewport**.
 
 ## Direction artistique
 
-- Fond **blanc pur dominant**. Le violet est un accent, jamais un fond de page. Seules
-  exceptions : le bloc CTA final de la landing et les cartes de catalogue sélectionnées.
-- **Un seul dégradé**, réservé aux CTA principaux : `bg-cta-gradient`. Interdit ailleurs.
-- Ombres violettes (`shadow-violet`), jamais grises. `rounded-2xl` sur les cards,
-  `rounded-full` sur les boutons.
-- Échelle typographique : `48/32/24/18/16/14`. **Sentence case partout**, jamais de
+- Fond **blanc pur dominant**, séparateurs `border-line`. Le violet porte les actions et
+  les titres ; il ne sert jamais de fond de page.
+- **Aucun dégradé.** Les boutons principaux sont en violet plein (`.btn-primary`), les
+  secondaires en contour (`.btn-outline`). `.btn-sm` pour le header.
+- Cards et boutons en `rounded-2xl` / `rounded-3xl`, pas de `rounded-full`.
+- Pas d'ombres : la structure passe par les bordures, comme la référence produit.
+- Échelle typographique : `48/40/32/18/16/14`. **Sentence case partout**, jamais de
   majuscules.
+- Tailwind ne sait pas appliquer d'opacité (`/85`) à une couleur définie via `var()` :
+  pour une pastille sur image, utiliser `.badge-dark`, pas `bg-violet-900/85`.
 - Le catalogue est le seul endroit à densité visuelle élevée. Tout le reste respire.
 
 ## Motion
@@ -59,6 +62,10 @@ simple fade d'opacité. Easing standard `[0.16, 1, 0.3, 1]`. Jamais de scale ni 
   vérification serveur de la propriété de la ligne.
 
 ## Interface
+
+Aucun avis client n'est inventé : `lib/testimonials.ts` est vide et la section ne s'affiche
+pas tant qu'elle l'est. Idem pour le compteur de preuve sociale du hero, alimenté par un
+vrai `count` en base (`lib/stats.ts`) et masqué sous 50.
 
 Quatre états, aucun optionnel : **vide**, **chargement**, **rempli**, **erreur**. Jamais de
 spinner nu, jamais d'écran blanc. Les messages d'erreur sont fixés dans

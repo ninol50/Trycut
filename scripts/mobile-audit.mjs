@@ -33,7 +33,10 @@ for (const path of PAGES) {
     } catch {}
   });
 
-  await page.goto(BASE + path, { waitUntil: 'networkidle' });
+  // `domcontentloaded` plutôt que `networkidle` : les scripts tiers (PostHog,
+  // fontes) peuvent être bloqués selon le réseau, l'audit ne doit pas en dépendre.
+  await page.goto(BASE + path, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1200);
 
   const audit = await page.evaluate(() => {
     const scrollW = document.documentElement.scrollWidth;

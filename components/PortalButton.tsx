@@ -40,7 +40,7 @@ export default function PortalButton() {
         whileTap={tap}
         disabled={busy}
         onClick={() => void open()}
-        className="btn-secondary w-full disabled:opacity-60"
+        className="btn-outline w-full disabled:opacity-60"
       >
         {busy ? 'Ouverture…' : 'Gérer mon abonnement'}
       </motion.button>

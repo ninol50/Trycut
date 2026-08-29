@@ -69,7 +69,7 @@ export default async function PricingPage({
                     authenticated={Boolean(user)}
                   />
                 ) : (
-                  <Link href="/onboarding/photo" className="btn-secondary w-full">
+                  <Link href="/onboarding/photo" className="btn-outline w-full">
                     Voir le catalogue
                   </Link>
                 )}

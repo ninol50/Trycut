@@ -46,7 +46,7 @@ export default function ErrorState({ kind, message, onRetry }: ErrorStateProps) 
             type="button"
             whileTap={tap}
             onClick={onRetry}
-            className={showPricing ? 'btn-secondary w-full' : 'btn-primary w-full'}
+            className={showPricing ? 'btn-outline w-full' : 'btn-primary w-full'}
           >
             Réessayer
           </motion.button>

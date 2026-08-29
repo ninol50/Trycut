@@ -34,14 +34,14 @@ export default function Faq() {
   const anim = useInView();
 
   return (
-    <motion.section {...anim} className="section py-10">
-      <h2 className="text-xl">Questions fréquentes</h2>
+    <motion.section {...anim} className="section py-14">
+      <h2 className="text-3xl">Questions fréquentes</h2>
 
-      <div className="mt-5 space-y-2">
+      <div className="mt-8 overflow-hidden rounded-3xl border border-line">
         {QUESTIONS.map(({ q, a }) => (
           <details
             key={q}
-            className="group rounded-2xl border border-violet-50 bg-white p-4 shadow-violet"
+            className="group border-b border-line px-5 py-4 last:border-b-0"
           >
             <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 font-semibold text-violet-900 marker:hidden">
               {q}

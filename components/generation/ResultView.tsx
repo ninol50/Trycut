@@ -92,7 +92,7 @@ export default function ResultView({
           whileTap={tap}
           disabled={busy || !resultUrl}
           onClick={() => void exportImage('share')}
-          className="btn-secondary w-full disabled:opacity-60"
+          className="btn-outline w-full disabled:opacity-60"
         >
           Partager
         </motion.button>

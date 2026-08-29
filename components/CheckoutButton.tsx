@@ -75,7 +75,7 @@ export default function CheckoutButton({
         whileTap={tap}
         disabled={busy}
         onClick={() => void start()}
-        className={`${variant === 'primary' ? 'btn-primary' : 'btn-secondary'} w-full disabled:opacity-60`}
+        className={`${variant === 'primary' ? 'btn-primary' : 'btn-outline'} w-full disabled:opacity-60`}
       >
         {busy ? 'Redirection…' : label}
       </motion.button>
