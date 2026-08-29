@@ -66,3 +66,28 @@ export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: 'pack' | 'pass'; credi
   999: { plan: 'pack', credits: 15 },
   1790: { plan: 'pass', credits: 50 },
 };
+
+/**
+ * Rattache un lien de paiement Stripe au compte qui clique.
+ *
+ * Sans `client_reference_id`, le webhook n'a aucun moyen de savoir à qui
+ * attribuer les coupes : les métadonnées sont vides sur un lien de paiement,
+ * et le client Stripe n'existe pas encore au premier achat. Le paiement
+ * passerait sans jamais créditer.
+ */
+export function withCheckoutReference(
+  link: string,
+  userId: string,
+  email?: string | null,
+): string {
+  try {
+    const url = new URL(link);
+    url.searchParams.set('client_reference_id', userId);
+    if (email) url.searchParams.set('prefilled_email', email);
+    return url.toString();
+  } catch {
+    // Lien mal formé : mieux vaut un paiement à rattacher à la main qu'un
+    // bouton mort.
+    return link;
+  }
+}

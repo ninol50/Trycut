@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useTapScale } from '@/components/motion';
 import { track } from '@/lib/analytics';
+import { withCheckoutReference } from '@/lib/pricing';
 
 interface CheckoutButtonProps {
   plan: 'pack' | 'pass';
@@ -12,7 +13,12 @@ interface CheckoutButtonProps {
   /** Lien de paiement Stripe. Emprunté dès qu'il est présent. */
   paymentLink?: string;
   variant?: 'primary' | 'secondary';
-  authenticated: boolean;
+  /**
+   * Compte qui clique. Il part avec le lien de paiement : sans lui, Stripe
+   * encaisse et le webhook ne sait à qui attribuer les coupes.
+   */
+  userId: string | null;
+  email?: string | null;
 }
 
 export default function CheckoutButton({
@@ -20,7 +26,8 @@ export default function CheckoutButton({
   label,
   paymentLink,
   variant = 'primary',
-  authenticated,
+  userId,
+  email,
 }: CheckoutButtonProps) {
   const router = useRouter();
   const tap = useTapScale();
@@ -28,7 +35,7 @@ export default function CheckoutButton({
   const [error, setError] = useState<string | null>(null);
 
   const start = async () => {
-    if (!authenticated) {
+    if (!userId) {
       router.push('/inscription?suite=tarifs');
       return;
     }
@@ -37,7 +44,7 @@ export default function CheckoutButton({
 
     // Lien de paiement Stripe : le plus direct, aucune clé serveur requise.
     if (paymentLink) {
-      window.location.href = paymentLink;
+      window.location.href = withCheckoutReference(paymentLink, userId, email);
       return;
     }
 

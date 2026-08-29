@@ -66,7 +66,8 @@ export default async function PricingPage({
                     paymentLink={plan.paymentLink}
                     label={`Prendre le ${plan.name.toLowerCase()}`}
                     variant={plan.highlighted ? 'primary' : 'secondary'}
-                    authenticated={Boolean(user)}
+                    userId={user?.id ?? null}
+                    email={user?.email ?? null}
                   />
                 ) : (
                   <Link href="/onboarding/photo" className="btn-outline w-full">

@@ -7,7 +7,7 @@ import { buildPrompt } from '@/lib/ai/prompt';
 import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
 import { createAnonToken, verifyAnonToken } from '@/lib/anon-token';
 import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
-import { PRICING, PLAN_BY_AMOUNT_CENTS } from '@/lib/pricing';
+import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pricing';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 20 coupes, 8 couleurs et 10 accessoires', () => {
@@ -232,4 +232,28 @@ test('le repli statique ne contient aucun prompt', () => {
   for (const item of FALLBACK_CATALOG) {
     assert.ok(!('prompt_template' in item), `prompt exposé sur ${item.slug}`);
   }
+});
+
+test('le lien de paiement emporte le compte qui clique', () => {
+  const link = withCheckoutReference(
+    'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06',
+    '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
+    'client@exemple.fr',
+  );
+  const url = new URL(link);
+
+  // Sans cet identifiant, le webhook ne sait pas qui créditer : le paiement
+  // passe et le compte reste à zéro coupe.
+  assert.equal(
+    url.searchParams.get('client_reference_id'),
+    '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
+  );
+  assert.equal(url.searchParams.get('prefilled_email'), 'client@exemple.fr');
+  assert.equal(url.origin + url.pathname, 'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06');
+});
+
+test('un email absent ne vide pas le paramètre', () => {
+  const url = new URL(withCheckoutReference('https://buy.stripe.com/abc', 'user-1', null));
+  assert.equal(url.searchParams.has('prefilled_email'), false);
+  assert.equal(url.searchParams.get('client_reference_id'), 'user-1');
 });
