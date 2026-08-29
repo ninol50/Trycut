@@ -23,3 +23,31 @@ alter table public.app_config
 -- Le garde-fou teste `current_user` et non le GUC `role` : dans une fonction
 -- security definer, `role` reste 'authenticated' et le débit de crédit aurait
 -- été annulé.
+
+-- Le garde-fou doit être `security invoker`. En `security definer`, `current_user`
+-- vaut le propriétaire de la fonction et jamais 'authenticated' : la condition
+-- n'est jamais vraie, et un compte peut se déclarer administrateur puis se
+-- créditer lui-même. Vérifié par une tentative réelle sous le rôle authenticated.
+create or replace function public.protect_profile_columns()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  if current_user in ('authenticated', 'anon') then
+    new.access_status := old.access_status;
+    new.is_admin := old.is_admin;
+    new.credits_remaining := old.credits_remaining;
+    new.plan := old.plan;
+    new.subscription_status := old.subscription_status;
+    new.stripe_customer_id := old.stripe_customer_id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_protect_columns on public.profiles;
+create trigger profiles_protect_columns
+  before update on public.profiles
+  for each row execute function public.protect_profile_columns();
