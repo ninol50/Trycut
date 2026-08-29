@@ -128,17 +128,20 @@ export async function POST(request: NextRequest) {
       webhookUrl: `${env.siteUrl}/api/webhooks/ai`,
     });
 
-    const { error: markError } = await supabase
-      .from('generations')
-      .update({ status: 'processing', provider_job_id: jobId })
-      .eq('id', generationId);
+    // Écrire directement dans `generations` ne marche pas : la table n'a qu'une
+    // politique de lecture, donc la RLS filtrait la mise à jour sans lever
+    // d'erreur et la coupe restait « en attente » pour toujours. On passe par
+    // une fonction qui vérifie la propriété de la ligne.
+    const { data: marked, error: markError } = await supabase.rpc(
+      'mark_generation_processing',
+      { p_generation_id: generationId, p_job_id: jobId },
+    );
 
-    // Cette écriture ratée en silence laissait la ligne « en attente » pour
-    // toujours : le rappel du fournisseur ne la débloque pas, et la coupe
-    // restait débitée. Le suivi la clôt maintenant après trois minutes, mais
-    // autant savoir que c'est arrivé.
-    if (markError) {
-      console.error('[generations] passage en cours de rendu', markError.message);
+    if (markError || marked !== true) {
+      console.error(
+        '[generations] passage en cours de rendu',
+        markError?.message ?? 'aucune ligne mise à jour',
+      );
     }
   } catch (providerError) {
     console.error('[generations] provider', providerError);
