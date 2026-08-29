@@ -32,19 +32,49 @@ répondent 503 avec un message explicite.
 
 Toutes sont documentées dans `.env.example`. Les indispensables :
 
-| Variable | Rôle |
-|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Base des URL de rappel (webhooks, redirections d'auth) |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client navigateur |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Serveur uniquement.** Routes API et cron |
-| `AI_PROVIDER` | `mock` (défaut) ou `fal` |
-| `AI_WEBHOOK_SECRET` | Secret partagé vérifié par `/api/webhooks/ai` |
-| `ANON_TOKEN_SECRET` | Signe le jeton d'essai anonyme httpOnly |
+**Aucune variable n'est nécessaire pour faire tourner le parcours.** L'URL et la clé
+`anon` Supabase ont des valeurs par défaut dans `lib/public-env.ts` : elles sont publiques
+par conception, et tout ce qu'elles autorisent est décidé par la RLS.
 
-> `SUPABASE_SERVICE_ROLE_KEY` contourne la RLS. Elle ne doit jamais être préfixée
-> `NEXT_PUBLIC_`, ni apparaître dans un bundle client.
+| Variable | Nécessaire pour |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | Rien sur Vercel (`VERCEL_URL` sert de repli). À renseigner avec un domaine. |
+| `NEXT_PUBLIC_SUPABASE_URL` / `_ANON_KEY` | Pointer vers un autre projet Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Uniquement** le cron de purge et `AI_PROVIDER=fal` |
+| `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` | **Créditer un compte après paiement** |
+| `RESEND_API_KEY` | Envoyer réellement les emails (sinon log console) |
+| `AI_PROVIDER` | `mock` (défaut) ou `fal` |
+
+> `SUPABASE_SERVICE_ROLE_KEY` contourne la RLS. Jamais préfixée `NEXT_PUBLIC_`, jamais
+> dans un bundle client.
+
+Vérifier l'état des intégrations sur un déploiement : **`GET /api/health`**.
 
 ---
+
+## Sécurité : pourquoi l'app tourne sur la clé publique
+
+Le parcours n'utilise pas de clé toute-puissante. Chaque requête part avec la session de
+l'utilisateur, et la RLS décide. Ce qui demande des privilèges passe par des fonctions
+`security definer` dont les garde-fous sont dans la base :
+
+- `start_generation()` — propriété du fichier, rate limit horaire, plafond mensuel puis
+  journalier, débit du crédit et insertion, dans **une seule transaction**. Les plafonds
+  sont lus dans `app_config`, pas reçus en paramètre : sinon un client authentifié
+  fixerait les siens.
+- `complete_generation()` / `fail_generation()` — le provider n'a pas de session, il prouve
+  son droit par un secret propre à la ligne. Ce secret est **révoqué en lecture au niveau
+  colonne** : même le propriétaire de la ligne ne peut pas le lire, donc personne ne peut
+  déclarer sa propre coupe réussie. Un échec rembourse la coupe, une seule fois.
+- `delete_own_account()` — ne peut effacer que `auth.uid()`.
+- `grant_credits()` reste inaccessible aux utilisateurs : seul le webhook Stripe l'appelle,
+  avec la clé service_role.
+
+Régler les plafonds se fait donc en base, pas par variable d'environnement :
+
+```sql
+update app_config set daily_generation_cap = 40, monthly_spend_cap_cents = 5000;
+```
 
 ## Setup Supabase
 
@@ -61,8 +91,9 @@ Toutes sont documentées dans `.env.example`. Les indispensables :
 
 3. Vérifier que les buckets `selfies` et `generations` sont créés et **privés**
    (`20250101000100_storage.sql` s'en charge).
-4. Dans **Authentication → URL Configuration**, ajouter
-   `<NEXT_PUBLIC_SITE_URL>/api/auth/callback` aux *Redirect URLs*.
+4. Dans **Authentication → URL Configuration** : mettre *Site URL* sur l'URL du
+   déploiement, et ajouter `<URL>/api/auth/callback` aux *Redirect URLs*. Sans ça, le lien
+   de confirmation d'email renvoie sur `localhost` et l'inscription ne peut pas aboutir.
 5. Optionnel : activer **Realtime** sur la table `generations` pour que le résultat
    s'affiche sans attendre le prochain sondage. Le polling (2 s, timeout 120 s) fonctionne
    sans.
