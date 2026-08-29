@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { env } from '@/lib/env';
+import { publicEnv } from '@/lib/public-env';
 
 export const metadata = { title: 'Confidentialité — Trycut' };
 
@@ -27,7 +28,11 @@ export default function PrivacyPage() {
           <h2 className="text-xl">Ce qu’on collecte</h2>
           <ul className="mt-3 space-y-2 text-base text-slate-500">
             <li>· La photo que tu importes, et le rendu généré à partir d’elle.</li>
-            <li>· Tes réponses au questionnaire, pour trier le catalogue.</li>
+            {/* Le questionnaire est désactivé par défaut : on n'annonce pas une
+                collecte qui n'a pas lieu. */}
+            {publicEnv.onboardingLength === 'none' ? null : (
+              <li>· Tes réponses au questionnaire, pour trier le catalogue.</li>
+            )}
             <li>· Ton email et ton prénom, si tu crées un compte.</li>
             <li>· Ton adresse IP, uniquement pour limiter les abus sur l’essai gratuit.</li>
           </ul>

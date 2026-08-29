@@ -167,7 +167,9 @@ clé serveur n'est nécessaire pour encaisser.
 Pour que le paiement **crédite réellement le compte**, il reste à brancher le webhook :
 
 1. Dans Stripe, webhook vers `<SITE_URL>/api/webhooks/stripe`, événements
-   `checkout.session.completed`, `customer.subscription.*`, `invoice.paid`.
+   `checkout.session.completed`, `customer.subscription.*`, `invoice.paid` et
+   `invoice.payment_failed` — c'est ce dernier qui coupe l'accès quand un paiement
+   est refusé.
 2. Copier le secret dans `STRIPE_WEBHOOK_SECRET`, et la clé secrète dans
    `STRIPE_SECRET_KEY`.
 3. En local : `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
