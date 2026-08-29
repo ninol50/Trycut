@@ -23,9 +23,9 @@ export default async function AdminPage() {
     <div className="section py-10">
       <h1 className="text-2xl">Inscrits</h1>
       <p className="mt-2 text-base text-slate-500">
-        L’accès au site est automatique à l’inscription. Générer une coupe demande
-        un abonnement. Tu peux bloquer un compte ici — il perd alors l’accès,
-        payé ou non.
+        Sans abonnement, un compte n’a accès à rien. Tu peux offrir l’accès à
+        quelqu’un depuis cette page : il génère alors sans payer et sans consommer
+        de coupe. Bloquer un compte lui retire l’accès, payé ou non.
       </p>
 
       {error ? (

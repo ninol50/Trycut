@@ -56,8 +56,11 @@ export function watermarkFor(profile: Profile): boolean {
  * regarder son propre produit.
  */
 export function hasPaidAccess(profile: Profile): boolean {
-  if (profile.is_admin) return true;
   if (profile.access_status === 'rejected') return false;
+
+  // Accès offert à la main depuis /admin, et administrateurs : ils entrent sans
+  // payer. Tous les autres passent par un abonnement actif.
+  if (profile.is_admin || profile.access_status === 'granted') return true;
 
   return (
     (profile.plan === 'pack' || profile.plan === 'pass') &&

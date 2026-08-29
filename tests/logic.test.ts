@@ -460,7 +460,11 @@ const profile = (over: Partial<Profile>): Profile =>
 test('sans abonnement, aucun accès', () => {
   // Un compte existe pour recevoir l'abonnement, pas pour essayer le produit.
   assert.equal(hasPaidAccess(profile({})), false);
-  assert.equal(hasPaidAccess(profile({ credits_remaining: 5 })), false, 'des coupes sans offre active ne suffisent pas');
+  assert.equal(
+    hasPaidAccess(profile({ credits_remaining: 5 })),
+    false,
+    'des coupes sans offre active ne suffisent pas',
+  );
   assert.equal(hasPaidAccess(profile({ plan: 'pack', subscription_status: 'none' })), false);
 });
 
@@ -469,12 +473,22 @@ test('un abonnement actif ouvre l’accès', () => {
   assert.equal(hasPaidAccess(profile({ plan: 'pass', subscription_status: 'active' })), true);
 });
 
-test('un impayé referme l’accès, un bannissement aussi', () => {
+test('l’accès offert ouvre l’accès sans abonnement', () => {
+  // Le seul moyen d'entrer sans payer, et il se décide à la main depuis /admin.
+  assert.equal(hasPaidAccess(profile({ access_status: 'granted' })), true);
+});
+
+test('un blocage l’emporte sur tout le reste', () => {
   assert.equal(hasPaidAccess(profile({ plan: 'pack', subscription_status: 'past_due' })), false);
   assert.equal(
-    hasPaidAccess(profile({ plan: 'pack', subscription_status: 'active', access_status: 'rejected' })),
+    hasPaidAccess(profile({ access_status: 'rejected', plan: 'pack', subscription_status: 'active' })),
     false,
-    'un compte banni passe avant l’abonnement',
+    'un compte bloqué reste bloqué même abonné',
+  );
+  assert.equal(
+    hasPaidAccess(profile({ access_status: 'rejected', is_admin: true })),
+    false,
+    'un compte bloqué reste bloqué même administrateur',
   );
 });
 

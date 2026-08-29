@@ -8,7 +8,7 @@ export interface Signup {
   id: string;
   email: string;
   first_name: string | null;
-  access_status: 'pending' | 'approved' | 'rejected';
+  access_status: 'pending' | 'approved' | 'granted' | 'rejected';
   plan: string;
   subscription_status: string;
   credits_remaining: number;
@@ -18,8 +18,9 @@ export interface Signup {
 
 const STATUS_LABEL: Record<Signup['access_status'], string> = {
   pending: 'En attente',
-  approved: 'Approuvé',
-  rejected: 'Refusé',
+  approved: 'Doit payer',
+  granted: 'Accès offert',
+  rejected: 'Bloqué',
 };
 
 const SUBSCRIPTION_LABEL: Record<string, string> = {
@@ -74,13 +75,13 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
     );
   }
 
-  const pending = rows.filter((row) => row.access_status === 'pending').length;
+  const granted = rows.filter((row) => row.access_status === 'granted').length;
 
   return (
     <>
-      {pending > 0 ? (
+      {granted > 0 ? (
         <p className="mt-6 inline-flex rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600">
-          {pending} en attente de validation
+          {granted} accès offert{granted > 1 ? 's' : ''}
         </p>
       ) : null}
 
@@ -110,7 +111,7 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
               </div>
               <span
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                  row.access_status === 'approved'
+                  row.access_status === 'granted'
                     ? 'bg-violet-600 text-white'
                     : row.access_status === 'rejected'
                       ? 'bg-violet-50 text-slate-500'
@@ -128,15 +129,27 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
             </p>
 
             <div className="mt-4 flex gap-2">
-              <motion.button
-                type="button"
-                whileTap={tap}
-                disabled={busyId === row.id || row.access_status === 'approved'}
-                onClick={() => void setStatus(row.id, 'approved')}
-                className="btn-primary flex-1 !min-h-[48px] !px-4 text-sm disabled:opacity-40"
-              >
-                Approuver
-              </motion.button>
+              {row.access_status === 'granted' ? (
+                <motion.button
+                  type="button"
+                  whileTap={tap}
+                  disabled={busyId === row.id}
+                  onClick={() => void setStatus(row.id, 'approved')}
+                  className="btn-outline flex-1 !min-h-[48px] !px-4 text-sm disabled:opacity-40"
+                >
+                  Retirer l’accès offert
+                </motion.button>
+              ) : (
+                <motion.button
+                  type="button"
+                  whileTap={tap}
+                  disabled={busyId === row.id}
+                  onClick={() => void setStatus(row.id, 'granted')}
+                  className="btn-primary flex-1 !min-h-[48px] !px-4 text-sm disabled:opacity-40"
+                >
+                  Offrir l’accès
+                </motion.button>
+              )}
               <motion.button
                 type="button"
                 whileTap={tap}
@@ -144,7 +157,7 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
                 onClick={() => void setStatus(row.id, 'rejected')}
                 className="btn-outline flex-1 !min-h-[48px] !px-4 text-sm disabled:opacity-40"
               >
-                Refuser
+                Bloquer
               </motion.button>
             </div>
           </li>

@@ -1,0 +1,22 @@
+-- Accès offert, décidé à la main par le propriétaire.
+--
+-- Depuis que l'inscription est automatique, « approved » ne distingue plus
+-- personne : tout le monde l'est. Il faut donc un état à part pour les rares
+-- comptes à qui l'accès est offert — proches, testeurs, partenaires — qui
+-- génèrent sans payer. Tous les autres passent par un abonnement actif.
+alter type access_status add value if not exists 'granted';
+
+-- Un accès offert n'a pas d'abonnement, donc pas de solde à débiter : la coupe
+-- est gratuite et le compteur ne bouge pas. Les plafonds de dépense continuent
+-- de s'appliquer — c'est la seule protection qui reste sur ces comptes.
+--
+-- Le corps complet de start_generation est appliqué par la migration
+-- correspondante côté Supabase ; il ajoute, avant tout le reste :
+--
+--   v_free := v_profile.is_admin or v_profile.access_status = 'granted';
+--
+--   if not v_free then
+--     -- impayé refusé, puis abonnement actif exigé
+--   end if;
+--
+-- puis saute consume_credit et le rattachement au grand livre quand v_free.

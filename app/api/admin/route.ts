@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
  */
 const schema = z.object({
   userId: z.string().uuid(),
-  status: z.enum(['pending', 'approved', 'rejected']),
+  status: z.enum(['approved', 'granted', 'rejected']),
 });
 
 export async function POST(request: NextRequest) {

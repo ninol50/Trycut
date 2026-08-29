@@ -28,7 +28,8 @@ export interface Profile {
   credits_remaining: number;
   photo_retention_optin: boolean;
   /** Accès accordé à la main par le propriétaire du site. */
-  access_status: 'pending' | 'approved' | 'rejected';
+  /** `granted` : accès offert à la main depuis /admin, sans abonnement. */
+  access_status: 'pending' | 'approved' | 'granted' | 'rejected';
   is_admin: boolean;
   created_at: string;
 }
