@@ -10,6 +10,7 @@ export type ErrorKind =
   | 'file'
   | 'no_face'
   | 'capacity'
+  | 'rate'
   | 'rejected'
   | 'payment';
 
@@ -21,6 +22,7 @@ export const ERROR_MESSAGES: Record<ErrorKind, string> = {
   no_face: 'On ne détecte pas de visage sur cette photo. Reprends-en une de face.',
   capacity:
     'Beaucoup de monde en ce moment. Reviens dans quelques heures ou passe en pack pour un accès prioritaire.',
+  rate: 'Tu as lancé plusieurs coupes d’affilée. Laisse passer quelques minutes et réessaie.',
   rejected: 'Ton compte n’a pas accès au service.',
   payment: 'Ton dernier paiement a été refusé. Mets ton moyen de paiement à jour.',
 };

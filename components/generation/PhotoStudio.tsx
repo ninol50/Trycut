@@ -134,7 +134,7 @@ export default function PhotoStudio({
       if (!response.ok) {
         const code = read('error');
         const known: readonly ErrorKind[] = [
-          'quota', 'capacity', 'rejected', 'payment', 'file',
+          'quota', 'capacity', 'rate', 'rejected', 'payment', 'file',
         ];
         const kind: ErrorKind = known.includes(code as ErrorKind)
           ? (code as ErrorKind)

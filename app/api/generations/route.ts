@@ -37,6 +37,11 @@ const ERRORS: Record<string, { status: number; message: string }> = {
     message: 'Il te reste 0 coupe. Prends un abonnement pour générer.',
   },
   capacity: { status: 503, message: CAPACITY_MESSAGE },
+  rate: {
+    status: 429,
+    message:
+      'Tu as lancé plusieurs coupes d’affilée. Laisse passer quelques minutes et réessaie.',
+  },
   rejected: { status: 403, message: 'Ton compte n’a pas accès au service.' },
   payment: {
     status: 402,
