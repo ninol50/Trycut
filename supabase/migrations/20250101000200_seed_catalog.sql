@@ -23,7 +23,7 @@ values
 
 ('cut-cuenca','Coupe cuenca','cut',
  array['court','raides','ondules','boucles','crepus','ovale','rond','carre','allonge','streetwear','remarque'],
- 'Give the person a Spanish cuenca haircut: rounded bowl shaped cutting line following the top of the head, straight blunt fringe across the forehead, faded short sides and nape.',
+ 'Give the person a cuenca haircut: straight hair kept longer on top and swept diagonally forward across the forehead to one side, soft rounded fringe line, tapered faded short sides and back.',
  '/reference/cut-cuenca.jpg', false, 40),
 
 ('cut-middle-part','Middle part','cut',
@@ -36,17 +36,17 @@ values
  'Give the person straight hair combed flat to one side: sleek smooth lengths with a clean side parting, no volume on top, tidy finish.',
  '/reference/cut-lisse-cote.jpg', false, 60),
 
-('cut-permanente-courte','Permanente courte','cut',
+('cut-permanente-courte','Cheveux bouclés','cut',
  array['allonge','boucles','carre','court','crepus','moderne','ondules','ovale','raides','rond'],
  'Give the person a short men''s perm: loose well defined curls about 4 cm long on top, falling slightly over the forehead, short tapered faded sides and back, natural springy curl pattern with visible separated curls.',
  '/reference/cut-permanente-courte.jpg', false, 70),
 
-('cut-permanente-mi-longue','Permanente mi-longue','cut',
+('cut-permanente-mi-longue','Cheveux bouclés mi-longs','cut',
  array['allonge','boucles','carre','crepus','mi-long','moderne','ondules','ovale','raides','rond'],
  'Give the person a medium length men''s perm: loose well defined curls about 8 cm long with full volume on top, curls falling over the forehead and covering the top of the ears, short tapered sides, natural springy separated curls.',
  '/reference/cut-permanente-mi-longue.jpg', false, 80),
 
-('cut-permanente-longue','Permanente longue','cut',
+('cut-permanente-longue','Cheveux bouclés longs','cut',
  array['allonge','boucles','carre','crepus','long','moderne','ondules','ovale','raides','rond'],
  'Give the person a long perm: loose well defined curls falling to the shoulders, abundant volume all around the head, natural springy separated curl pattern.',
  '/reference/cut-permanente-longue.jpg', false, 90),

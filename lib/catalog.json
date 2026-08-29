@@ -81,7 +81,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Give the person a Spanish cuenca haircut: rounded bowl shaped cutting line following the top of the head, straight blunt fringe across the forehead, faded short sides and nape.",
+    "prompt_template": "Give the person a cuenca haircut: straight hair kept longer on top and swept diagonally forward across the forehead to one side, soft rounded fringe line, tapered faded short sides and back.",
     "preview_path": "/reference/cut-cuenca.jpg",
     "is_premium": false,
     "sort_order": 40
@@ -133,7 +133,7 @@
   },
   {
     "slug": "cut-permanente-courte",
-    "label": "Permanente courte",
+    "label": "Cheveux bouclés",
     "category": "cut",
     "style_tags": [
       "allonge",
@@ -154,7 +154,7 @@
   },
   {
     "slug": "cut-permanente-mi-longue",
-    "label": "Permanente mi-longue",
+    "label": "Cheveux bouclés mi-longs",
     "category": "cut",
     "style_tags": [
       "allonge",
@@ -175,7 +175,7 @@
   },
   {
     "slug": "cut-permanente-longue",
-    "label": "Permanente longue",
+    "label": "Cheveux bouclés longs",
     "category": "cut",
     "style_tags": [
       "allonge",
