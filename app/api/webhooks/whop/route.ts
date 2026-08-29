@@ -9,7 +9,7 @@ import {
   extractAmountCents,
   extractEmail,
   extractUserRef,
-  planForAmount,
+  planForPayload,
   readWhopHeaders,
   verifyWhopSignature,
 } from '@/lib/whop';
@@ -122,9 +122,9 @@ async function grant(payload: unknown, admin: Admin) {
     return;
   }
 
-  const mapped = planForAmount(extractAmountCents(payload));
+  const mapped = planForPayload(payload);
   if (!mapped) {
-    console.error('[webhooks/whop] montant inconnu', extractAmountCents(payload));
+    console.error('[webhooks/whop] offre inconnue', extractAmountCents(payload));
     return;
   }
 

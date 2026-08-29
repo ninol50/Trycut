@@ -24,9 +24,21 @@ export interface PricingPlan {
  * doit retomber sur le défaut.
  */
 const LINK_HEBDO =
-  process.env.NEXT_PUBLIC_WHOP_LINK_HEBDO || 'https://whop.com/ldn1/abonnement-trycut-pro/';
+  process.env.NEXT_PUBLIC_WHOP_LINK_HEBDO || 'https://whop.com/checkout/plan_TgQeVRautIvVk';
 const LINK_MENSUEL =
-  process.env.NEXT_PUBLIC_WHOP_LINK_MENSUEL || 'https://whop.com/ldn1/abonnement-max/';
+  process.env.NEXT_PUBLIC_WHOP_LINK_MENSUEL || 'https://whop.com/checkout/plan_FqNwkkzr18mMH';
+
+/**
+ * Identifiants d'offre Whop, lisibles dans les liens de paiement ci-dessus.
+ *
+ * C'est le rattachement le plus sûr : le webhook porte cet identifiant, alors
+ * que le montant dépend de la devise et de l'unité choisies par Whop. On s'en
+ * sert d'abord, le montant ne servant que de repli.
+ */
+export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
+  pack: 'plan_TgQeVRautIvVk',
+  pass: 'plan_FqNwkkzr18mMH',
+};
 
 /**
  * Deux offres, et la mensuelle est volontairement la meilleure affaire :
@@ -109,7 +121,6 @@ export function withCheckoutReference(
 ): string {
   try {
     const url = new URL(link);
-    url.searchParams.set('d2c', 'true');
     if (email) url.searchParams.set('email', email);
     // Repère de secours, lisible dans le tableau de bord Whop si un paiement
     // doit être rattaché à la main.

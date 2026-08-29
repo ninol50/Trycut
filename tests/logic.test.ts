@@ -13,8 +13,11 @@ import {
   verifyWhopSignature,
   extractEmail,
   extractAmountCents,
+  extractPlanId,
   planForAmount,
+  planForPayload,
 } from '@/lib/whop';
+import { CREDITS_BY_PLAN, WHOP_PLAN_IDS } from '@/lib/pricing';
 import { hasPaidAccess } from '@/lib/profile';
 import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
@@ -281,14 +284,44 @@ test('le mensuel reste la meilleure affaire face à l’hebdomadaire', () => {
   );
 });
 
-test('les offres payantes portent une page de paiement Whop', () => {
+test('chaque offre payante pointe vers son propre paiement Whop', () => {
   for (const plan of PRICING) {
     if (plan.credits === 0) {
       assert.equal(plan.paymentLink, undefined);
       continue;
     }
-    assert.match(plan.paymentLink ?? '', /^https:\/\/whop\.com\//);
+    assert.match(plan.paymentLink ?? '', /^https:\/\/whop\.com\/checkout\/plan_/);
+
+    // Le lien et la table de correspondance doivent désigner la même offre,
+    // sinon on crédite l'offre d'à côté.
+    const id = WHOP_PLAN_IDS[plan.id as 'pack' | 'pass'];
+    assert.ok(
+      plan.paymentLink?.endsWith(id),
+      `${plan.name} : le lien ne correspond pas à l’identifiant ${id}`,
+    );
   }
+
+  const ids = Object.values(WHOP_PLAN_IDS);
+  assert.equal(new Set(ids).size, ids.length, 'deux offres partagent le même identifiant');
+});
+
+test('l’identifiant d’offre l’emporte sur le montant', () => {
+  // Le montant peut arriver dans une unité inattendue ; l'identifiant, non.
+  const payload = {
+    action: 'payment.succeeded',
+    data: { final_amount: 3, plan: { id: WHOP_PLAN_IDS.pass } },
+  };
+  assert.equal(extractPlanId(payload), WHOP_PLAN_IDS.pass);
+  assert.deepEqual(planForPayload(payload), { plan: 'pass', credits: CREDITS_BY_PLAN.pass });
+
+  // Sans identifiant connu, on retombe sur le montant.
+  assert.deepEqual(planForPayload({ data: { final_amount: 3 } }), {
+    plan: 'pack',
+    credits: CREDITS_BY_PLAN.pack,
+  });
+
+  // Ni l'un ni l'autre : on ne crédite rien.
+  assert.equal(planForPayload({ data: { final_amount: 7.5 } }), null);
 });
 
 test('le montant facturé suffit à retrouver l’offre', () => {
@@ -347,7 +380,7 @@ test('le repli statique ne contient aucun prompt', () => {
 
 test('le lien de paiement emporte le compte qui clique', () => {
   const link = withCheckoutReference(
-    'https://whop.com/ldn1/abonnement-max/',
+    'https://whop.com/checkout/plan_FqNwkkzr18mMH',
     '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
     'client@exemple.fr',
   );
@@ -357,11 +390,11 @@ test('le lien de paiement emporte le compte qui clique', () => {
   // le compte reste à zéro coupe.
   assert.equal(url.searchParams.get('email'), 'client@exemple.fr');
   assert.equal(url.searchParams.get('ref'), '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2');
-  assert.equal(url.origin + url.pathname, 'https://whop.com/ldn1/abonnement-max/');
+  assert.equal(url.origin + url.pathname, 'https://whop.com/checkout/plan_FqNwkkzr18mMH');
 });
 
 test('un email absent ne vide pas le paramètre', () => {
-  const url = new URL(withCheckoutReference('https://whop.com/ldn1/abonnement-max/', 'user-1', null));
+  const url = new URL(withCheckoutReference('https://whop.com/checkout/plan_FqNwkkzr18mMH', 'user-1', null));
   assert.equal(url.searchParams.has('email'), false);
   assert.equal(url.searchParams.get('ref'), 'user-1');
 });
@@ -738,10 +771,11 @@ test('les offres affichées correspondent aux montants encaissés', () => {
 
 test('le lien de paiement emporte l’email du compte', () => {
   const link = withCheckoutReference(
-    'https://whop.com/ldn1/abonnement-max/',
+    'https://whop.com/checkout/plan_FqNwkkzr18mMH',
     '11111111-2222-3333-4444-555555555555',
     'client@example.com',
   );
   assert.ok(link.includes('email=client%40example.com'), 'email absent du lien');
   assert.ok(link.includes('11111111-2222-3333-4444-555555555555'), 'repère de compte absent');
+  assert.ok(link.startsWith('https://whop.com/checkout/plan_'), 'lien de paiement altéré');
 });

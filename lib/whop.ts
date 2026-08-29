@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { PLAN_BY_AMOUNT_CENTS } from '@/lib/pricing';
+import { CREDITS_BY_PLAN, PLAN_BY_AMOUNT_CENTS, WHOP_PLAN_IDS } from '@/lib/pricing';
 
 /**
  * Whop signe ses webhooks selon la spécification Standard Webhooks :
@@ -128,6 +128,38 @@ export function extractUserRef(payload: unknown): string | null {
 export function planForAmount(cents: number | null): { plan: 'pack' | 'pass'; credits: number } | null {
   if (cents === null) return null;
   return PLAN_BY_AMOUNT_CENTS[cents] ?? null;
+}
+
+/** Identifiant d'offre Whop porté par le message, s'il y en a un. */
+export function extractPlanId(payload: unknown): string | null {
+  const found: string[] = [];
+  const known = new Set(Object.values(WHOP_PLAN_IDS));
+
+  walk(payload, (_key, value) => {
+    if (typeof value === 'string' && known.has(value)) found.push(value);
+  });
+
+  return found[0] ?? null;
+}
+
+/**
+ * Offre achetée. L'identifiant d'offre l'emporte : il est stable, alors que le
+ * montant dépend de la devise et de l'unité. Le montant ne sert que si aucun
+ * identifiant connu n'apparaît dans le message.
+ */
+export function planForPayload(payload: unknown): { plan: 'pack' | 'pass'; credits: number } | null {
+  const planId = extractPlanId(payload);
+  if (planId) {
+    for (const [plan, id] of Object.entries(WHOP_PLAN_IDS)) {
+      if (id === planId) {
+        // Le nombre de coupes vient des offres, jamais recopié ici : sinon
+        // l'affichage et le crédit finissent par diverger en silence.
+        const key = plan as 'pack' | 'pass';
+        return { plan: key, credits: CREDITS_BY_PLAN[key] };
+      }
+    }
+  }
+  return planForAmount(extractAmountCents(payload));
 }
 
 /** Événements qui accordent l'accès, et ceux qui le referment. */
