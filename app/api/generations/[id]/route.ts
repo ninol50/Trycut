@@ -46,6 +46,28 @@ export async function GET(
     return signed?.signedUrl ?? null;
   };
 
+  // Une coupe restée « en cours » trop longtemps ne se débloquera jamais seule :
+  // le rappel du fournisseur n'arrivera pas. On la clôt et on rend la coupe.
+  // La base refuse d'agir avant le délai, donc ce n'est pas une annulation
+  // à la demande.
+  if (generation.status === 'queued' || generation.status === 'processing') {
+    const { data: expired } = await supabase.rpc('expire_stale_generation', {
+      p_generation_id: id,
+    });
+
+    if (expired === true) {
+      return NextResponse.json({
+        id: generation.id,
+        status: 'failed',
+        errorCode: 'provider',
+        errorMessage: 'Le service de rendu n’a pas répondu. Ta coupe t’a été rendue.',
+        resultUrl: null,
+        sourceUrl: await sign(UPLOAD_BUCKET, generation.source_path),
+        watermarked: generation.watermarked,
+      });
+    }
+  }
+
   const resultUrl =
     generation.status === 'succeeded' && generation.result_path
       ? await sign(generation.result_bucket, generation.result_path)

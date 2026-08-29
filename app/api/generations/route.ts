@@ -123,10 +123,18 @@ export async function POST(request: NextRequest) {
       webhookUrl: `${env.siteUrl}/api/webhooks/ai`,
     });
 
-    await supabase
+    const { error: markError } = await supabase
       .from('generations')
       .update({ status: 'processing', provider_job_id: jobId })
       .eq('id', generationId);
+
+    // Cette écriture ratée en silence laissait la ligne « en attente » pour
+    // toujours : le rappel du fournisseur ne la débloque pas, et la coupe
+    // restait débitée. Le suivi la clôt maintenant après trois minutes, mais
+    // autant savoir que c'est arrivé.
+    if (markError) {
+      console.error('[generations] passage en cours de rendu', markError.message);
+    }
   } catch (providerError) {
     console.error('[generations] provider', providerError);
     await supabase.rpc('fail_generation', {
