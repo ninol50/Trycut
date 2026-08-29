@@ -15,7 +15,6 @@ export const CATALOG_SEED: readonly CatalogSeed[] = catalog as CatalogSeed[];
  * Repli hors Supabase : le slug fait office d'id, et le prompt est retiré —
  * ce repli alimente l'affichage, jamais la génération.
  */
-export const FALLBACK_CATALOG: readonly PublicCatalogItem[] = CATALOG_SEED.map((item) => {
-  const { prompt_template: _prompt, ...visible } = item;
-  return { ...visible, id: item.slug };
-});
+export const FALLBACK_CATALOG: readonly PublicCatalogItem[] = CATALOG_SEED.map(
+  ({ prompt_template: _unused, ...visible }) => ({ ...visible, id: visible.slug }),
+);
