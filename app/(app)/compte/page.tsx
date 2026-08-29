@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import PortalButton from '@/components/PortalButton';
 import DeleteAccountButton from '@/components/DeleteAccountButton';
 import { loadProfile } from '@/lib/profile';
 import type { Plan, SubscriptionStatus } from '@/types/db';
@@ -61,7 +60,6 @@ export default async function AccountPage({
         <Link href="/tarifs" className="btn-primary w-full">
           Voir les offres
         </Link>
-        <PortalButton />
       </div>
 
       <div className="mt-10 border-t border-violet-50 pt-6">

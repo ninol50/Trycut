@@ -104,7 +104,7 @@ export function sendSubscriptionEmail(to: string, planName: string, credits: num
       `Ton ${planName} est actif.`,
       `<p style="margin:0 0 12px">${credits} coupes viennent d'être créditées sur ton compte.</p>
        <p style="margin:0">Elles se renouvellent chaque mois et ne sont pas reportables.
-       Tu peux résilier à tout moment depuis ton compte.</p>`,
+       Tu peux résilier à tout moment en répondant à cet email.</p>`,
       { href: `${env.siteUrl}/app`, label: 'Générer une coupe' },
     ),
   });

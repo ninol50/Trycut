@@ -83,8 +83,8 @@ export default async function PricingPage({
           <p className="font-semibold text-violet-900">Bon à savoir</p>
           <p className="mt-2">Les coupes ne sont pas reportables d’un mois sur l’autre.</p>
           <p className="mt-2">
-            Tu peux résilier à tout moment depuis ton compte. L’accès reste actif jusqu’à la
-            fin de la période déjà payée.
+            Tu peux résilier à tout moment en écrivant à trycutsee@hotmail.com. L’accès reste
+            actif jusqu’à la fin de la période déjà payée.
           </p>
         </div>
       </main>
