@@ -7,6 +7,8 @@ import { CAPACITY_MESSAGE } from '@/lib/limits';
 import { UPLOAD_BUCKET } from '@/lib/storage';
 import { getProvider } from '@/lib/ai/provider';
 import { buildPrompt, type PromptContext } from '@/lib/ai/prompt';
+import { referenceUrlFor, REFERENCE_CLAUSE } from '@/lib/ai/reference';
+import { loadCatalog } from '@/lib/catalog-server';
 
 export const runtime = 'nodejs';
 
@@ -128,13 +130,31 @@ export async function POST(request: NextRequest) {
     if (!signed?.signedUrl) throw new Error('URL signée indisponible');
 
     const context: PromptContext = profile ?? {};
+
+    // Photos de référence : elles montrent la coupe au lieu de la décrire. Les
+    // slugs viennent du catalogue public, jamais du corps de la requête.
+    const catalog = await loadCatalog();
+    const referenceUrls = catalogItemIds
+      .map((id) => catalog.find((item) => item.id === id)?.slug)
+      .filter((slug): slug is string => typeof slug === 'string')
+      .map((slug) => referenceUrlFor(slug))
+      .filter((url): url is string => url !== null);
+
+    const prompt = [
+      buildPrompt(row.prompt_templates, row.categories, context),
+      referenceUrls.length > 0 ? REFERENCE_CLAUSE : '',
+    ]
+      .filter((part) => part.length > 0)
+      .join(' ');
+
     const { jobId } = await getProvider().generate({
       imageUrl: signed.signedUrl,
-      prompt: buildPrompt(row.prompt_templates, row.categories, context),
+      prompt,
       generationId,
       callbackSecret,
       sourcePath: imagePath,
       webhookUrl: `${env.siteUrl}/api/webhooks/ai`,
+      referenceUrls,
     });
 
     // Écrire directement dans `generations` ne marche pas : la table n'a qu'une

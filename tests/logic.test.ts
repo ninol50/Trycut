@@ -419,3 +419,15 @@ test('la portée nomme les deux familles quand deux sont choisies', () => {
   assert.match(prompt, /Change only the hair on the head and the facial hair\./);
   assert.match(prompt, /Do not change the face/);
 });
+
+test('la vignette et la référence sont le même fichier', () => {
+  // Une seule photo à déposer par style : elle s'affiche dans le catalogue et
+  // sert de référence au modèle.
+  for (const item of CATALOG_SEED) {
+    assert.equal(
+      item.preview_path,
+      `/reference/${item.slug}.jpg`,
+      `chemin de vignette inattendu pour ${item.slug}`,
+    );
+  }
+});

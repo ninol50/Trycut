@@ -12,6 +12,8 @@ export interface GenerateInput {
   callbackSecret: string;
   /** Chemin de la photo source, réutilisé par le mock comme résultat. */
   sourcePath: string;
+  /** Photos de référence des styles demandés. Vide si aucune n'est déposée. */
+  referenceUrls?: readonly string[];
   /** URL de rappel. */
   webhookUrl: string;
 }
@@ -76,6 +78,13 @@ async function scheduleMockCallback(input: GenerateInput, jobId: string): Promis
 const FAL_MODEL = 'fal-ai/flux-pro/kontext';
 
 /**
+ * Variante multi-images, utilisée dès qu'une photo de référence accompagne la
+ * demande. Si elle n'est pas disponible, on retombe sur le modèle simple : une
+ * référence absente dégrade la fidélité, elle ne doit pas casser le rendu.
+ */
+const FAL_MODEL_MULTI = 'fal-ai/flux-pro/kontext/max/multi';
+
+/**
  * FalProvider : stub prêt à brancher. Actif dès que `AI_PROVIDER=fal`
  * et que `FAL_KEY` est renseignée.
  */
@@ -85,26 +94,44 @@ export const falProvider: AiProvider = {
     const key = env.falKey;
     if (!key) throw new Error('FAL_KEY manquante alors que AI_PROVIDER=fal');
 
-    const response = await fetch(
-      buildFalEndpoint(FAL_MODEL, input.webhookUrl, input.generationId, input.callbackSecret),
-      {
+    const references = input.referenceUrls ?? [];
+
+    const common = {
+      prompt: input.prompt,
+      num_images: 1,
+      output_format: 'jpeg',
+      // Par défaut le modèle s'autorise à réinterpréter largement la photo.
+      // Une adhérence plus forte le tient à la consigne et au visage
+      // d'origine ; au-delà, le rendu se fige et devient artificiel.
+      guidance_scale: 4.5,
+    };
+
+    const submit = async (model: string, body: unknown) =>
+      fetch(buildFalEndpoint(model, input.webhookUrl, input.generationId, input.callbackSecret), {
         method: 'POST',
         headers: {
           authorization: `Key ${key}`,
           'content-type': 'application/json',
         },
-        body: JSON.stringify({
-          prompt: input.prompt,
-          image_url: input.imageUrl,
-          num_images: 1,
-          output_format: 'jpeg',
-          // Par défaut le modèle s'autorise à réinterpréter largement la photo.
-          // Une adhérence plus forte le tient à la consigne et au visage
-          // d'origine ; au-delà, le rendu se fige et devient artificiel.
-          guidance_scale: 4.5,
-        }),
-      },
-    );
+        body: JSON.stringify(body),
+      });
+
+    let response =
+      references.length > 0
+        ? await submit(FAL_MODEL_MULTI, {
+            ...common,
+            image_urls: [input.imageUrl, ...references],
+          })
+        : await submit(FAL_MODEL, { ...common, image_url: input.imageUrl });
+
+    // Une référence est un bonus, jamais une condition : si la variante
+    // multi-images refuse la demande, on refait le rendu sans elle plutôt que
+    // de rendre une coupe impossible à générer.
+    if (!response.ok && references.length > 0) {
+      const detail = await response.text();
+      console.error('[fal] variante multi-images indisponible', response.status, detail.slice(0, 200));
+      response = await submit(FAL_MODEL, { ...common, image_url: input.imageUrl });
+    }
 
     if (!response.ok) {
       const detail = await response.text();
