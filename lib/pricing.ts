@@ -16,11 +16,12 @@ export interface PricingPlan {
 /**
  * Liens de paiement Stripe. Publics par nature (ils sont dans le HTML),
  * surchargeables par variable d'environnement pour passer en test.
+ * `||` et non `??` : une variable définie mais vide doit retomber sur le défaut.
  */
 const PAYMENT_LINK_PACK =
-  process.env.NEXT_PUBLIC_STRIPE_LINK_PACK ?? 'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06';
+  process.env.NEXT_PUBLIC_STRIPE_LINK_PACK || 'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06';
 const PAYMENT_LINK_PASS =
-  process.env.NEXT_PUBLIC_STRIPE_LINK_PASS ?? 'https://buy.stripe.com/28EcN40SV51tgcSaZq2wU07';
+  process.env.NEXT_PUBLIC_STRIPE_LINK_PASS || 'https://buy.stripe.com/28EcN40SV51tgcSaZq2wU07';
 
 export const PRICING: readonly PricingPlan[] = [
   {

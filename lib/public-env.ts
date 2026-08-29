@@ -8,7 +8,17 @@
  * sinon les URL de rappel (webhook IA, redirection d'auth) pointeraient sur
  * localhost en production.
  */
-const vercelHost = process.env.NEXT_PUBLIC_VERCEL_URL ?? '';
+/**
+ * Vercel définit ses variables même vides. `??` ne les rattrape donc pas :
+ * partout ici on utilise `||`, sinon une variable vide écrase la valeur par
+ * défaut. C'est ce qui avait mis `api_host: ""` sur PostHog en production.
+ *
+ * `VERCEL_PROJECT_PRODUCTION_URL` est stable d'un déploiement à l'autre, à la
+ * différence de `VERCEL_URL` qui change à chaque build — les liens de
+ * confirmation d'email doivent viser une URL déclarée chez Supabase.
+ */
+const stableHost = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || '';
+const vercelHost = process.env.NEXT_PUBLIC_VERCEL_URL || '';
 
 const DEFAULT_SUPABASE_URL = 'https://otgqqrrbanuyiqfspsrm.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY =
@@ -17,7 +27,9 @@ const DEFAULT_SUPABASE_ANON_KEY =
 export const publicEnv = {
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL ||
-    (vercelHost ? `https://${vercelHost}` : 'http://localhost:3000'),
+    (stableHost ? `https://${stableHost}` : '') ||
+    (vercelHost ? `https://${vercelHost}` : '') ||
+    'http://localhost:3000',
   /**
    * Projet Supabase par défaut. L'URL et la clé « anon » sont publiques par
    * conception : elles partent dans le navigateur de chaque visiteur, et tout
@@ -29,7 +41,7 @@ export const publicEnv = {
   posthogKey:
     process.env.NEXT_PUBLIC_POSTHOG_KEY ||
     'phc_xVtzU2fWPFv6r924D6Go3EpQhEPgirGvcSDZDjBNSZy4',
-  posthogHost: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+  posthogHost: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com',
   /**
    * `none` (défaut) : pas de questionnaire, on va droit à l'import photo.
    * `short` / `full` restent servis pour comparer les parcours par la donnée.
@@ -39,6 +51,6 @@ export const publicEnv = {
     : process.env.NEXT_PUBLIC_ONBOARDING_LENGTH === 'full'
       ? 'full'
       : 'none') as 'none' | 'short' | 'full',
-  stripeLinkPack: process.env.NEXT_PUBLIC_STRIPE_LINK_PACK ?? '',
-  stripeLinkPass: process.env.NEXT_PUBLIC_STRIPE_LINK_PASS ?? '',
+  stripeLinkPack: process.env.NEXT_PUBLIC_STRIPE_LINK_PACK || '',
+  stripeLinkPass: process.env.NEXT_PUBLIC_STRIPE_LINK_PASS || '',
 } as const;

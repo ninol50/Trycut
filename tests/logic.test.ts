@@ -194,3 +194,30 @@ test('le jeton de rappel du webhook IA est signé par génération', async () =>
   assert.equal(verifyWebhookToken(id, null), false);
   assert.equal(verifyWebhookToken(id, 'court'), false);
 });
+
+// ------------------------------------------- variables vides côté Vercel
+test('une variable définie mais vide retombe sur la valeur par défaut', async () => {
+  // Vercel définit ses variables même vides : `??` ne les rattrape pas, `||` si.
+  // C'est ce qui avait envoyé `api_host: ""` à PostHog en production.
+  const before = process.env['NEXT_PUBLIC_POSTHOG_HOST'];
+  process.env['NEXT_PUBLIC_POSTHOG_HOST'] = '';
+
+  const source = await import('node:fs').then((fs) =>
+    fs.readFileSync('lib/public-env.ts', 'utf8'),
+  );
+
+  if (before === undefined) delete process.env['NEXT_PUBLIC_POSTHOG_HOST'];
+  else process.env['NEXT_PUBLIC_POSTHOG_HOST'] = before;
+
+  // Aucun `??` ne doit subsister sur une variable d'environnement publique.
+  const risky = source.match(/process\.env\.NEXT_PUBLIC_\w+\s*\?\?/g) ?? [];
+  assert.deepEqual(risky, [], `repli fragile : ${risky.join(', ')}`);
+});
+
+test('les liens de paiement ne peuvent pas être vidés par une variable vide', async () => {
+  const source = await import('node:fs').then((fs) =>
+    fs.readFileSync('lib/pricing.ts', 'utf8'),
+  );
+  const risky = source.match(/process\.env\.NEXT_PUBLIC_\w+\s*\?\?/g) ?? [];
+  assert.deepEqual(risky, [], `repli fragile : ${risky.join(', ')}`);
+});
