@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CATEGORY_LABELS } from '@/lib/catalog';
 import { useTapScale } from '@/components/motion';
-import type { CatalogItem } from '@/types/db';
+import type { PublicCatalogItem } from '@/types/db';
 
 interface CatalogPickerProps {
-  items: readonly CatalogItem[];
+  items: readonly PublicCatalogItem[];
   selectedId: string | null;
-  onSelect: (item: CatalogItem) => void;
+  onSelect: (item: PublicCatalogItem) => void;
   lockedPremium: boolean;
 }
 

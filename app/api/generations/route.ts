@@ -6,7 +6,6 @@ import { CAPACITY_MESSAGE } from '@/lib/limits';
 import { UPLOAD_BUCKET } from '@/lib/storage';
 import { getProvider } from '@/lib/ai/provider';
 import { buildPrompt, type PromptContext } from '@/lib/ai/prompt';
-import type { CatalogItem } from '@/types/db';
 
 export const runtime = 'nodejs';
 
@@ -59,20 +58,9 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createServerSupabase();
 
-  const { data: item } = await supabase
-    .from('catalog_items')
-    .select('*')
-    .eq('id', catalogItemId)
-    .maybeSingle<CatalogItem>();
-
-  if (!item) {
-    return NextResponse.json(
-      { error: 'file', message: 'Ce style n’existe plus.' },
-      { status: 404 },
-    );
-  }
-
   // --- réservation, débit et insertion, en une transaction ------------------
+  // `start_generation` renvoie aussi le gabarit de prompt : la colonne n'est
+  // pas lisible par le client, elle ne transite que par cette fonction.
   const { data, error } = await supabase.rpc('start_generation', {
     p_catalog_item_id: catalogItemId,
     p_source_path: imagePath,
@@ -87,10 +75,16 @@ export async function POST(request: NextRequest) {
   }
 
   const row = (Array.isArray(data) ? data[0] : data) as
-    | { generation_id: string | null; callback_secret: string | null; credits_left: number; error_code: string | null }
+    | {
+        generation_id: string | null;
+        callback_secret: string | null;
+        credits_left: number;
+        prompt_template: string | null;
+        error_code: string | null;
+      }
     | undefined;
 
-  if (!row || row.error_code || !row.generation_id || !row.callback_secret) {
+  if (!row || row.error_code || !row.generation_id || !row.callback_secret || !row.prompt_template) {
     const code = row?.error_code ?? 'network';
     const mapped = ERRORS[code] ?? { status: 502, message: 'La connexion a été interrompue. Réessaie.' };
     return NextResponse.json({ error: code, message: mapped.message }, { status: mapped.status });
@@ -109,7 +103,7 @@ export async function POST(request: NextRequest) {
     const context: PromptContext = profile ?? {};
     const { jobId } = await getProvider().generate({
       imageUrl: signed.signedUrl,
-      prompt: buildPrompt(item, context),
+      prompt: buildPrompt(row.prompt_template, context),
       generationId,
       callbackSecret,
       sourcePath: imagePath,

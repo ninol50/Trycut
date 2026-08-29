@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { FALLBACK_CATALOG } from '@/lib/catalog-data';
+import { CATALOG_SEED, FALLBACK_CATALOG } from '@/lib/catalog-data';
 import { rankCatalog, recommendedItems, scoreItem } from '@/lib/catalog';
 import { buildPrompt } from '@/lib/ai/prompt';
 import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
@@ -77,9 +77,13 @@ test('« je ne sais pas » est neutre, il ne pénalise rien', () => {
 
 // --------------------------------------------------------------------- prompt
 test('le prompt interpole les variables du profil', () => {
-  const item = FALLBACK_CATALOG.find((candidate) => candidate.slug === 'cut-fade-bas');
+  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-fade-bas');
   assert.ok(item);
-  const prompt = buildPrompt(item, { texture: 'crepus', length: 'court', beard: 'fournie' });
+  const prompt = buildPrompt(item.prompt_template, {
+    texture: 'crepus',
+    length: 'court',
+    beard: 'fournie',
+  });
 
   assert.match(prompt, /crépus/);
   assert.match(prompt, /courte/);
@@ -88,8 +92,8 @@ test('le prompt interpole les variables du profil', () => {
 });
 
 test('aucune variable ne subsiste sur l’ensemble du catalogue', () => {
-  for (const item of FALLBACK_CATALOG) {
-    const prompt = buildPrompt(item, {});
+  for (const item of CATALOG_SEED) {
+    const prompt = buildPrompt(item.prompt_template, {});
     assert.doesNotMatch(prompt, /\{\{\w+\}\}/, `variable non résolue dans ${item.slug}`);
   }
 });
@@ -220,4 +224,12 @@ test('les liens de paiement ne peuvent pas être vidés par une variable vide', 
   );
   const risky = source.match(/process\.env\.NEXT_PUBLIC_\w+\s*\?\?/g) ?? [];
   assert.deepEqual(risky, [], `repli fragile : ${risky.join(', ')}`);
+});
+
+test('le repli statique ne contient aucun prompt', () => {
+  // Le gabarit ne doit jamais atteindre le navigateur : Postgres le refuse déjà
+  // au client, le repli doit tenir la même ligne.
+  for (const item of FALLBACK_CATALOG) {
+    assert.ok(!('prompt_template' in item), `prompt exposé sur ${item.slug}`);
+  }
 });

@@ -1,4 +1,4 @@
-import type { CatalogItem } from '@/types/db';
+import type { PublicCatalogItem } from '@/types/db';
 import {
   answerAsArray,
   answerAsString,
@@ -12,7 +12,7 @@ import {
  */
 
 export interface ScoredItem {
-  item: CatalogItem;
+  item: PublicCatalogItem;
   score: number;
 }
 
@@ -35,7 +35,7 @@ function scoreDimension(
   return tagsInDimension.includes(answer) ? weight : -weight;
 }
 
-export function scoreItem(item: CatalogItem, answers: OnboardingAnswers): number {
+export function scoreItem(item: PublicCatalogItem, answers: OnboardingAnswers): number {
   const tags = item.style_tags;
   let score = 0;
 
@@ -67,7 +67,7 @@ export function scoreItem(item: CatalogItem, answers: OnboardingAnswers): number
 
 /** Trie le catalogue par pertinence. Rien n'est masqué : tout reste accessible. */
 export function rankCatalog(
-  items: readonly CatalogItem[],
+  items: readonly PublicCatalogItem[],
   answers: OnboardingAnswers,
 ): ScoredItem[] {
   return items
@@ -77,17 +77,17 @@ export function rankCatalog(
 
 /** Les N entrées réellement recommandées (score positif), N=12 par défaut. */
 export function recommendedItems(
-  items: readonly CatalogItem[],
+  items: readonly PublicCatalogItem[],
   answers: OnboardingAnswers,
   limit = 12,
-): CatalogItem[] {
+): PublicCatalogItem[] {
   const ranked = rankCatalog(items, answers);
   const positive = ranked.filter((scored) => scored.score > 0);
   const pool = positive.length >= limit ? positive : ranked;
   return pool.slice(0, limit).map((scored) => scored.item);
 }
 
-export const CATEGORY_LABELS: Record<CatalogItem['category'], string> = {
+export const CATEGORY_LABELS: Record<PublicCatalogItem['category'], string> = {
   cut: 'Coupes',
   color: 'Couleurs',
   accessory: 'Accessoires',

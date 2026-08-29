@@ -30,6 +30,10 @@ export interface Profile {
   created_at: string;
 }
 
+/** Ce que le client peut voir. `prompt_template` en est volontairement absent :
+ *  la colonne n'est pas lisible par anon/authenticated côté Postgres non plus. */
+export type PublicCatalogItem = Omit<CatalogItem, 'prompt_template'>;
+
 export interface CatalogItem {
   id: string;
   slug: string;

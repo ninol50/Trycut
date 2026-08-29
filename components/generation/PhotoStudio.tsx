@@ -13,10 +13,10 @@ import { UPLOAD_MESSAGES } from '@/lib/upload';
 import { rankCatalog } from '@/lib/catalog';
 import { readAnswers, answerAsString } from '@/lib/onboarding';
 import { track } from '@/lib/analytics';
-import type { CatalogItem } from '@/types/db';
+import type { PublicCatalogItem } from '@/types/db';
 
 interface PhotoStudioProps {
-  items: readonly CatalogItem[];
+  items: readonly PublicCatalogItem[];
   /** Route de suivi. L'id est ajouté en query string. */
   nextBasePath: string;
   lockedPremium: boolean;
@@ -40,7 +40,7 @@ export default function PhotoStudio({
   const [consented, setConsented] = useState<boolean | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
-  const [selected, setSelected] = useState<CatalogItem | null>(null);
+  const [selected, setSelected] = useState<PublicCatalogItem | null>(null);
   const [error, setError] = useState<{ kind: ErrorKind; message?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [answers, setAnswers] = useState(() => ({}) as ReturnType<typeof readAnswers>);

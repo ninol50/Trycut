@@ -1,9 +1,8 @@
-import type { CatalogItem } from '@/types/db';
-
 /**
  * Interpolation du `prompt_template` — **serveur uniquement**.
- * L'utilisateur n'envoie jamais de texte libre : le client ne transmet
- * qu'un `catalogItemId`. Toute variable inconnue est vidée.
+ * Le gabarit ne vient pas du client : il est lu en base par `start_generation`,
+ * la colonne n'étant pas lisible par anon/authenticated. L'utilisateur ne
+ * transmet qu'un `catalogItemId`. Toute variable inconnue est vidée.
  */
 
 export interface PromptContext {
@@ -35,7 +34,7 @@ const BEARD_LABELS: Record<string, string> = {
   'a-tester': 'courte',
 };
 
-export function buildPrompt(item: CatalogItem, context: PromptContext): string {
+export function buildPrompt(template: string, context: PromptContext): string {
   const values: Record<string, string> = {
     texture: TEXTURE_LABELS[context.texture ?? ''] ?? 'naturels',
     length: LENGTH_LABELS[context.length ?? ''] ?? 'actuelle',
@@ -44,5 +43,5 @@ export function buildPrompt(item: CatalogItem, context: PromptContext): string {
     hairline: context.hairline ?? 'inchangée',
   };
 
-  return item.prompt_template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => values[key] ?? '');
+  return template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => values[key] ?? '');
 }
