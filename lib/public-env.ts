@@ -3,8 +3,17 @@
  * Elles DOIVENT être lues en accès statique `process.env.NEXT_PUBLIC_X` :
  * Next.js n'inline pas les accès dynamiques `process.env[nom]` côté client.
  */
+/**
+ * Vercel expose l'hôte du déploiement. Sans `NEXT_PUBLIC_SITE_URL`, on s'en sert :
+ * sinon les URL de rappel (webhook IA, redirection d'auth) pointeraient sur
+ * localhost en production.
+ */
+const vercelHost = process.env.NEXT_PUBLIC_VERCEL_URL ?? '';
+
 export const publicEnv = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  siteUrl:
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (vercelHost ? `https://${vercelHost}` : 'http://localhost:3000'),
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
   posthogKey: process.env.NEXT_PUBLIC_POSTHOG_KEY ?? '',

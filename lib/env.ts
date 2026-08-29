@@ -32,8 +32,13 @@ function bool(name: string, fallback: boolean): boolean {
   return raw === 'true' || raw === '1';
 }
 
+/** Côté serveur, Vercel expose aussi VERCEL_URL sans le préfixe public. */
+const serverVercelHost = optional('VERCEL_URL');
+
 export const env = {
-  siteUrl: publicEnv.siteUrl,
+  siteUrl:
+    optional('NEXT_PUBLIC_SITE_URL') ??
+    (serverVercelHost ? `https://${serverVercelHost}` : publicEnv.siteUrl),
 
   supabaseUrl: publicEnv.supabaseUrl || undefined,
   supabaseAnonKey: publicEnv.supabaseAnonKey || undefined,
