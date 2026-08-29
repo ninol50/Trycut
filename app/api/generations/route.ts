@@ -63,6 +63,17 @@ export async function POST(request: NextRequest) {
   // --- jeton d'essai anonyme ------------------------------------------------
   let anonToken: string | null = null;
   if (!user) {
+    // L'offre gratuite donne 0 coupe : sans compte payant, on ne génère pas.
+    if (!env.enableFreeTrial) {
+      return NextResponse.json(
+        {
+          error: 'quota',
+          message: 'Il te faut un abonnement pour générer une coupe.',
+        },
+        { status: 402 },
+      );
+    }
+
     const store = await cookies();
     const raw = store.get(ANON_COOKIE)?.value;
     if (!verifyAnonToken(raw) || !raw) {

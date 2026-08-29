@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
  * Checkout Stripe. Abonnement par défaut ; le paiement unique n'est proposé
  * que si `ENABLE_ONE_TIME_PACK` est activé (défaut : false).
  */
-const schema = z.object({ plan: z.enum(['pack', 'pass', 'pack_oneshot']) });
+const schema = z.object({ plan: z.enum(['pack', 'pass']) });
 
 export async function POST(request: NextRequest) {
   if (!isStripeConfigured) {
@@ -32,16 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { plan } = parsed.data;
-  if (plan === 'pack_oneshot' && !env.enableOneTimePack) {
-    return NextResponse.json({ error: 'desactive' }, { status: 403 });
-  }
-
-  const priceId =
-    plan === 'pack'
-      ? env.stripePricePack
-      : plan === 'pass'
-        ? env.stripePricePass
-        : env.stripePricePackOneshot;
+  const priceId = plan === 'pack' ? env.stripePricePack : env.stripePricePass;
 
   if (!priceId) {
     return NextResponse.json(
@@ -68,7 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   const checkout = await stripe.checkout.sessions.create({
-    mode: plan === 'pack_oneshot' ? 'payment' : 'subscription',
+    mode: 'subscription',
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     client_reference_id: session.user.id,

@@ -13,7 +13,7 @@ export default function FinalCta() {
       <div className="mx-auto max-w-[480px] rounded-2xl bg-violet-600 px-6 py-10 text-center">
         <h2 className="text-xl text-white">Trente secondes maintenant, trois mois d’économisés.</h2>
         <p className="mt-3 text-base text-white/80">
-          Ton premier essai est offert, sans compte.
+          Quinze coupes par mois pour 9,99 €.
         </p>
         <div className="mt-6">
           <CtaButton location="final" variant="inverse" fullWidth>

@@ -7,7 +7,7 @@ import { buildPrompt } from '@/lib/ai/prompt';
 import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
 import { createAnonToken, verifyAnonToken } from '@/lib/anon-token';
 import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
-import { PRICING } from '@/lib/pricing';
+import { PRICING, PLAN_BY_AMOUNT_CENTS } from '@/lib/pricing';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 20 coupes, 8 couleurs et 10 accessoires', () => {
@@ -134,7 +134,11 @@ test('un jeton falsifié est rejeté', () => {
 });
 
 // ----------------------------------------------------------------- onboarding
-test('le parcours long compte 13 écrans, le court en sert 5', () => {
+test('le parcours par défaut ne pose aucune question', () => {
+  assert.equal(getSteps('none').length, 0);
+});
+
+test('les parcours optionnels restent servis', () => {
   assert.equal(ONBOARDING_STEPS.length, 13);
   assert.equal(getSteps('full').length, 13);
   assert.equal(getSteps('short').length, 5);
@@ -148,14 +152,34 @@ test('le parcours court conserve les écrans qui filtrent le catalogue', () => {
 });
 
 // --------------------------------------------------------------------- tarifs
-test('les prix sont ceux du brief', () => {
+test('les offres et le nombre de coupes sont ceux demandés', () => {
   const byId = Object.fromEntries(PRICING.map((plan) => [plan.id, plan]));
+
   assert.equal(byId['free']?.price, '0 €');
-  assert.equal(byId['pack']?.price, '9,90 €');
-  assert.equal(byId['pass']?.price, '19,99 €');
+  assert.equal(byId['free']?.credits, 0);
+
+  assert.equal(byId['pack']?.price, '9,99 €');
   assert.equal(byId['pack']?.credits, 15);
-  assert.equal(byId['pass']?.credits, 80);
   assert.equal(byId['pack']?.highlighted, true);
+
+  assert.equal(byId['pass']?.price, '17,90 €');
+  assert.equal(byId['pass']?.credits, 50);
+});
+
+test('les offres payantes portent un lien de paiement Stripe', () => {
+  for (const plan of PRICING) {
+    if (plan.credits === 0) {
+      assert.equal(plan.paymentLink, undefined);
+      continue;
+    }
+    assert.match(plan.paymentLink ?? '', /^https:\/\/buy\.stripe\.com\//);
+  }
+});
+
+test('le montant facturé suffit à retrouver l’offre', () => {
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[999], { plan: 'pack', credits: 15 });
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[1790], { plan: 'pass', credits: 50 });
+  assert.equal(PLAN_BY_AMOUNT_CENTS[1234], undefined);
 });
 
 // ------------------------------------------------- authentification du webhook

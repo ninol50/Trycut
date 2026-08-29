@@ -9,7 +9,15 @@ export const publicEnv = {
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
   posthogKey: process.env.NEXT_PUBLIC_POSTHOG_KEY ?? '',
   posthogHost: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+  /**
+   * `none` (défaut) : pas de questionnaire, on va droit à l'import photo.
+   * `short` / `full` restent servis pour comparer les parcours par la donnée.
+   */
   onboardingLength: (process.env.NEXT_PUBLIC_ONBOARDING_LENGTH === 'short'
     ? 'short'
-    : 'full') as 'full' | 'short',
+    : process.env.NEXT_PUBLIC_ONBOARDING_LENGTH === 'full'
+      ? 'full'
+      : 'none') as 'none' | 'short' | 'full',
+  stripeLinkPack: process.env.NEXT_PUBLIC_STRIPE_LINK_PACK ?? '',
+  stripeLinkPass: process.env.NEXT_PUBLIC_STRIPE_LINK_PASS ?? '',
 } as const;

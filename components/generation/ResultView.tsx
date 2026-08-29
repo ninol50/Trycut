@@ -119,7 +119,7 @@ export default function ResultView({
             Garde ce résultat, sans filigrane.
           </p>
           <p className="mt-2 text-sm text-white/80">
-            Un compte débloque un crédit offert et sauvegarde tes essais.
+            Un abonnement retire le filigrane et sauvegarde tes essais.
           </p>
           <Link
             href="/inscription"

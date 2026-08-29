@@ -27,7 +27,7 @@ export default function Hero() {
           Tester ma nouvelle coupe
         </CtaButton>
         <p className="mt-3 text-center text-sm text-slate-500">
-          Sans inscription · Résultat en 30 secondes
+          Résultat en 30 secondes · Sans engagement
         </p>
       </motion.div>
     </section>

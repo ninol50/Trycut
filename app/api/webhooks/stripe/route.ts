@@ -97,23 +97,22 @@ async function handleCheckoutCompleted(
       .eq('id', userId);
   }
 
-  // Le paiement unique n'a pas d'abonnement : les crédits sont accordés ici.
-  if (session.mode === 'payment') {
-    const items = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 1 });
-    const priceId = items.data[0]?.price?.id;
-    const mapped = planForPrice(priceId);
-    if (!mapped) return;
+  // Les liens de paiement Stripe ne portent pas d'identifiant de prix connu :
+  // on lit la ligne facturée et on retombe sur le montant.
+  const items = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 1 });
+  const line = items.data[0];
+  const mapped = planForPrice(line?.price?.id, line?.amount_total ?? session.amount_total);
+  if (!mapped) return;
 
-    await admin.rpc('grant_credits', {
-      p_user_id: userId,
-      p_amount: mapped.credits,
-      p_reason: 'pack_grant',
-    });
-    await admin
-      .from('profiles')
-      .update({ plan: mapped.plan, subscription_status: 'active' })
-      .eq('id', userId);
-  }
+  await admin.rpc('grant_credits', {
+    p_user_id: userId,
+    p_amount: mapped.credits,
+    p_reason: session.mode === 'payment' ? 'pack_grant' : 'subscription_grant',
+  });
+  await admin
+    .from('profiles')
+    .update({ plan: mapped.plan, subscription_status: 'active' })
+    .eq('id', userId);
 }
 
 const STATUS_MAP: Record<string, SubscriptionStatus> = {
@@ -140,8 +139,8 @@ async function handleSubscriptionChange(
   const userId = await userIdForCustomer(customer, admin);
   if (!userId) return;
 
-  const priceId = subscription.items.data[0]?.price.id;
-  const mapped = planForPrice(priceId);
+  const price = subscription.items.data[0]?.price;
+  const mapped = planForPrice(price?.id, price?.unit_amount ?? null);
   const status = STATUS_MAP[subscription.status] ?? 'none';
   const canceled = subscription.status === 'canceled' || status === 'canceled';
 
@@ -164,9 +163,10 @@ async function handleInvoicePaid(invoice: Stripe.Invoice, admin: Admin): Promise
   const userId = await userIdForCustomer(customer, admin);
   if (!userId) return;
 
-  const rawPrice = invoice.lines.data[0]?.pricing?.price_details?.price;
+  const line = invoice.lines.data[0];
+  const rawPrice = line?.pricing?.price_details?.price;
   const priceId = typeof rawPrice === 'string' ? rawPrice : rawPrice?.id;
-  const mapped = planForPrice(priceId);
+  const mapped = planForPrice(priceId, line?.amount ?? null);
   if (!mapped) return;
 
   // Crédits du mois. Non reportables : on remet le solde au forfait,

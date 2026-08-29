@@ -32,6 +32,10 @@ export default function PricingSummary() {
               </span>
             </div>
 
+            <p className="mt-2 text-sm font-semibold text-violet-600">
+              {plan.credits === 0 ? 'Aucune coupe incluse' : `${plan.credits} coupes par mois`}
+            </p>
+
             <ul className="mt-3 space-y-1 text-sm text-slate-500">
               {plan.features.map((feature) => (
                 <li key={feature}>· {feature}</li>
@@ -42,7 +46,7 @@ export default function PricingSummary() {
       </div>
 
       <p className="mt-4 text-center text-sm text-slate-500">
-        Les crédits ne sont pas reportables d’un mois sur l’autre.
+        Les coupes ne sont pas reportables d’un mois sur l’autre.
       </p>
 
       <Link

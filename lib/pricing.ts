@@ -5,51 +5,63 @@ export interface PricingPlan {
   name: string;
   price: string;
   period: string;
+  /** Coupes incluses par mois. */
   credits: number;
   highlighted: boolean;
   features: readonly string[];
+  /** Lien de paiement Stripe. Absent sur l'offre gratuite. */
+  paymentLink?: string;
 }
 
-/** Prix définitifs (section 10). Ne pas modifier. */
+/**
+ * Liens de paiement Stripe. Publics par nature (ils sont dans le HTML),
+ * surchargeables par variable d'environnement pour passer en test.
+ */
+const PAYMENT_LINK_PACK =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_PACK ?? 'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06';
+const PAYMENT_LINK_PASS =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_PASS ?? 'https://buy.stripe.com/28EcN40SV51tgcSaZq2wU07';
+
 export const PRICING: readonly PricingPlan[] = [
   {
     id: 'free',
-    name: 'Essai',
+    name: 'Découverte',
     price: '0 €',
     period: '',
-    credits: 1,
+    credits: 0,
     highlighted: false,
-    features: [
-      '1 essai offert sans compte',
-      '1 crédit après vérification de l’email',
-      'Basse résolution, filigrane',
-    ],
+    features: ['Catalogue complet consultable', 'Aucune génération incluse'],
   },
   {
     id: 'pack',
     name: 'Pack',
-    price: '9,90 €',
+    price: '9,99 €',
     period: '/mois',
     credits: 15,
     highlighted: true,
-    features: ['15 essais par mois', 'HD sans filigrane', 'Historique conservé'],
+    features: ['HD sans filigrane', 'Historique conservé', 'Résiliable à tout moment'],
+    paymentLink: PAYMENT_LINK_PACK,
   },
   {
     id: 'pass',
     name: 'Pass',
-    price: '19,99 €',
+    price: '17,90 €',
     period: '/mois',
-    credits: 80,
+    credits: 50,
     highlighted: false,
-    features: ['80 essais par mois', 'HD sans filigrane', 'Catalogue premium', 'File prioritaire'],
+    features: ['HD sans filigrane', 'Catalogue premium', 'File prioritaire'],
+    paymentLink: PAYMENT_LINK_PASS,
   },
 ] as const;
 
-export const ONE_TIME_PACK = {
-  name: 'Pack 15 essais',
-  price: '9,90 €',
-  credits: 15,
-  validity: 'valables 6 mois',
-} as const;
+export const CREDITS_BY_PLAN: Record<PlanId, number> = { free: 0, pack: 15, pass: 50 };
 
-export const CREDITS_BY_PLAN: Record<PlanId, number> = { free: 1, pack: 15, pass: 80 };
+/**
+ * Montants Stripe en centimes → offre. Les liens de paiement ne nous
+ * transmettent pas d'identifiant de prix connu à l'avance : on retombe
+ * sur le montant facturé, qui lui est fiable.
+ */
+export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: 'pack' | 'pass'; credits: number }> = {
+  999: { plan: 'pack', credits: 15 },
+  1790: { plan: 'pass', credits: 50 },
+};

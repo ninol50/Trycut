@@ -7,8 +7,10 @@ import { useTapScale } from '@/components/motion';
 import { track } from '@/lib/analytics';
 
 interface CheckoutButtonProps {
-  plan: 'pack' | 'pass' | 'pack_oneshot';
+  plan: 'pack' | 'pass';
   label: string;
+  /** Lien de paiement Stripe. Emprunté dès qu'il est présent. */
+  paymentLink?: string;
   variant?: 'primary' | 'secondary';
   authenticated: boolean;
 }
@@ -16,6 +18,7 @@ interface CheckoutButtonProps {
 export default function CheckoutButton({
   plan,
   label,
+  paymentLink,
   variant = 'primary',
   authenticated,
 }: CheckoutButtonProps) {
@@ -26,13 +29,21 @@ export default function CheckoutButton({
 
   const start = async () => {
     if (!authenticated) {
-      router.push('/inscription');
+      router.push('/inscription?suite=tarifs');
       return;
     }
 
+    track('checkout_completed', { plan, stage: 'redirect' });
+
+    // Lien de paiement Stripe : le plus direct, aucune clé serveur requise.
+    if (paymentLink) {
+      window.location.href = paymentLink;
+      return;
+    }
+
+    // Repli : Checkout créé côté serveur quand STRIPE_SECRET_KEY est configurée.
     setBusy(true);
     setError(null);
-
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -49,8 +60,6 @@ export default function CheckoutButton({
         setError('Le paiement n’est pas disponible pour le moment.');
         return;
       }
-
-      track('checkout_completed', { plan, stage: 'redirect' });
       window.location.href = url;
     } catch {
       setError('La connexion a été interrompue. Réessaie.');

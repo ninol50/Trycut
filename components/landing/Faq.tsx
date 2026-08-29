@@ -6,15 +6,15 @@ import { useInView } from '@/components/motion';
 const QUESTIONS = [
   {
     q: 'Que devient ma photo ?',
-    a: 'Elle part chez notre prestataire d’IA le temps du rendu, puis elle est stockée dans un espace privé accessible à toi seul. Photos sources et résultats sont supprimés au bout de 30 jours, et sous 24 heures pour un essai sans compte. Tu peux tout effacer à tout moment depuis ton compte.',
+    a: 'Elle part chez notre prestataire d’IA le temps du rendu, puis elle est stockée dans un espace privé accessible à toi seul. Photos sources et résultats sont supprimés au bout de 30 jours. Tu peux tout effacer à tout moment depuis ton compte.',
   },
   {
     q: 'Ça marche sur cheveux crépus / bouclés ?',
     a: 'Oui. La texture fait partie des questions posées au départ et elle est transmise au modèle, qui conserve la définition naturelle des boucles au lieu de la lisser. Le catalogue contient des coupes pensées pour ces textures.',
   },
   {
-    q: 'Il me faut un compte pour essayer ?',
-    a: 'Non. Le premier essai est offert sans inscription. Le compte sert uniquement à sauvegarder tes résultats et à retirer le filigrane.',
+    q: 'Il me faut un compte pour générer une coupe ?',
+    a: 'Oui. Tu peux parcourir le catalogue librement, mais générer une coupe demande un abonnement — Pack à 9,99 € pour 15 coupes par mois, Pass à 17,90 € pour 50. Tu résilies quand tu veux.',
   },
   {
     q: 'Le résultat est-il fidèle à ce que fera mon coiffeur ?',

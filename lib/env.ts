@@ -65,7 +65,12 @@ export const env = {
 
   // Feature flags
   onboardingLength: publicEnv.onboardingLength,
-  enableOneTimePack: bool('ENABLE_ONE_TIME_PACK', false),
+  /**
+   * L'offre gratuite donne 0 coupe : l'essai anonyme est donc coupé par défaut.
+   * Le remettre à true rouvre une génération offerte sans compte, sans autre
+   * changement de code.
+   */
+  enableFreeTrial: bool('ENABLE_FREE_TRIAL', false),
 } as const;
 
 export const isSupabaseConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);

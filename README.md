@@ -121,26 +121,29 @@ compte, **3 essais gratuits / 24 h** par IP, **1 essai anonyme** par jeton.
 
 ---
 
-## Activer le pack en paiement unique
+## Offres et paiement
 
-```bash
-ENABLE_ONE_TIME_PACK=true
-STRIPE_PRICE_PACK_ONESHOT=price_...   # 9,90 € pour 15 essais, valables 6 mois
-```
+| Offre | Prix | Coupes / mois |
+|---|---|---|
+| Découverte | 0 € | 0 |
+| **Pack** | **9,99 €/mois** | 15 |
+| Pass | 17,90 €/mois | 50 |
 
-L'offre apparaît alors sur `/tarifs` et `POST /api/checkout` accepte
-`{ plan: "pack_oneshot" }` en `mode: payment`. Flag à `false` : la route refuse le plan en
-403, l'offre n'est pas affichée. Les deux modèles cohabitent sans réécrire la couche
-paiement — l'usage étant épisodique, l'abonnement mensuel peut produire du churn.
+Les boutons pointent sur des **liens de paiement Stripe**, codés dans `lib/pricing.ts` et
+surchargeables par `NEXT_PUBLIC_STRIPE_LINK_PACK` / `NEXT_PUBLIC_STRIPE_LINK_PASS`. Aucune
+clé serveur n'est nécessaire pour encaisser.
 
-### Setup Stripe (mode test)
+Pour que le paiement **crédite réellement le compte**, il reste à brancher le webhook :
 
-1. Créer les prix récurrents : **Pack 9,90 €/mois**, **Pass 19,99 €/mois**.
-2. Renseigner `STRIPE_PRICE_PACK` et `STRIPE_PRICE_PASS`.
-3. Webhook vers `<SITE_URL>/api/webhooks/stripe`, événements :
+1. Dans Stripe, webhook vers `<SITE_URL>/api/webhooks/stripe`, événements
    `checkout.session.completed`, `customer.subscription.*`, `invoice.paid`.
-   Copier le secret dans `STRIPE_WEBHOOK_SECRET`.
-4. En local : `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
+2. Copier le secret dans `STRIPE_WEBHOOK_SECRET`, et la clé secrète dans
+   `STRIPE_SECRET_KEY`.
+3. En local : `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
+
+Les liens de paiement ne transmettent pas d'identifiant de prix connu à l'avance : l'offre
+est retrouvée par le **montant facturé** (999 → Pack, 1790 → Pass), avec les
+`STRIPE_PRICE_*` en priorité s'ils sont renseignés.
 
 Le webhook est **idempotent** (contrainte unique sur `webhook_events.external_id`) : les
 webhooks arrivent en double, systématiquement.
@@ -193,12 +196,17 @@ comparer le parcours long et le parcours court :
 Sans `NEXT_PUBLIC_POSTHOG_KEY`, les events sont écrits en `console.debug` — le
 développement local n'a pas besoin de PostHog.
 
-## Feature flag du questionnaire
+## Parcours
 
-`NEXT_PUBLIC_ONBOARDING_LENGTH=full|short`. En `short`, seuls les écrans longueur,
-texture, forme du visage et prénom sont servis. Un questionnaire de 13 écrans avant toute
-preuve est la première cause d'abandon plausible de ce funnel ; le flag permet de trancher
-par la donnée plutôt que de le supposer.
+Par défaut, **aucune question** : le CTA mène directement à l'import de la photo, où l'on
+choisit une coupe et où le comparateur avant/après reste disponible.
+
+`NEXT_PUBLIC_ONBOARDING_LENGTH=none|short|full` — `none` par défaut. `short` sert 4 écrans
+de profil, `full` les 13 du brief initial. Le code du questionnaire reste en place : le flag
+permet de le rouvrir sans redéploiement de code.
+
+`ENABLE_FREE_TRIAL=false` par défaut, puisque l'offre gratuite donne 0 coupe. Le passer à
+`true` rouvre une génération offerte sans compte.
 
 ## Visuels
 

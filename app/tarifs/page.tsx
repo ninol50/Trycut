@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import CheckoutButton from '@/components/CheckoutButton';
-import { PRICING, ONE_TIME_PACK } from '@/lib/pricing';
-import { env } from '@/lib/env';
-import { getSessionUser } from '@/lib/supabase/server';
+import { PRICING } from '@/lib/pricing';
 import { isSupabaseConfigured } from '@/lib/env';
+import { getSessionUser } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Tarifs — Trycut' };
 export const dynamic = 'force-dynamic';
@@ -20,7 +19,7 @@ export default async function PricingPage({
   return (
     <>
       <main className="section py-10">
-        <h1 className="text-2xl">Trois façons d’essayer.</h1>
+        <h1 className="text-2xl">Choisis ton rythme.</h1>
 
         {params.paiement === 'annule' ? (
           <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
@@ -48,6 +47,12 @@ export default async function PricingPage({
                 </span>
               </div>
 
+              <p className="mt-2 text-sm font-semibold text-violet-600">
+                {plan.credits === 0
+                  ? 'Aucune coupe incluse'
+                  : `${plan.credits} coupes par mois`}
+              </p>
+
               <ul className="mt-3 space-y-1 text-sm text-slate-500">
                 {plan.features.map((feature) => (
                   <li key={feature}>· {feature}</li>
@@ -55,51 +60,27 @@ export default async function PricingPage({
               </ul>
 
               <div className="mt-5">
-                {plan.id === 'free' ? (
-                  <Link href="/onboarding" className="btn-secondary w-full">
-                    Essayer gratuitement
-                  </Link>
-                ) : (
+                {plan.paymentLink ? (
                   <CheckoutButton
                     plan={plan.id === 'pack' ? 'pack' : 'pass'}
+                    paymentLink={plan.paymentLink}
                     label={`Prendre le ${plan.name.toLowerCase()}`}
                     variant={plan.highlighted ? 'primary' : 'secondary'}
                     authenticated={Boolean(user)}
                   />
+                ) : (
+                  <Link href="/onboarding/photo" className="btn-secondary w-full">
+                    Voir le catalogue
+                  </Link>
                 )}
               </div>
             </div>
           ))}
-
-          {env.enableOneTimePack ? (
-            <div className="card">
-              <div className="flex items-baseline justify-between">
-                <span className="font-display text-lg font-bold text-violet-900">
-                  {ONE_TIME_PACK.name}
-                </span>
-                <span className="font-display text-xl text-violet-900">{ONE_TIME_PACK.price}</span>
-              </div>
-              <p className="mt-2 text-sm text-slate-500">
-                Paiement unique, {ONE_TIME_PACK.credits} essais {ONE_TIME_PACK.validity}. Sans
-                abonnement.
-              </p>
-              <div className="mt-5">
-                <CheckoutButton
-                  plan="pack_oneshot"
-                  label="Acheter le pack"
-                  variant="secondary"
-                  authenticated={Boolean(user)}
-                />
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <div className="mt-8 rounded-2xl bg-violet-50 p-5 text-sm text-slate-500">
           <p className="font-semibold text-violet-900">Bon à savoir</p>
-          <p className="mt-2">
-            Les crédits ne sont pas reportables d’un mois sur l’autre.
-          </p>
+          <p className="mt-2">Les coupes ne sont pas reportables d’un mois sur l’autre.</p>
           <p className="mt-2">
             Tu peux résilier à tout moment depuis ton compte. L’accès reste actif jusqu’à la
             fin de la période déjà payée.

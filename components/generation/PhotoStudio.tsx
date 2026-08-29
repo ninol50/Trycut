@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import ConsentGate, { hasStoredConsent } from '@/components/generation/ConsentGate';
+import ConsentNotice, { hasStoredConsent, storeConsent } from '@/components/generation/ConsentGate';
 import CatalogPicker from '@/components/generation/CatalogPicker';
 import ErrorState, { type ErrorKind } from '@/components/generation/ErrorState';
 import { useTapScale } from '@/components/motion';
@@ -100,7 +100,7 @@ export default function PhotoStudio({
   }, []);
 
   const launch = useCallback(async () => {
-    if (!imagePath || !selected || busy) return;
+    if (!imagePath || !selected || !consented || busy) return;
     setBusy(true);
     setError(null);
 
@@ -147,10 +147,9 @@ export default function PhotoStudio({
     } finally {
       setBusy(false);
     }
-  }, [imagePath, selected, busy, answers, router, nextBasePath]);
+  }, [imagePath, selected, consented, busy, answers, router, nextBasePath]);
 
   if (consented === null) return <div className="section py-16" aria-hidden="true" />;
-  if (!consented) return <ConsentGate onAccept={() => setConsented(true)} />;
 
   return (
     <div className="section py-8">
@@ -210,6 +209,16 @@ export default function PhotoStudio({
         </span>
       </motion.button>
 
+      <div className="mt-4">
+        <ConsentNotice
+          checked={consented}
+          onChange={(value) => {
+            setConsented(value);
+            storeConsent(value);
+          }}
+        />
+      </div>
+
       {error ? (
         <div className="mt-4">
           <ErrorState
@@ -223,7 +232,7 @@ export default function PhotoStudio({
       <div className="mt-8">
         <h2 className="text-xl">Choisis un style</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Trié selon les réponses que tu viens de donner.
+          Coupes, couleurs et accessoires. Un seul à la fois.
         </p>
         <div className="mt-5">
           <CatalogPicker
@@ -239,7 +248,7 @@ export default function PhotoStudio({
         <motion.button
           type="button"
           whileTap={tap}
-          disabled={!imagePath || !selected || busy}
+          disabled={!imagePath || !selected || !consented || busy}
           onClick={() => void launch()}
           className="btn-primary w-full disabled:opacity-50"
         >

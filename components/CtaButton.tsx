@@ -20,7 +20,7 @@ const MotionLink = motion.create(Link);
 export default function CtaButton({
   children,
   location,
-  href = '/onboarding',
+  href = '/onboarding/photo',
   variant = 'primary',
   fullWidth = false,
   size = 'default',

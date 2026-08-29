@@ -169,9 +169,10 @@ const SHORT_STEP_IDS: readonly OnboardingStepId[] = [
   'summary',
 ];
 
-export type OnboardingVariant = 'full' | 'short';
+export type OnboardingVariant = 'none' | 'short' | 'full';
 
 export function getSteps(variant: OnboardingVariant): readonly OnboardingStep[] {
+  if (variant === 'none') return [];
   if (variant === 'short') {
     return ONBOARDING_STEPS.filter((step) => SHORT_STEP_IDS.includes(step.id));
   }
