@@ -58,12 +58,19 @@ export async function GET() {
   };
 
   // --- Stripe : liens publics présents, secrets pour créditer -------------
+  // Créditer un compte se fait avec la clé service_role : la session d'un
+  // client ne peut pas s'octroyer des crédits. Sans elle, le webhook répond
+  // 503 même avec les deux secrets Stripe — l'annoncer prêt serait faux.
   checks['stripe'] = {
     paymentLinks: true,
     secretKey: isStripeConfigured,
     webhookSecret: Boolean(env.stripeWebhookSecret),
-    /** Sans ces deux-là, un paiement encaisse mais ne crédite pas le compte. */
-    creditsOnPurchase: isStripeConfigured && Boolean(env.stripeWebhookSecret),
+    serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
+    /** Sans ces trois-là, un paiement encaisse mais ne crédite pas le compte. */
+    creditsOnPurchase:
+      isStripeConfigured &&
+      Boolean(env.stripeWebhookSecret) &&
+      Boolean(env.supabaseServiceRoleKey),
   };
 
   // --- Emails --------------------------------------------------------------
@@ -74,11 +81,13 @@ export async function GET() {
 
   checks['posthog'] = { configured: Boolean(env.posthogKey), host: env.posthogHost };
 
-  // La clé service_role ne sert qu'au cron de purge et au stockage d'un
-  // résultat produit par un provider réel.
   checks['serviceRole'] = {
     present: Boolean(env.supabaseServiceRoleKey),
-    requiredFor: ['cron de purge J+30', 'stockage du rendu avec AI_PROVIDER=fal'],
+    requiredFor: [
+      'créditer un compte après paiement (webhook Stripe)',
+      'cron de purge J+30',
+      'stockage du rendu avec AI_PROVIDER=fal',
+    ],
   };
 
   return NextResponse.json(checks, { headers: { 'cache-control': 'no-store' } });
