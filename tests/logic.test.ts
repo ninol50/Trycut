@@ -13,7 +13,7 @@ import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { HERO_PEOPLE, resolveHero } from '@/lib/demo-assets';
+import { EXAMPLE_PAIRS, HERO_PEOPLE, resolveExamples, resolveHero } from '@/lib/demo-assets';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 16 coupes, 9 barbes, 8 couleurs et 10 accessoires', () => {
@@ -557,6 +557,23 @@ test('le hero ne mélange jamais photo et dessin', () => {
   // avec le même dessin.
   if (people.every((person) => person.baseSrc === null)) {
     assert.equal(people.length, 1, 'sans photo, une seule silhouette');
+  }
+});
+
+test('chaque exemple avant/après désigne une vraie coupe du catalogue', () => {
+  for (const pair of EXAMPLE_PAIRS) {
+    const item = FALLBACK_CATALOG.find((candidate) => candidate.slug === pair.slug);
+    assert.ok(item, `${pair.slug} : absent du catalogue`);
+    assert.equal(item?.category, 'cut', `${pair.slug} : les exemples montrent des coupes`);
+  }
+});
+
+test('une paire d’exemple n’est jamais affichée à moitié', () => {
+  // Un « avant » sans « après » ne prouve rien et donne un cadre vide à côté
+  // d'une photo. Les deux fichiers, ou rien.
+  for (const pair of resolveExamples()) {
+    assert.ok(pair.before, `${pair.label} : « avant » manquant`);
+    assert.ok(pair.after, `${pair.label} : « après » manquant`);
   }
 });
 

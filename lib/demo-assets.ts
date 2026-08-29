@@ -14,23 +14,52 @@ export function hasPublicAsset(relativePath: string): boolean {
   }
 }
 
-export const DEMO_VIDEO = {
-  mp4: '/demo/demo-loop.mp4',
-  webm: '/demo/demo-loop.webm',
-  poster: '/demo/demo-poster.jpg',
-} as const;
-
-export interface DemoPair {
-  before: string;
-  after: string;
+export interface ExamplePairAsset {
+  /** Coupe montrée par la paire. */
+  slug: string;
   label: string;
 }
 
-export const DEMO_PAIRS: readonly DemoPair[] = [
-  { before: '/demo/before-1.jpg', after: '/demo/after-1.jpg', label: 'dégradé bas' },
-  { before: '/demo/before-2.jpg', after: '/demo/after-2.jpg', label: 'platine' },
-  { before: '/demo/before-3.jpg', after: '/demo/after-3.jpg', label: 'chaîne fine' },
+/**
+ * Paires avant/après de la section « Le rendu, avant le coup de ciseaux ».
+ *
+ * Fichiers attendus, par coupe :
+ *   /public/exemples/{slug}-avant.jpg
+ *   /public/exemples/{slug}-apres.jpg
+ *
+ * Une paire n'apparaît que si les deux fichiers sont là — une moitié de paire
+ * ne montre rien. La section entière se cache si aucune paire n'est complète,
+ * plutôt que d'aligner des cadres vides.
+ *
+ * Ce qui rend ces paires convaincantes : le même visage, le même mur, le même
+ * vêtement, le même cadrage. Seuls les cheveux changent. Le plus simple est de
+ * passer la photo « avant » dans Trycut et de reprendre le résultat tel quel.
+ */
+export const EXAMPLE_PAIRS: readonly ExamplePairAsset[] = [
+  { slug: 'cut-permanente-mi-longue', label: 'Cheveux bouclés mi-longs' },
+  { slug: 'cut-buzz', label: 'Buzz cut' },
+  { slug: 'cut-locks', label: 'Locks' },
+  { slug: 'cut-afro-court', label: 'Afro court' },
+  { slug: 'cut-degrade-espagnol', label: 'Dégradé espagnol' },
+  { slug: 'cut-chauve', label: 'Crâne rasé' },
 ] as const;
+
+export interface ResolvedExample {
+  before: string | null;
+  after: string | null;
+  label: string;
+}
+
+/** Ne renvoie que les paires complètes : une demi-paire ne prouve rien. */
+export function resolveExamples(): readonly ResolvedExample[] {
+  return EXAMPLE_PAIRS.flatMap((pair) => {
+    const before = `/exemples/${pair.slug}-avant.jpg`;
+    const after = `/exemples/${pair.slug}-apres.jpg`;
+
+    if (!hasPublicAsset(before) || !hasPublicAsset(after)) return [];
+    return [{ before, after, label: pair.label }];
+  });
+}
 
 // ------------------------------------------------------------------ hero
 /**
