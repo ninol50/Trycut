@@ -54,8 +54,13 @@ function SideBySide({ pair }: { pair: ExamplePair }) {
 
 export default function Examples({ pairs }: ExamplesProps) {
   const anim = useInView();
-  const first = pairs[0];
-  const extras = pairs.slice(1).filter((pair) => pair.before || pair.after);
+  const first = pairs.find((pair) => pair.before || pair.after);
+  const extras = pairs.filter((pair) => pair !== first && (pair.before || pair.after));
+
+  // Sans le moindre visuel, la section ne montre que des cadres vides : elle
+  // donne l'impression d'un site inachevé, ou d'un rendu qui n'arrive jamais.
+  // Le hero fait déjà la démonstration.
+  if (!first) return null;
 
   return (
     <motion.section {...anim} className="section py-14">

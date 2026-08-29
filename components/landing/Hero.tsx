@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import ScanCard from '@/components/landing/ScanCard';
+import HeroTransform, { type HeroLook } from '@/components/landing/HeroTransform';
 import { useEntrance } from '@/components/motion';
 import { track } from '@/lib/analytics';
 
 interface HeroProps {
-  heroImage: string | null;
+  /** Visage de départ du hero. Absent : la carte est dessinée. */
+  heroBaseSrc: string | null;
+  heroBaseSlug: string;
+  heroLooks: readonly HeroLook[];
   /**
    * Nombre réel de coupes générées aujourd'hui. La pastille de preuve sociale
    * ne s'affiche qu'à partir d'un volume crédible — on n'invente pas de chiffre.
@@ -15,7 +18,7 @@ interface HeroProps {
   cutsToday: number | null;
 }
 
-export default function Hero({ heroImage, cutsToday }: HeroProps) {
+export default function Hero({ heroBaseSrc, heroBaseSlug, heroLooks, cutsToday }: HeroProps) {
   const pill = useEntrance(0);
   const title = useEntrance(0.06);
   const subtitle = useEntrance(0.14);
@@ -60,7 +63,7 @@ export default function Hero({ heroImage, cutsToday }: HeroProps) {
         </motion.div>
 
         <motion.div {...visual} className="mt-10">
-          <ScanCard src={heroImage} />
+          <HeroTransform baseSrc={heroBaseSrc} baseSlug={heroBaseSlug} looks={heroLooks} />
         </motion.div>
       </div>
     </section>

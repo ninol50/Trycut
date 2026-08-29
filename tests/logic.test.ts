@@ -11,6 +11,9 @@ import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pric
 import { hasPaidAccess } from '@/lib/profile';
 import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { HERO_BASE_SLUG, HERO_LOOKS, resolveHero } from '@/lib/demo-assets';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 16 coupes, 9 barbes, 8 couleurs et 10 accessoires', () => {
@@ -494,4 +497,39 @@ test('un blocage l’emporte sur tout le reste', () => {
 
 test('un administrateur garde l’accès à son propre produit', () => {
   assert.equal(hasPaidAccess(profile({ is_admin: true })), true);
+});
+
+// ----------------------------------------------------------------- hero
+test('chaque coupe du hero existe au catalogue et sait se dessiner', () => {
+  // Un slug fautif ne casse rien : il rend une tête sans cheveux, en boucle,
+  // sur la première carte que voit un visiteur. Le test attrape la faute de
+  // frappe que l'œil laisse passer.
+  const illustration = readFileSync(
+    join(process.cwd(), 'components/catalog/StyleIllustration.tsx'),
+    'utf8',
+  );
+  const drawn = new Set(
+    [...illustration.matchAll(/^ {2}'(cut-[a-z0-9-]+)':/gm)].map((match) => match[1]),
+  );
+
+  for (const slug of [HERO_BASE_SLUG, ...HERO_LOOKS.map((look) => look.slug)]) {
+    const item = FALLBACK_CATALOG.find((candidate) => candidate.slug === slug);
+    assert.ok(item, `${slug} : absent du catalogue`);
+    assert.equal(item?.category, 'cut', `${slug} : le hero ne montre que des coupes`);
+    assert.ok(drawn.has(slug), `${slug} : aucun dessin dans StyleIllustration`);
+  }
+});
+
+test('le hero ne bascule en photo que si le départ et une coupe sont là', () => {
+  // Panacher une photo et un dessin de part et d'autre du séparateur donnerait
+  // une carte incohérente. C'est tout l'un ou tout l'autre.
+  const hero = resolveHero();
+  const photos = hero.looks.filter((look) => look.src !== null).length;
+
+  if (hero.baseSrc === null) {
+    assert.equal(photos, 0, 'départ dessiné : aucune coupe ne doit être en photo');
+    assert.ok(hero.looks.length > 0, 'le hero ne doit jamais être vide');
+  } else {
+    assert.equal(photos, hero.looks.length, 'départ en photo : toutes les coupes en photo');
+  }
 });

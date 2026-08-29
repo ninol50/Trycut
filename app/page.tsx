@@ -7,7 +7,7 @@ import PricingSummary from '@/components/landing/PricingSummary';
 import Faq from '@/components/landing/Faq';
 import FinalCta from '@/components/landing/FinalCta';
 import Footer from '@/components/Footer';
-import { DEMO_PAIRS, hasPublicAsset } from '@/lib/demo-assets';
+import { DEMO_PAIRS, hasPublicAsset, resolveHero } from '@/lib/demo-assets';
 import { countCutsToday } from '@/lib/stats';
 
 export const dynamic = 'force-dynamic';
@@ -20,14 +20,19 @@ export default async function LandingPage() {
     after: hasPublicAsset(pair.after) ? pair.after : null,
   }));
 
-  const heroPair = pairs[0];
+  const hero = resolveHero();
   const cutsToday = await countCutsToday();
 
   return (
     <>
       <Header />
       <main>
-        <Hero heroImage={heroPair?.after ?? null} cutsToday={cutsToday} />
+        <Hero
+          heroBaseSrc={hero.baseSrc}
+          heroBaseSlug={hero.baseSlug}
+          heroLooks={hero.looks}
+          cutsToday={cutsToday}
+        />
         <Steps />
         <Examples pairs={pairs} />
         <Testimonials />
