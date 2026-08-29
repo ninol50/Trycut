@@ -8,6 +8,7 @@ import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
 import { createAnonToken, verifyAnonToken } from '@/lib/anon-token';
 import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
 import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pricing';
+import { isFailureCallback, extractResultImageUrl } from '@/lib/ai/callback';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 20 coupes, 8 couleurs et 10 accessoires', () => {
@@ -256,4 +257,35 @@ test('un email absent ne vide pas le paramètre', () => {
   const url = new URL(withCheckoutReference('https://buy.stripe.com/abc', 'user-1', null));
   assert.equal(url.searchParams.has('prefilled_email'), false);
   assert.equal(url.searchParams.get('client_reference_id'), 'user-1');
+});
+
+// ------------------------------------------------- rappel des fournisseurs IA
+test('le rendu de fal.ai est lu dans son enveloppe', () => {
+  // Forme réelle d'un rappel de file d'attente fal.ai.
+  const rappel = {
+    request_id: 'abc-123',
+    status: 'OK',
+    payload: { images: [{ url: 'https://fal.media/files/coupe.jpeg', content_type: 'image/jpeg' }] },
+  };
+  assert.equal(extractResultImageUrl(rappel), 'https://fal.media/files/coupe.jpeg');
+  assert.equal(isFailureCallback(rappel), false);
+});
+
+test('un echec de fal.ai est reconnu malgre la casse', () => {
+  // fal.ai écrit ERROR en majuscules ; sans normalisation, l'échec passait
+  // pour une réussite et la coupe n'était jamais remboursée.
+  assert.equal(isFailureCallback({ status: 'ERROR', error: 'boom' }), true);
+  assert.equal(isFailureCallback({ status: 'failed' }), true);
+  assert.equal(isFailureCallback({ status: 'OK' }), false);
+});
+
+test('le rappel du mock reste lu tel quel', () => {
+  assert.equal(extractResultImageUrl({ image_url: 'https://exemple.fr/a.jpg' }), 'https://exemple.fr/a.jpg');
+  assert.equal(extractResultImageUrl({ image_url: null, source_path: 'u/1.jpg' }), null);
+});
+
+test('une enveloppe vide ne fait pas passer une image fantome', () => {
+  assert.equal(extractResultImageUrl({ status: 'OK', payload: { images: [] } }), null);
+  assert.equal(extractResultImageUrl({ status: 'OK' }), null);
+  assert.equal(extractResultImageUrl(null), null);
 });

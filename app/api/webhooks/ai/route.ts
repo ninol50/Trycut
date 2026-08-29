@@ -3,6 +3,7 @@ import { createAnonSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { RESULT_BUCKET, UPLOAD_BUCKET } from '@/lib/storage';
 import { sendGenerationReadyEmail } from '@/lib/email';
+import { isFailureCallback, extractResultImageUrl } from '@/lib/ai/callback';
 
 export const runtime = 'nodejs';
 
@@ -39,7 +40,8 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAnonSupabase();
-  const failed = body.status === 'failed' || body.status === 'error';
+  const failed = isFailureCallback(payload);
+  const imageUrl = extractResultImageUrl(payload);
 
   if (failed) {
     const { data } = await supabase.rpc('fail_generation', {
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
   let resultPath: string | null = null;
   let resultBucket = RESULT_BUCKET;
 
-  if (body.image_url) {
+  if (imageUrl) {
     const admin = createAdminSupabase();
     if (!admin) {
       // Rapatrier une image produite demande d'écrire dans le dossier d'un
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
       const owner = (row as { user_id: string | null } | null)?.user_id;
       if (!owner) throw new Error('propriétaire introuvable');
 
-      const response = await fetch(body.image_url);
+      const response = await fetch(imageUrl);
       if (!response.ok) throw new Error(`téléchargement ${response.status}`);
       const bytes = new Uint8Array(await response.arrayBuffer());
 
