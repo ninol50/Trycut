@@ -42,7 +42,7 @@ par conception, et tout ce qu'elles autorisent est décidé par la RLS.
 | `NEXT_PUBLIC_SUPABASE_URL` / `_ANON_KEY` | Pointer vers un autre projet Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Uniquement** le cron de purge et `AI_PROVIDER=fal` |
 | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` | **Créditer un compte après paiement** |
-| `RESEND_API_KEY` | Envoyer réellement les emails (sinon log console) |
+| `RESEND_API_KEY` + `EMAIL_FROM` | Envoyer réellement les emails (sinon log console) |
 | `AI_PROVIDER` | `mock` (défaut) ou `fal` |
 
 > `SUPABASE_SERVICE_ROLE_KEY` contourne la RLS. Jamais préfixée `NEXT_PUBLIC_`, jamais
@@ -261,3 +261,17 @@ navigateurs, inutile sur un build de déploiement. À installer à la demande :
 ```bash
 npm i -D --no-save playwright
 ```
+
+## Emails
+
+Deux canaux, indépendants :
+
+1. **Vérification d'inscription** — envoyée par Supabase Auth, sans configuration.
+   Il faut seulement que *Site URL* et *Redirect URLs* pointent sur le domaine de
+   production (Authentication → URL Configuration), sinon le lien renvoie ailleurs.
+2. **Emails transactionnels** (bienvenue, coupe prête, abonnement actif) — envoyés par
+   Resend depuis `lib/email.ts`. Sans `RESEND_API_KEY`, ils sont écrits en console et
+   rien n'échoue.
+
+Pour les activer réellement, le domaine d'envoi doit être vérifié chez Resend (DKIM +
+SPF), puis `EMAIL_FROM` doit utiliser ce domaine.

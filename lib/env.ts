@@ -61,7 +61,7 @@ export const env = {
   stripePricePackOneshot: optional('STRIPE_PRICE_PACK_ONESHOT'),
 
   resendApiKey: optional('RESEND_API_KEY'),
-  emailFrom: optional('EMAIL_FROM') ?? 'Trycut <onboarding@trycut.local>',
+  emailFrom: optional('EMAIL_FROM') ?? 'Trycut <bonjour@trycut.io>',
 
   posthogKey: publicEnv.posthogKey || undefined,
   posthogHost: publicEnv.posthogHost,
