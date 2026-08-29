@@ -533,3 +533,19 @@ test('le hero ne bascule en photo que si le départ et une coupe sont là', () =
     assert.equal(photos, hero.looks.length, 'départ en photo : toutes les coupes en photo');
   }
 });
+
+test('une seule image part au modèle, jamais une photo d’exemple', () => {
+  // Régression vue en production : une demande de crâne rasé a rendu le visage
+  // du modèle de référence collé sur la photo du client. La variante
+  // multi-images compose les visages qu'on lui donne, elle ne sait pas traiter
+  // le second comme un exemple. Aucune consigne écrite ne l'en empêche.
+  const provider = readFileSync(join(process.cwd(), 'lib/ai/provider.ts'), 'utf8');
+  const route = readFileSync(join(process.cwd(), 'app/api/generations/route.ts'), 'utf8');
+
+  assert.ok(!provider.includes('image_urls'), 'provider : envoi multi-images interdit');
+  assert.ok(!provider.includes('kontext/max/multi'), 'provider : endpoint multi-images interdit');
+  assert.ok(!provider.includes('FAL_MODEL_MULTI'), 'provider : plus de modèle multi-images');
+  assert.ok(!provider.includes('referenceUrls'), 'provider : plus de photo de référence');
+  assert.ok(!route.includes('referenceUrl'), 'route : plus de photo de référence');
+  assert.ok(!route.includes('REFERENCE_CLAUSE'), 'route : plus de clause de référence');
+});

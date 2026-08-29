@@ -12,8 +12,6 @@ export interface GenerateInput {
   callbackSecret: string;
   /** Chemin de la photo source, réutilisé par le mock comme résultat. */
   sourcePath: string;
-  /** Photos de référence des styles demandés. Vide si aucune n'est déposée. */
-  referenceUrls?: readonly string[];
   /** URL de rappel. */
   webhookUrl: string;
 }
@@ -74,15 +72,17 @@ async function scheduleMockCallback(input: GenerateInput, jobId: string): Promis
 }
 
 // ------------------------------------------------------------------- fal
-/** Modèle d'édition d'image : il garde le visage et ne change que la coupe. */
-const FAL_MODEL = 'fal-ai/flux-pro/kontext';
-
 /**
- * Variante multi-images, utilisée dès qu'une photo de référence accompagne la
- * demande. Si elle n'est pas disponible, on retombe sur le modèle simple : une
- * référence absente dégrade la fidélité, elle ne doit pas casser le rendu.
+ * Modèle d'édition d'image : il garde le visage et ne change que la coupe.
+ *
+ * Une seule image lui est envoyée, jamais deux. La variante multi-images a été
+ * retirée : elle ne sait pas traiter une seconde photo comme un simple exemple,
+ * elle compose les deux. En production, une demande de crâne rasé a rendu le
+ * visage du modèle de référence collé sur la photo du client. Aucune formulation
+ * de consigne n'empêche ça de façon fiable — c'est ce que fait le modèle.
+ * La coupe se décrit donc par le texte, qui lui ne peut ressembler à personne.
  */
-const FAL_MODEL_MULTI = 'fal-ai/flux-pro/kontext/max/multi';
+const FAL_MODEL = 'fal-ai/flux-pro/kontext';
 
 /**
  * FalProvider : stub prêt à brancher. Actif dès que `AI_PROVIDER=fal`
@@ -93,8 +93,6 @@ export const falProvider: AiProvider = {
   async generate(input: GenerateInput): Promise<GenerateOutput> {
     const key = env.falKey;
     if (!key) throw new Error('FAL_KEY manquante alors que AI_PROVIDER=fal');
-
-    const references = input.referenceUrls ?? [];
 
     const common = {
       prompt: input.prompt,
@@ -116,22 +114,7 @@ export const falProvider: AiProvider = {
         body: JSON.stringify(body),
       });
 
-    let response =
-      references.length > 0
-        ? await submit(FAL_MODEL_MULTI, {
-            ...common,
-            image_urls: [input.imageUrl, ...references],
-          })
-        : await submit(FAL_MODEL, { ...common, image_url: input.imageUrl });
-
-    // Une référence est un bonus, jamais une condition : si la variante
-    // multi-images refuse la demande, on refait le rendu sans elle plutôt que
-    // de rendre une coupe impossible à générer.
-    if (!response.ok && references.length > 0) {
-      const detail = await response.text();
-      console.error('[fal] variante multi-images indisponible', response.status, detail.slice(0, 200));
-      response = await submit(FAL_MODEL, { ...common, image_url: input.imageUrl });
-    }
+    const response = await submit(FAL_MODEL, { ...common, image_url: input.imageUrl });
 
     if (!response.ok) {
       const detail = await response.text();
