@@ -45,7 +45,7 @@ export default function Hero({ heroImage, cutsToday }: HeroProps) {
 
         <motion.div {...cta} className="mt-7">
           <Link
-            href="/onboarding/photo"
+            href="/tarifs"
             onClick={() => track('landing_cta_clicked', { location: 'hero' })}
             className="btn-primary w-full"
           >

@@ -31,7 +31,7 @@ export const PRICING: readonly PricingPlan[] = [
     period: '',
     credits: 0,
     highlighted: false,
-    features: ['Catalogue complet consultable', 'Aucune génération incluse'],
+    features: ['Compte créé, prêt à s’abonner', 'Aucune coupe incluse'],
   },
   {
     id: 'pack',

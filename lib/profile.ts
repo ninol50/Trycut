@@ -46,3 +46,21 @@ export function watermarkFor(profile: Profile): boolean {
     profile.subscription_status === 'active'
   );
 }
+
+/**
+ * Accès au produit : réservé aux abonnements actifs.
+ *
+ * Sans paiement, rien n'est accessible — ni le studio photo, ni le catalogue.
+ * Le compte existe pour recevoir l'abonnement, pas pour en faire l'essai.
+ * Les administrateurs passent, sinon le propriétaire du site ne pourrait plus
+ * regarder son propre produit.
+ */
+export function hasPaidAccess(profile: Profile): boolean {
+  if (profile.is_admin) return true;
+  if (profile.access_status === 'rejected') return false;
+
+  return (
+    (profile.plan === 'pack' || profile.plan === 'pass') &&
+    profile.subscription_status === 'active'
+  );
+}

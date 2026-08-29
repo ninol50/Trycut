@@ -24,7 +24,7 @@ export default function FinalCta() {
 
         <div className="mt-7">
           <Link
-            href="/onboarding/photo"
+            href="/tarifs"
             onClick={() => track('landing_cta_clicked', { location: 'final' })}
             className="btn-primary w-full"
           >

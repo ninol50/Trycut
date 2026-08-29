@@ -1,3 +1,4 @@
+import { requirePaidAccess } from '@/lib/paywall';
 import ResultScreen from '@/components/generation/ResultScreen';
 import Footer from '@/components/Footer';
 
@@ -8,6 +9,8 @@ export default async function OnboardingResultPage({
 }: {
   searchParams: Promise<{ id?: string }>;
 }) {
+  await requirePaidAccess();
+
   const { id } = await searchParams;
 
   return (

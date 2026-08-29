@@ -3,7 +3,8 @@ import PhotoStudio from '@/components/generation/PhotoStudio';
 import HistoryStrip from '@/components/generation/HistoryStrip';
 import OnboardingSync from '@/components/onboarding/OnboardingSync';
 import { loadCatalog } from '@/lib/catalog-server';
-import { loadHistory, loadProfile, premiumLocked } from '@/lib/profile';
+import { loadHistory, loadProfile, premiumLocked, hasPaidAccess } from '@/lib/profile';
+import PaywallNotice from '@/components/PaywallNotice';
 
 export const metadata = { title: 'Mon espace — Trycut' };
 export const dynamic = 'force-dynamic';
@@ -12,13 +13,6 @@ export default async function AppPage() {
   const session = await loadProfile();
   if (!session) redirect('/connexion');
 
-  const [catalog, history] = await Promise.all([
-    loadCatalog(),
-    loadHistory(session.user.id),
-  ]);
-
-  // Seul un compte banni est arrêté ici. L'inscription ouvre le site ; c'est
-  // le solde de coupes, donc le paiement, qui ouvre la génération.
   if (session.profile.access_status === 'rejected') {
     return (
       <div className="section py-14">
@@ -29,6 +23,19 @@ export default async function AppPage() {
       </div>
     );
   }
+
+  // Sans abonnement actif, on ne charge même pas le catalogue : il n'y a rien
+  // à montrer avant le paiement.
+  if (!hasPaidAccess(session.profile)) {
+    return (
+      <PaywallNotice reason={session.profile.subscription_status === 'past_due' ? 'past_due' : 'none'} />
+    );
+  }
+
+  const [catalog, history] = await Promise.all([
+    loadCatalog(),
+    loadHistory(session.user.id),
+  ]);
 
   return (
     <>

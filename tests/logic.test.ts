@@ -8,6 +8,8 @@ import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
 import { createAnonToken, verifyAnonToken } from '@/lib/anon-token';
 import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
 import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pricing';
+import { hasPaidAccess } from '@/lib/profile';
+import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 
 // ------------------------------------------------------------------ catalogue
@@ -435,4 +437,47 @@ test('chaque style du catalogue a son dessin', async () => {
       `aucun dessin pour ${item.slug}`,
     );
   }
+});
+
+// --------------------------------------------------------------------- accès
+const profile = (over: Partial<Profile>): Profile =>
+  ({
+    id: 'u',
+    email: 'a@b.fr',
+    first_name: null,
+    plan: 'free',
+    subscription_status: 'none',
+    credits_remaining: 0,
+    access_status: 'approved',
+    is_admin: false,
+    age_confirmed: true,
+    stripe_customer_id: null,
+    current_period_end: null,
+    created_at: '2026-01-01',
+    ...over,
+  }) as Profile;
+
+test('sans abonnement, aucun accès', () => {
+  // Un compte existe pour recevoir l'abonnement, pas pour essayer le produit.
+  assert.equal(hasPaidAccess(profile({})), false);
+  assert.equal(hasPaidAccess(profile({ credits_remaining: 5 })), false, 'des coupes sans offre active ne suffisent pas');
+  assert.equal(hasPaidAccess(profile({ plan: 'pack', subscription_status: 'none' })), false);
+});
+
+test('un abonnement actif ouvre l’accès', () => {
+  assert.equal(hasPaidAccess(profile({ plan: 'pack', subscription_status: 'active' })), true);
+  assert.equal(hasPaidAccess(profile({ plan: 'pass', subscription_status: 'active' })), true);
+});
+
+test('un impayé referme l’accès, un bannissement aussi', () => {
+  assert.equal(hasPaidAccess(profile({ plan: 'pack', subscription_status: 'past_due' })), false);
+  assert.equal(
+    hasPaidAccess(profile({ plan: 'pack', subscription_status: 'active', access_status: 'rejected' })),
+    false,
+    'un compte banni passe avant l’abonnement',
+  );
+});
+
+test('un administrateur garde l’accès à son propre produit', () => {
+  assert.equal(hasPaidAccess(profile({ is_admin: true })), true);
 });

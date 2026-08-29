@@ -30,7 +30,11 @@ export function referenceUrlFor(slug: string): string | null {
 
 /** Consigne ajoutée quand au moins une référence accompagne la demande. */
 export const REFERENCE_CLAUSE =
-  'The additional images are style references only: copy the shape and cut they ' +
-  'show, and nothing else. Do not copy the reference person, their face, their ' +
-  'skin tone, their body, their clothing or their background. Adapt the style to ' +
-  'the hair colour and hair texture of the person in the first image.';
+  'The first image is the person to edit, and the only person who may appear in ' +
+  'the result: the output must be that same person, same face, same head angle, ' +
+  'same background. The other images are style references only. Reproduce the ' +
+  'shape of the haircut, beard or colour they show, adapted to the head angle, ' +
+  'hair colour and hair texture of the person in the first image — if that person ' +
+  'faces the camera, the same cut must be rendered facing the camera. Never copy ' +
+  'the reference person’s face, skin tone, body, clothing, pose or background, and ' +
+  'never return the reference image itself.';

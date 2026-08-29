@@ -56,7 +56,7 @@ export default function Steps() {
 
       <div className="mt-8">
         <Link
-          href="/onboarding/photo"
+          href="/tarifs"
           onClick={() => track('landing_cta_clicked', { location: 'steps' })}
           className="btn-primary w-full"
         >

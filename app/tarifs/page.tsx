@@ -70,8 +70,8 @@ export default async function PricingPage({
                     email={user?.email ?? null}
                   />
                 ) : (
-                  <Link href="/onboarding/photo" className="btn-outline w-full">
-                    Voir le catalogue
+                  <Link href="/inscription" className="btn-outline w-full">
+                    Créer mon compte
                   </Link>
                 )}
               </div>
