@@ -32,6 +32,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Les coupes restées « en cours » : personne ne les débloquera si l'onglet a
+  // été fermé, l'écran de suivi étant le seul autre appelant.
+  const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_generations');
+  if (sweepError) {
+    console.error('[cron] balayage des rendus bloqués', sweepError.message);
+  }
+
   const now = Date.now();
   const cutoffUsers = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
   const cutoffAnon = new Date(now - 24 * 60 * 60 * 1000).toISOString();
@@ -43,6 +50,7 @@ export async function GET(request: NextRequest) {
     ok: true,
     comptes: purgeUsers,
     anonymes: purgeAnon,
+    rendus_debloques: typeof swept === 'number' ? swept : null,
   });
 }
 
