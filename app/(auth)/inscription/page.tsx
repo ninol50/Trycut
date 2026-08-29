@@ -11,8 +11,8 @@ export default function SignUpPage() {
       <main className="section py-10">
         <h1 className="text-2xl">Garde tes résultats.</h1>
         <p className="mt-3 text-base text-slate-500">
-          Un compte débloque un crédit offert après vérification de ton email, et sauvegarde
-          tes essais.
+          Crée ton compte, confirme ton email, et le catalogue s’ouvre. Générer une coupe
+          demande un abonnement — Pack ou Pass, résiliable à tout moment.
         </p>
 
         <div className="mt-8">

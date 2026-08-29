@@ -37,7 +37,7 @@ export default function GenerationWatcher({
     return (
       <ErrorState
         kind="network"
-        message="Le rendu prend plus de temps que prévu. Ton crédit n’est pas perdu, réessaie."
+        message="Le rendu prend plus de temps que prévu. Ta coupe n’est pas perdue, réessaie."
         onRetry={() => router.push(retryPath)}
       />
     );

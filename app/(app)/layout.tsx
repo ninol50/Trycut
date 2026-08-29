@@ -33,7 +33,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
           <div className="flex items-center gap-3">
             <span className="rounded-full bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-600">
-              {session.profile.credits_remaining} crédits
+              {session.profile.credits_remaining} coupe
+              {session.profile.credits_remaining > 1 ? 's' : ''}
             </span>
             {session.profile.is_admin ? (
               <Link href="/admin" className="text-sm font-semibold text-violet-600 underline">

@@ -77,7 +77,12 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error('[generations] start_generation', error.message);
     return NextResponse.json(
-      { error: 'network', message: 'La connexion a été interrompue. Réessaie.' },
+      {
+        error: 'network',
+        // Le crédit vient d'être remboursé par fail_generation : le dire, sinon
+        // la personne croit avoir perdu une coupe.
+        message: 'Le service de rendu n’a pas répondu. Ta coupe t’a été rendue, réessaie.',
+      },
       { status: 502 },
     );
   }
@@ -131,7 +136,12 @@ export async function POST(request: NextRequest) {
       p_error_message: 'Le service de rendu n’a pas répondu. Ta coupe t’a été rendue.',
     });
     return NextResponse.json(
-      { error: 'network', message: 'La connexion a été interrompue. Réessaie.' },
+      {
+        error: 'network',
+        // Le crédit vient d'être remboursé par fail_generation : le dire, sinon
+        // la personne croit avoir perdu une coupe.
+        message: 'Le service de rendu n’a pas répondu. Ta coupe t’a été rendue, réessaie.',
+      },
       { status: 502 },
     );
   }

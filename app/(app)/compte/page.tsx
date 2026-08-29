@@ -40,7 +40,7 @@ export default async function AccountPage({
 
       {params.paiement === 'ok' ? (
         <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
-          Paiement confirmé. Tes crédits arrivent dans quelques secondes.
+          Paiement confirmé. Tes coupes arrivent dans quelques secondes.
         </p>
       ) : null}
 
