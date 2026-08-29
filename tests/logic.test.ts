@@ -310,3 +310,17 @@ test('l’adresse de rappel voyage dans l’URL, pas dans le corps', () => {
   // Le secret doit ressortir intact malgré le double encodage.
   assert.equal(callback.searchParams.get('secret'), 'secret/avec+caracteres');
 });
+
+test('aucun client Supabase ne lit NEXT_PUBLIC_ en direct', async () => {
+  // Vercel définit ses variables même vides. Une lecture directe de
+  // process.env échouait donc là où le reste du site retombait sur son repli :
+  // le rappel du fournisseur d'IA répondait 500 et la coupe était perdue.
+  const source = await import('node:fs').then((fs) =>
+    fs.readFileSync('lib/supabase/server.ts', 'utf8'),
+  );
+  assert.equal(
+    /required\(\s*'NEXT_PUBLIC_/.test(source),
+    false,
+    'lib/supabase/server.ts doit passer par `env`, jamais par required() sur une variable NEXT_PUBLIC_',
+  );
+});

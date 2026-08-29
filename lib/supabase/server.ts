@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { env, required } from '@/lib/env';
+import { env } from '@/lib/env';
 
 /**
  * Client serveur lié à la session utilisateur. **C'est le client par défaut.**
@@ -37,11 +37,22 @@ export async function createServerSupabase() {
  * autrement (secret par ligne). N'a aucun privilège particulier.
  */
 export function createAnonSupabase() {
-  return createSupabaseClient(
-    required('NEXT_PUBLIC_SUPABASE_URL'),
-    required('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
+  // Passer par `env` et non par process.env : Vercel définit les variables même
+  // vides, et une lecture directe échouait donc là où tout le reste du site
+  // retombait sur son repli. C'est ce qui faisait planter le rappel du
+  // fournisseur d'IA en 500, coupe débitée et jamais rendue.
+  const url = env.supabaseUrl;
+  const key = env.supabaseAnonKey;
+
+  if (!url || !key) {
+    throw new Error(
+      'Supabase n’est pas configuré : NEXT_PUBLIC_SUPABASE_URL ou NEXT_PUBLIC_SUPABASE_ANON_KEY est vide.',
+    );
+  }
+
+  return createSupabaseClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 /**
