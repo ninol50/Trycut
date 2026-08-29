@@ -137,7 +137,7 @@ test('chaque rendu exige de préserver le visage', () => {
   // lui changer les cheveux.
   for (const item of CATALOG_SEED) {
     const prompt = buildPrompt([item.prompt_template], [item.category], {});
-    assert.match(prompt, /face, identity/, `clause d'identité absente sur ${item.slug}`);
+    assert.match(prompt, /Do not change the face/, `clause d'identité absente sur ${item.slug}`);
     assert.match(prompt, /Photorealistic/, `exigence photoréaliste absente sur ${item.slug}`);
   }
 });
@@ -398,4 +398,24 @@ test('aucun client Supabase ne lit NEXT_PUBLIC_ en direct', async () => {
     false,
     'lib/supabase/server.ts doit passer par `env`, jamais par required() sur une variable NEXT_PUBLIC_',
   );
+});
+
+test('une coupe seule ne doit toucher que les cheveux', () => {
+  const prompt = buildPrompt([seeded('cut-buzz').prompt_template], ['cut'], {});
+
+  assert.match(prompt, /Change only the hair on the head\./);
+  assert.match(prompt, /Do not change the face/);
+  assert.match(prompt, /same individual/);
+  assert.match(prompt, /Keep the existing facial hair/, 'la barbe doit rester figée');
+});
+
+test('la portée nomme les deux familles quand deux sont choisies', () => {
+  const prompt = buildPrompt(
+    [seeded('cut-buzz').prompt_template, seeded('beard-moustache').prompt_template],
+    ['cut', 'beard'],
+    {},
+  );
+
+  assert.match(prompt, /Change only the hair on the head and the facial hair\./);
+  assert.match(prompt, /Do not change the face/);
 });

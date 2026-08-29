@@ -98,6 +98,10 @@ export const falProvider: AiProvider = {
           image_url: input.imageUrl,
           num_images: 1,
           output_format: 'jpeg',
+          // Par défaut le modèle s'autorise à réinterpréter largement la photo.
+          // Une adhérence plus forte le tient à la consigne et au visage
+          // d'origine ; au-delà, le rendu se fige et devient artificiel.
+          guidance_scale: 4.5,
         }),
       },
     );

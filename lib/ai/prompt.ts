@@ -58,14 +58,44 @@ const PRESERVE: Record<CatalogCategory, string> = {
 const ALL_CATEGORIES: readonly CatalogCategory[] = ['cut', 'beard', 'color', 'accessory'];
 
 /**
+ * Ce que le rendu a le droit de toucher, nommé positivement.
+ *
+ * Un modèle d'édition suit bien mieux « ne change que les cheveux » qu'une
+ * liste d'interdictions reléguée en fin de consigne. La portée est donc
+ * énoncée juste après l'instruction, avant tout le reste.
+ */
+const SCOPE: Record<CatalogCategory, string> = {
+  cut: 'the hair on the head',
+  beard: 'the facial hair',
+  color: 'the hair colour',
+  accessory: 'the added accessory',
+};
+
+function scopeSentence(categories: readonly CatalogCategory[]): string {
+  const parts = ALL_CATEGORIES.filter((category) => categories.includes(category)).map(
+    (category) => SCOPE[category],
+  );
+  if (parts.length === 0) return '';
+
+  const list =
+    parts.length === 1
+      ? parts[0]
+      : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+
+  return `Change only ${list}. Everything else in the photograph must stay pixel for pixel identical.`;
+}
+
+/**
  * Clause d'identité, ajoutée à chaque rendu. Sans elle, le modèle reconstruit
  * la personne au lieu de lui changer les cheveux.
  */
 const IDENTITY_CLAUSE =
-  'Keep the person’s face, identity, facial features, expression, skin tone, ' +
-  'body, clothing, background, framing, camera angle and lighting exactly ' +
-  'unchanged. Photorealistic photograph, natural hair texture, sharp realistic ' +
-  'detail, no illustration or cartoon style.';
+  'Do not change the face: same facial features, same face shape, same nose, ' +
+  'eyes, mouth, jawline, expression and skin tone, so that the person stays ' +
+  'immediately recognisable as the same individual. Keep the body, clothing, ' +
+  'background, framing, camera angle and lighting exactly unchanged. ' +
+  'Photorealistic photograph, natural hair texture, sharp realistic detail, ' +
+  'no illustration or cartoon style.';
 
 export function buildPrompt(
   templates: readonly string[],
@@ -98,5 +128,13 @@ export function buildPrompt(
     values.beard && !asked.has('beard') ? `Beard: ${values.beard}.` : null,
   ].filter((part): part is string => part !== null);
 
-  return [...instructions, ...details, ...preserve, IDENTITY_CLAUSE].join(' ');
+  return [
+    ...instructions,
+    scopeSentence(categories),
+    ...details,
+    ...preserve,
+    IDENTITY_CLAUSE,
+  ]
+    .filter((part) => part.length > 0)
+    .join(' ');
 }
