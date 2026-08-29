@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CATEGORY_LABELS } from '@/lib/catalog';
+import StyleIllustration from '@/components/catalog/StyleIllustration';
 import { useTapScale } from '@/components/motion';
 import type { PublicCatalogItem } from '@/types/db';
 
@@ -57,7 +57,7 @@ export default function CatalogPicker({
                     onClick={() => onToggle(item)}
                     className="relative flex aspect-square flex-col items-center justify-end overflow-hidden rounded-2xl bg-violet-50 p-2 text-center disabled:opacity-45"
                   >
-                    <Thumbnail src={item.preview_path} />
+                    <StyleIllustration slug={item.slug} category={item.category} />
 
                     {active ? (
                       <motion.span
@@ -83,25 +83,5 @@ export default function CatalogPicker({
         );
       })}
     </div>
-  );
-}
-
-/**
- * Vignette du catalogue. Le fichier peut ne pas exister encore : on le masque
- * en silence plutôt que d'afficher une image cassée.
- */
-function Thumbnail({ src }: { src: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return null;
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      onError={() => setFailed(true)}
-      className="absolute inset-0 h-full w-full object-cover"
-    />
   );
 }
