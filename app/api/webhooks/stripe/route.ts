@@ -62,6 +62,12 @@ export async function POST(request: NextRequest) {
         await handleInvoicePaid(event.data.object, admin);
         break;
       }
+      case 'invoice.payment_failed': {
+        // Paiement refusé : l'accès est coupé jusqu'au règlement. Les coupes
+        // restantes sont conservées, elles reviennent avec le paiement.
+        await handlePaymentFailed(event.data.object, admin);
+        break;
+      }
       default:
         break;
     }
@@ -207,5 +213,18 @@ async function handleInvoicePaid(invoice: Stripe.Invoice, admin: Admin): Promise
   await admin
     .from('profiles')
     .update({ plan: mapped.plan, subscription_status: 'active' })
+    .eq('id', userId);
+}
+
+async function handlePaymentFailed(invoice: Stripe.Invoice, admin: Admin): Promise<void> {
+  const customer = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+  if (!customer) return;
+
+  const userId = await userIdForCustomer(customer, admin);
+  if (!userId) return;
+
+  await admin
+    .from('profiles')
+    .update({ subscription_status: 'past_due' })
     .eq('id', userId);
 }

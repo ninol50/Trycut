@@ -133,8 +133,12 @@ export default function PhotoStudio({
 
       if (!response.ok) {
         const code = read('error');
-        const kind: ErrorKind =
-          code === 'quota' ? 'quota' : code === 'capacity' ? 'capacity' : 'network';
+        const known: readonly ErrorKind[] = [
+          'quota', 'capacity', 'pending', 'rejected', 'payment', 'file',
+        ];
+        const kind: ErrorKind = known.includes(code as ErrorKind)
+          ? (code as ErrorKind)
+          : 'network';
         setError({ kind, message: read('message') });
         return;
       }

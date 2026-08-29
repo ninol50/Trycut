@@ -35,6 +35,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <span className="rounded-full bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-600">
               {session.profile.credits_remaining} crédits
             </span>
+            {session.profile.is_admin ? (
+              <Link href="/admin" className="text-sm font-semibold text-violet-600 underline">
+                Inscrits
+              </Link>
+            ) : null}
             <Link href="/compte" className="text-sm font-semibold text-violet-600 underline">
               Compte
             </Link>

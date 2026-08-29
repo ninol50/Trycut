@@ -27,6 +27,9 @@ export interface Profile {
   current_period_end: string | null;
   credits_remaining: number;
   photo_retention_optin: boolean;
+  /** Accès accordé à la main par le propriétaire du site. */
+  access_status: 'pending' | 'approved' | 'rejected';
+  is_admin: boolean;
   created_at: string;
 }
 

@@ -34,6 +34,15 @@ const ERRORS: Record<string, { status: number; message: string }> = {
   file: { status: 400, message: 'Photo introuvable. Reprends-en une.' },
   quota: { status: 402, message: 'Il te reste 0 coupe. Passe en Pack pour continuer.' },
   capacity: { status: 503, message: CAPACITY_MESSAGE },
+  pending: {
+    status: 403,
+    message: 'Ton compte attend d’être validé. Tu recevras un email dès qu’il est ouvert.',
+  },
+  rejected: { status: 403, message: 'Ton compte n’a pas accès au service.' },
+  payment: {
+    status: 402,
+    message: 'Ton dernier paiement a été refusé. Mets ton moyen de paiement à jour.',
+  },
 };
 
 export async function POST(request: NextRequest) {

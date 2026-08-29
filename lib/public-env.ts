@@ -20,6 +20,10 @@
 const stableHost = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || '';
 const vercelHost = process.env.NEXT_PUBLIC_VERCEL_URL || '';
 
+/** Domaine de production. Surchargé par NEXT_PUBLIC_SITE_URL si besoin. */
+const DEFAULT_SITE_URL =
+  process.env.NODE_ENV === 'production' ? 'https://trycutapps.site' : 'http://localhost:3000';
+
 const DEFAULT_SUPABASE_URL = 'https://otgqqrrbanuyiqfspsrm.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90Z3FxcnJiYW51eWlxZnNwc3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODY0NTQsImV4cCI6MjEwMzM2MjQ1NH0.4AD-I3lER0coofb8ckAXzj_YIckSyN9cpijHRvm8mKY';
@@ -29,7 +33,7 @@ export const publicEnv = {
     process.env.NEXT_PUBLIC_SITE_URL ||
     (stableHost ? `https://${stableHost}` : '') ||
     (vercelHost ? `https://${vercelHost}` : '') ||
-    'http://localhost:3000',
+    DEFAULT_SITE_URL,
   /**
    * Projet Supabase par défaut. L'URL et la clé « anon » sont publiques par
    * conception : elles partent dans le navigateur de chaque visiteur, et tout

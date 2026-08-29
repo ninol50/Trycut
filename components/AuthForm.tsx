@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -32,9 +32,22 @@ function SubmitButton({ label }: { label: string }) {
   );
 }
 
+const REMEMBERED_EMAIL = 'trycut_email';
+
 export default function AuthForm({ mode, action, defaultFirstName }: AuthFormProps) {
   const [state, formAction] = useActionState(action, INITIAL);
+  const [email, setEmail] = useState('');
   const isSignup = mode === 'signup';
+
+  // L'email est repropose au retour ; le mot de passe est laisse au
+  // gestionnaire du navigateur, qui est fait pour ca.
+  useEffect(() => {
+    try {
+      setEmail(window.localStorage.getItem(REMEMBERED_EMAIL) ?? '');
+    } catch {
+      // navigation privee
+    }
+  }, []);
 
   useEffect(() => {
     if (isSignup && state.notice) track('signup_completed', { method: 'email' });
@@ -63,6 +76,15 @@ export default function AuthForm({ mode, action, defaultFirstName }: AuthFormPro
           required
           autoComplete="email"
           inputMode="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            try {
+              window.localStorage.setItem(REMEMBERED_EMAIL, event.target.value);
+            } catch {
+              // navigation privee
+            }
+          }}
           className="w-full rounded-2xl border border-violet-200 px-4 py-3 text-base"
         />
       </label>

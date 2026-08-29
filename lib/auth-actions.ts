@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured, env } from '@/lib/env';
+import { sendWelcomeEmail } from '@/lib/email';
 
 export interface AuthFormState {
   error: string | null;
@@ -41,7 +42,7 @@ export async function signUpAction(
   }
 
   const supabase = await createServerSupabase();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -54,10 +55,20 @@ export async function signUpAction(
     return { error: error.message || GENERIC_ERROR, notice: null };
   }
 
+  // Quand la confirmation d'email est désactivée, Supabase renvoie
+  // directement une session : on entre dans l'app sans passer par la boîte mail.
+  if (data.session) {
+    if (data.user?.email) {
+      void sendWelcomeEmail(data.user.email, firstName || null).catch(() => undefined);
+    }
+    revalidatePath('/', 'layout');
+    redirect('/app');
+  }
+
+  // Confirmation encore active côté Supabase : on le dit clairement.
   return {
     error: null,
-    notice:
-      'Compte créé. Ouvre l’email de confirmation : ton crédit offert est débloqué à la vérification.',
+    notice: 'Compte créé. Ouvre l’email de confirmation pour activer ton accès.',
   };
 }
 

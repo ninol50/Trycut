@@ -61,7 +61,12 @@ export const env = {
   stripePricePackOneshot: optional('STRIPE_PRICE_PACK_ONESHOT'),
 
   resendApiKey: optional('RESEND_API_KEY'),
-  emailFrom: optional('EMAIL_FROM') ?? 'Trycut <bonjour@trycut.io>',
+  /**
+   * Expéditeur par défaut : l'adresse partagée de Resend, qui fonctionne sans
+   * domaine vérifié mais n'atteint que l'adresse du titulaire du compte.
+   * À remplacer par une adresse du domaine une fois celui-ci vérifié.
+   */
+  emailFrom: optional('EMAIL_FROM') ?? 'Trycut <onboarding@resend.dev>',
 
   posthogKey: publicEnv.posthogKey || undefined,
   posthogHost: publicEnv.posthogHost,
