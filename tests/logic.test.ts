@@ -21,17 +21,6 @@ test('le catalogue contient 16 coupes, 9 barbes, 8 couleurs et 10 accessoires', 
   assert.equal(count('accessory'), 10);
 });
 
-test('chaque consigne dit ce qu’elle ne doit pas toucher', () => {
-  // Un modèle d'édition change tout ce qu'on ne lui interdit pas : une coupe
-  // qui recolore les cheveux, ou une couleur qui raccourcit la coupe, sont des
-  // rendus ratés même quand l'image est belle.
-  for (const item of FALLBACK_CATALOG) {
-    const seeded = CATALOG_SEED.find((candidate) => candidate.slug === item.slug);
-    assert.ok(seeded, `gabarit absent pour ${item.slug}`);
-    assert.match(seeded.prompt_template, /Keep the existing/, `rien de préservé sur ${item.slug}`);
-  }
-});
-
 test('aucun slug dupliqué', () => {
   const slugs = new Set(FALLBACK_CATALOG.map((item) => item.slug));
   assert.equal(slugs.size, FALLBACK_CATALOG.length);
@@ -89,10 +78,14 @@ test('« je ne sais pas » est neutre, il ne pénalise rien', () => {
 });
 
 // --------------------------------------------------------------------- prompt
+const seeded = (slug: string) => {
+  const item = CATALOG_SEED.find((candidate) => candidate.slug === slug);
+  assert.ok(item, `gabarit introuvable : ${slug}`);
+  return item;
+};
+
 test('le prompt reprend les précisions du profil, en anglais', () => {
-  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-buzz');
-  assert.ok(item);
-  const prompt = buildPrompt(item.prompt_template, {
+  const prompt = buildPrompt([seeded('color-platine').prompt_template], ['color'], {
     texture: 'crepus',
     length: 'court',
     beard: 'fournie',
@@ -107,20 +100,43 @@ test('le prompt reprend les précisions du profil, en anglais', () => {
 test('sans questionnaire, aucune précision vide n’est ajoutée', () => {
   // Les valeurs par défaut affirmaient « longueur actuelle, barbe inchangée » à
   // chaque rendu : trois phrases sans information qui diluaient la consigne.
-  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-buzz');
-  assert.ok(item);
-  const prompt = buildPrompt(item.prompt_template, {});
+  const prompt = buildPrompt([seeded('cut-buzz').prompt_template], ['cut'], {});
 
   assert.doesNotMatch(prompt, /Current hair texture/);
   assert.doesNotMatch(prompt, /Current hair length/);
   assert.doesNotMatch(prompt, /Beard:/);
 });
 
+test('une coupe seule interdit de toucher à la barbe et à la couleur', () => {
+  // Un modèle d'édition change tout ce qu'on ne lui interdit pas.
+  const prompt = buildPrompt([seeded('cut-buzz').prompt_template], ['cut'], {});
+
+  assert.match(prompt, /Keep the existing facial hair/);
+  assert.match(prompt, /Keep the existing hair colour/);
+  assert.doesNotMatch(prompt, /Keep the existing hairstyle/, 'la coupe est justement ce qu’on change');
+});
+
+test('coupe et barbe combinées ne se contredisent pas', () => {
+  // C'est le piège du choix multiple : chaque gabarit portait autrefois sa
+  // propre clause « garde le reste », et deux styles ensemble s'annulaient.
+  const prompt = buildPrompt(
+    [seeded('cut-buzz').prompt_template, seeded('beard-moustache').prompt_template],
+    ['cut', 'beard'],
+    {},
+  );
+
+  assert.match(prompt, /buzz cut/);
+  assert.match(prompt, /moustache/);
+  assert.doesNotMatch(prompt, /Keep the existing facial hair/, 'la barbe est demandée, on ne la fige pas');
+  assert.doesNotMatch(prompt, /Keep the existing hairstyle/, 'la coupe est demandée, on ne la fige pas');
+  assert.match(prompt, /Keep the existing hair colour/, 'la couleur n’est pas demandée : elle doit être figée');
+});
+
 test('chaque rendu exige de préserver le visage', () => {
   // Sans cette clause, le modèle d'édition reconstruit la personne au lieu de
   // lui changer les cheveux.
   for (const item of CATALOG_SEED) {
-    const prompt = buildPrompt(item.prompt_template, {});
+    const prompt = buildPrompt([item.prompt_template], [item.category], {});
     assert.match(prompt, /face, identity/, `clause d'identité absente sur ${item.slug}`);
     assert.match(prompt, /Photorealistic/, `exigence photoréaliste absente sur ${item.slug}`);
   }
@@ -139,9 +155,21 @@ test('les consignes envoyées au modèle sont en anglais', () => {
   }
 });
 
+test('aucun gabarit ne porte sa propre clause de préservation', () => {
+  // Elle se calcule désormais à partir des familles non demandées : la laisser
+  // dans le gabarit ferait resurgir la contradiction du choix multiple.
+  for (const item of CATALOG_SEED) {
+    assert.doesNotMatch(
+      item.prompt_template,
+      /Keep the existing/,
+      `le gabarit de ${item.slug} fige encore quelque chose lui-même`,
+    );
+  }
+});
+
 test('aucune variable ne subsiste sur l’ensemble du catalogue', () => {
   for (const item of CATALOG_SEED) {
-    const prompt = buildPrompt(item.prompt_template, {});
+    const prompt = buildPrompt([item.prompt_template], [item.category], {});
     assert.doesNotMatch(prompt, /\{\{\w+\}\}/, `variable non résolue dans ${item.slug}`);
   }
 });

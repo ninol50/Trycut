@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createServerSupabase, getSessionUser } from '@/lib/supabase/server';
+import type { CatalogCategory } from '@/types/db';
 import { env, isSupabaseConfigured } from '@/lib/env';
 import { CAPACITY_MESSAGE } from '@/lib/limits';
 import { UPLOAD_BUCKET } from '@/lib/storage';
@@ -10,14 +11,14 @@ import { buildPrompt, type PromptContext } from '@/lib/ai/prompt';
 export const runtime = 'nodejs';
 
 /**
- * Le client n'envoie QUE `imagePath` et `catalogItemId` — jamais de prompt libre.
+ * Le client n'envoie QUE `imagePath` et des `catalogItemIds` — jamais de prompt libre.
  * Tout l'enchaînement sensible (propriété du fichier, rate limit, plafonds,
  * débit du crédit, insertion) se joue dans `start_generation`, une seule
  * transaction Postgres. L'app ne peut pas en contourner une étape.
  */
 const bodySchema = z.object({
   imagePath: z.string().min(1).max(400),
-  catalogItemId: z.string().uuid(),
+  catalogItemIds: z.array(z.string().uuid()).min(1).max(4),
   profile: z
     .object({
       texture: z.string().max(40).optional(),
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'file', message: 'Requête invalide.' }, { status: 400 });
   }
 
-  const { imagePath, catalogItemId, profile } = parsed.data;
+  const { imagePath, catalogItemIds, profile } = parsed.data;
 
   const user = await getSessionUser();
   if (!user) {
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
   // `start_generation` renvoie aussi le gabarit de prompt : la colonne n'est
   // pas lisible par le client, elle ne transite que par cette fonction.
   const { data, error } = await supabase.rpc('start_generation', {
-    p_catalog_item_id: catalogItemId,
+    p_catalog_item_ids: catalogItemIds,
     p_source_path: imagePath,
   });
 
@@ -97,12 +98,20 @@ export async function POST(request: NextRequest) {
         generation_id: string | null;
         callback_secret: string | null;
         credits_left: number;
-        prompt_template: string | null;
+        prompt_templates: string[] | null;
+        categories: CatalogCategory[] | null;
         error_code: string | null;
       }
     | undefined;
 
-  if (!row || row.error_code || !row.generation_id || !row.callback_secret || !row.prompt_template) {
+  if (
+    !row ||
+    row.error_code ||
+    !row.generation_id ||
+    !row.callback_secret ||
+    !row.prompt_templates ||
+    !row.categories
+  ) {
     const code = row?.error_code ?? 'network';
     const mapped = ERRORS[code] ?? { status: 502, message: 'La connexion a été interrompue. Réessaie.' };
     return NextResponse.json({ error: code, message: mapped.message }, { status: mapped.status });
@@ -121,7 +130,7 @@ export async function POST(request: NextRequest) {
     const context: PromptContext = profile ?? {};
     const { jobId } = await getProvider().generate({
       imageUrl: signed.signedUrl,
-      prompt: buildPrompt(row.prompt_template, context),
+      prompt: buildPrompt(row.prompt_templates, row.categories, context),
       generationId,
       callbackSecret,
       sourcePath: imagePath,

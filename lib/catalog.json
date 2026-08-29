@@ -16,7 +16,7 @@
       "sportif",
       "discret"
     ],
-    "prompt_template": "Give the person a buzz cut: uniform very short clipper cut of even length over the whole head, natural hairline. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a buzz cut: uniform very short clipper cut of even length over the whole head, natural hairline.",
     "preview_path": "/demo/catalog/cut-buzz.jpg",
     "is_premium": false,
     "sort_order": 10
@@ -37,7 +37,7 @@
       "allonge",
       "discret"
     ],
-    "prompt_template": "Shave the person completely bald: smooth clean scalp with no hair at all, natural skin tone and shine on the scalp. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Shave the person completely bald: smooth clean scalp with no hair at all, natural skin tone and shine on the scalp.",
     "preview_path": "/demo/catalog/cut-chauve.jpg",
     "is_premium": false,
     "sort_order": 20
@@ -59,7 +59,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Give the person a Spanish style fade haircut: skin fade on the sides and back, sharp defined line up at the temples and forehead, short textured top with a small straight fringe brought forward over the forehead. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a Spanish style fade haircut: skin fade on the sides and back, sharp defined line up at the temples and forehead, short textured top with a small straight fringe brought forward over the forehead.",
     "preview_path": "/demo/catalog/cut-degrade-espagnol.jpg",
     "is_premium": false,
     "sort_order": 30
@@ -81,7 +81,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Give the person a Spanish cuenca haircut: rounded bowl shaped cutting line following the top of the head, straight blunt fringe across the forehead, faded short sides and nape. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a Spanish cuenca haircut: rounded bowl shaped cutting line following the top of the head, straight blunt fringe across the forehead, faded short sides and nape.",
     "preview_path": "/demo/catalog/cut-cuenca.jpg",
     "is_premium": false,
     "sort_order": 40
@@ -103,7 +103,7 @@
       "moderne",
       "soigne"
     ],
-    "prompt_template": "Give the person a middle part hairstyle: hair of medium length parted straight down the centre, both sides falling symmetrically and framing the forehead, soft natural movement. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a middle part hairstyle: hair of medium length parted straight down the centre, both sides falling symmetrically and framing the forehead, soft natural movement.",
     "preview_path": "/demo/catalog/cut-middle-part.jpg",
     "is_premium": false,
     "sort_order": 50
@@ -126,7 +126,7 @@
       "classique",
       "soigne"
     ],
-    "prompt_template": "Give the person straight hair combed flat to one side: sleek smooth lengths with a clean side parting, no volume on top, tidy finish. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person straight hair combed flat to one side: sleek smooth lengths with a clean side parting, no volume on top, tidy finish.",
     "preview_path": "/demo/catalog/cut-lisse-cote.jpg",
     "is_premium": false,
     "sort_order": 60
@@ -147,7 +147,7 @@
       "raides",
       "rond"
     ],
-    "prompt_template": "Give the person a short men's perm: loose well defined curls about 4 cm long on top, falling slightly over the forehead, short tapered faded sides and back, natural springy curl pattern with visible separated curls. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a short men's perm: loose well defined curls about 4 cm long on top, falling slightly over the forehead, short tapered faded sides and back, natural springy curl pattern with visible separated curls.",
     "preview_path": "/demo/catalog/cut-permanente-courte.jpg",
     "is_premium": false,
     "sort_order": 70
@@ -168,7 +168,7 @@
       "raides",
       "rond"
     ],
-    "prompt_template": "Give the person a medium length men's perm: loose well defined curls about 8 cm long with full volume on top, curls falling over the forehead and covering the top of the ears, short tapered sides, natural springy separated curls. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a medium length men's perm: loose well defined curls about 8 cm long with full volume on top, curls falling over the forehead and covering the top of the ears, short tapered sides, natural springy separated curls.",
     "preview_path": "/demo/catalog/cut-permanente-mi-longue.jpg",
     "is_premium": false,
     "sort_order": 80
@@ -189,7 +189,7 @@
       "raides",
       "rond"
     ],
-    "prompt_template": "Give the person a long perm: loose well defined curls falling to the shoulders, abundant volume all around the head, natural springy separated curl pattern. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a long perm: loose well defined curls falling to the shoulders, abundant volume all around the head, natural springy separated curl pattern.",
     "preview_path": "/demo/catalog/cut-permanente-longue.jpg",
     "is_premium": false,
     "sort_order": 90
@@ -211,7 +211,7 @@
       "crepus",
       "soigne"
     ],
-    "prompt_template": "Give the person a short afro: even short natural coily hair over the whole head with a sharp lined up hairline at the forehead and temples. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a short afro: even short natural coily hair over the whole head with a sharp lined up hairline at the forehead and temples.",
     "preview_path": "/demo/catalog/cut-afro-court.jpg",
     "is_premium": false,
     "sort_order": 100
@@ -233,7 +233,7 @@
       "crepus",
       "remarque"
     ],
-    "prompt_template": "Give the person a medium length afro: rounded voluminous natural coily hair standing out from the head, even shape, sharp lined up hairline. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person a medium length afro: rounded voluminous natural coily hair standing out from the head, even shape, sharp lined up hairline.",
     "preview_path": "/demo/catalog/cut-afro-mi-long.jpg",
     "is_premium": false,
     "sort_order": 110
@@ -255,7 +255,7 @@
       "crepus",
       "streetwear"
     ],
-    "prompt_template": "Give the person dreadlocks: even cylindrical locs of shoulder length distributed over the whole head, neat parted roots. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person dreadlocks: even cylindrical locs of shoulder length distributed over the whole head, neat parted roots.",
     "preview_path": "/demo/catalog/cut-locks.jpg",
     "is_premium": false,
     "sort_order": 120
@@ -277,7 +277,7 @@
       "crepus",
       "streetwear"
     ],
-    "prompt_template": "Give the person braided hair: parallel cornrow braids laid flat along the scalp from the forehead to the nape, clean straight partings between them. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person braided hair: parallel cornrow braids laid flat along the scalp from the forehead to the nape, clean straight partings between them.",
     "preview_path": "/demo/catalog/cut-tresses.jpg",
     "is_premium": false,
     "sort_order": 130
@@ -298,7 +298,7 @@
       "allonge",
       "remarque"
     ],
-    "prompt_template": "Give the person long hair reaching well below the shoulders, worn loose with natural movement and a soft centre parting. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person long hair reaching well below the shoulders, worn loose with natural movement and a soft centre parting.",
     "preview_path": "/demo/catalog/cut-cheveux-longs.jpg",
     "is_premium": false,
     "sort_order": 140
@@ -319,7 +319,7 @@
       "allonge",
       "soigne"
     ],
-    "prompt_template": "Give the person long hair tied back into a bun at the back of the head, smooth pulled back lengths, clean hairline at the forehead. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person long hair tied back into a bun at the back of the head, smooth pulled back lengths, clean hairline at the forehead.",
     "preview_path": "/demo/catalog/cut-long-attache.jpg",
     "is_premium": false,
     "sort_order": 150
@@ -341,7 +341,7 @@
       "boucles",
       "soigne"
     ],
-    "prompt_template": "Give the person long curly hair tied back into a bun at the back of the head, curls visible around the hairline and in the bun. Keep the existing hair colour, and keep the beard exactly as it is.",
+    "prompt_template": "Give the person long curly hair tied back into a bun at the back of the head, curls visible around the hairline and in the bun.",
     "preview_path": "/demo/catalog/cut-long-attache-boucle.jpg",
     "is_premium": false,
     "sort_order": 160
@@ -359,7 +359,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Recolour the person's hair to cool platinum blonde, uniform from roots to ends. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to cool platinum blonde, uniform from roots to ends.",
     "preview_path": "/demo/catalog/color-platine.jpg",
     "is_premium": false,
     "sort_order": 210
@@ -376,7 +376,7 @@
       "soigne",
       "modere"
     ],
-    "prompt_template": "Recolour the person's hair to cool ash blonde with no golden tones. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to cool ash blonde with no golden tones.",
     "preview_path": "/demo/catalog/color-cendre.jpg",
     "is_premium": false,
     "sort_order": 220
@@ -394,7 +394,7 @@
       "classique",
       "modere"
     ],
-    "prompt_template": "Recolour the person's hair to warm caramel brown with subtle golden highlights. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to warm caramel brown with subtle golden highlights.",
     "preview_path": "/demo/catalog/color-caramel.jpg",
     "is_premium": false,
     "sort_order": 230
@@ -412,7 +412,7 @@
       "modere",
       "remarque"
     ],
-    "prompt_template": "Recolour the person's hair to fine lightened highlights through the top, keeping the base darker. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to fine lightened highlights through the top, keeping the base darker.",
     "preview_path": "/demo/catalog/color-meches.jpg",
     "is_premium": false,
     "sort_order": 240
@@ -430,7 +430,7 @@
       "soigne",
       "modere"
     ],
-    "prompt_template": "Recolour the person's hair to uniform warm honey blonde. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to uniform warm honey blonde.",
     "preview_path": "/demo/catalog/color-blond-miel.jpg",
     "is_premium": false,
     "sort_order": 250
@@ -449,7 +449,7 @@
       "soigne",
       "discret"
     ],
-    "prompt_template": "Recolour the person's hair to deep cool brown with no red tones. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to deep cool brown with no red tones.",
     "preview_path": "/demo/catalog/color-chatain-froid.jpg",
     "is_premium": false,
     "sort_order": 260
@@ -468,7 +468,7 @@
       "soigne",
       "discret"
     ],
-    "prompt_template": "Recolour the person's hair to deep uniform black with natural shine. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to deep uniform black with natural shine.",
     "preview_path": "/demo/catalog/color-noir-intense.jpg",
     "is_premium": false,
     "sort_order": 270
@@ -485,7 +485,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Recolour the person's hair to saturated copper red. Keep the existing haircut, hair length and hairstyle exactly as they are.",
+    "prompt_template": "Recolour the person's hair to saturated copper red.",
     "preview_path": "/demo/catalog/color-roux-cuivre.jpg",
     "is_premium": true,
     "sort_order": 280
@@ -499,7 +499,7 @@
       "discret",
       "soigne"
     ],
-    "prompt_template": "Remove the person's facial hair completely: clean shaven face with smooth skin, no stubble. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Remove the person's facial hair completely: clean shaven face with smooth skin, no stubble.",
     "preview_path": "/demo/catalog/beard-rase.jpg",
     "is_premium": false,
     "sort_order": 300
@@ -513,7 +513,7 @@
       "discret",
       "moderne"
     ],
-    "prompt_template": "Give the person light three day stubble evenly covering the jaw, chin and upper lip, short and natural. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person light three day stubble evenly covering the jaw, chin and upper lip, short and natural.",
     "preview_path": "/demo/catalog/beard-trois-jours.jpg",
     "is_premium": false,
     "sort_order": 310
@@ -527,7 +527,7 @@
       "soigne",
       "classique"
     ],
-    "prompt_template": "Give the person a short trimmed beard: even short length along the jaw and chin, clean defined cheek line and neckline. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a short trimmed beard: even short length along the jaw and chin, clean defined cheek line and neckline.",
     "preview_path": "/demo/catalog/beard-courte.jpg",
     "is_premium": false,
     "sort_order": 320
@@ -541,7 +541,7 @@
       "remarque",
       "classique"
     ],
-    "prompt_template": "Give the person a full thick beard covering the jaw, chin and cheeks, dense and well groomed, natural shape. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a full thick beard covering the jaw, chin and cheeks, dense and well groomed, natural shape.",
     "preview_path": "/demo/catalog/beard-fournie.jpg",
     "is_premium": false,
     "sort_order": 330
@@ -554,7 +554,7 @@
       "long",
       "remarque"
     ],
-    "prompt_template": "Give the person a long beard falling below the chin, dense and well groomed, natural shape and texture. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a long beard falling below the chin, dense and well groomed, natural shape and texture.",
     "preview_path": "/demo/catalog/beard-longue.jpg",
     "is_premium": false,
     "sort_order": 340
@@ -567,7 +567,7 @@
       "court",
       "moderne"
     ],
-    "prompt_template": "Give the person a goatee: hair on the chin only, cheeks and jaw clean shaven, neatly trimmed outline. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a goatee: hair on the chin only, cheeks and jaw clean shaven, neatly trimmed outline.",
     "preview_path": "/demo/catalog/beard-bouc.jpg",
     "is_premium": false,
     "sort_order": 350
@@ -580,7 +580,7 @@
       "court",
       "remarque"
     ],
-    "prompt_template": "Give the person a moustache only: hair on the upper lip, chin and cheeks completely clean shaven. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a moustache only: hair on the upper lip, chin and cheeks completely clean shaven.",
     "preview_path": "/demo/catalog/beard-moustache.jpg",
     "is_premium": false,
     "sort_order": 360
@@ -594,7 +594,7 @@
       "moderne",
       "soigne"
     ],
-    "prompt_template": "Give the person a circle beard: a moustache joined to a chin goatee forming a closed circle around the mouth, cheeks clean shaven. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a circle beard: a moustache joined to a chin goatee forming a closed circle around the mouth, cheeks clean shaven.",
     "preview_path": "/demo/catalog/beard-bouc-moustache.jpg",
     "is_premium": false,
     "sort_order": 370
@@ -607,7 +607,7 @@
       "court",
       "soigne"
     ],
-    "prompt_template": "Give the person a chinstrap beard: a thin even line of beard following the jawline from ear to ear, cheeks and chin otherwise clean shaven. Keep the existing hairstyle, hair length and hair colour exactly as they are.",
+    "prompt_template": "Give the person a chinstrap beard: a thin even line of beard following the jawline from ear to ear, cheeks and chin otherwise clean shaven.",
     "preview_path": "/demo/catalog/beard-collier.jpg",
     "is_premium": false,
     "sort_order": 380
@@ -622,7 +622,7 @@
       "remarque",
       "modere"
     ],
-    "prompt_template": "Add a thick silver curb link chain necklace resting on the chest to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a thick silver curb link chain necklace resting on the chest.",
     "preview_path": "/demo/catalog/acc-chaine-maille.jpg",
     "is_premium": false,
     "sort_order": 400
@@ -637,7 +637,7 @@
       "modere",
       "remarque"
     ],
-    "prompt_template": "Add a medium silver chain with a simple geometric pendant to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a medium silver chain with a simple geometric pendant.",
     "preview_path": "/demo/catalog/acc-chaine-pendentif.jpg",
     "is_premium": false,
     "sort_order": 410
@@ -651,7 +651,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Add two layered silver chains of different lengths to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add two layered silver chains of different lengths.",
     "preview_path": "/demo/catalog/acc-double-chaine.jpg",
     "is_premium": true,
     "sort_order": 420
@@ -666,7 +666,7 @@
       "modere",
       "soigne"
     ],
-    "prompt_template": "Add a small thin silver hoop earring on the visible ear to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a small thin silver hoop earring on the visible ear.",
     "preview_path": "/demo/catalog/acc-creole-fine.jpg",
     "is_premium": false,
     "sort_order": 430
@@ -681,7 +681,7 @@
       "soigne",
       "classique"
     ],
-    "prompt_template": "Add a small discreet stud earring on the visible ear to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a small discreet stud earring on the visible ear.",
     "preview_path": "/demo/catalog/acc-puce-discrete.jpg",
     "is_premium": false,
     "sort_order": 440
@@ -695,7 +695,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Add a thick silver hoop earring on the visible ear to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a thick silver hoop earring on the visible ear.",
     "preview_path": "/demo/catalog/acc-anneau-epais.jpg",
     "is_premium": true,
     "sort_order": 450
@@ -709,7 +709,7 @@
       "streetwear",
       "modere"
     ],
-    "prompt_template": "Add a metallic tooth cap on a single tooth, visible only if the mouth is open to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a metallic tooth cap on a single tooth, visible only if the mouth is open.",
     "preview_path": "/demo/catalog/acc-grillz-simple.jpg",
     "is_premium": false,
     "sort_order": 460
@@ -723,7 +723,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Add metallic grillz on the lower row of teeth, visible only if the mouth is open to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add metallic grillz on the lower row of teeth, visible only if the mouth is open.",
     "preview_path": "/demo/catalog/acc-grillz-bas.jpg",
     "is_premium": true,
     "sort_order": 470
@@ -737,7 +737,7 @@
       "streetwear",
       "remarque"
     ],
-    "prompt_template": "Add metallic grillz on both rows of teeth, visible only if the mouth is open to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add metallic grillz on both rows of teeth, visible only if the mouth is open.",
     "preview_path": "/demo/catalog/acc-grillz-complet.jpg",
     "is_premium": true,
     "sort_order": 480
@@ -753,7 +753,7 @@
       "soigne",
       "classique"
     ],
-    "prompt_template": "Add a thin silver chain necklace worn close to the neck, subtle shine to the person. Keep the existing hairstyle and hair colour exactly as they are.",
+    "prompt_template": "Add a thin silver chain necklace worn close to the neck, subtle shine.",
     "preview_path": "/demo/catalog/acc-chaine-fine.jpg",
     "is_premium": false,
     "sort_order": 490

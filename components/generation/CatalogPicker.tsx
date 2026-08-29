@@ -8,19 +8,23 @@ import type { PublicCatalogItem } from '@/types/db';
 
 interface CatalogPickerProps {
   items: readonly PublicCatalogItem[];
-  selectedId: string | null;
-  onSelect: (item: PublicCatalogItem) => void;
+  /** Un style retenu par famille, au plus. */
+  selectedIds: readonly string[];
+  onToggle: (item: PublicCatalogItem) => void;
   lockedPremium: boolean;
 }
 
 /**
  * Le seul endroit à densité visuelle élevée.
- * Sélection = bordure violette animée via `layoutId` (micro-interaction signature).
+ *
+ * Sélection multiple, un style par famille : on peut demander une coupe ET une
+ * barbe dans le même rendu. Le `layoutId` de la bordure est propre à chaque
+ * famille, sinon l'animation ferait voler la bordure d'une section à l'autre.
  */
 export default function CatalogPicker({
   items,
-  selectedId,
-  onSelect,
+  selectedIds,
+  onToggle,
   lockedPremium,
 }: CatalogPickerProps) {
   const tap = useTapScale();
@@ -41,7 +45,7 @@ export default function CatalogPicker({
             <div className="mt-3 grid grid-cols-3 gap-2">
               {group.map((item) => {
                 const locked = lockedPremium && item.is_premium;
-                const active = selectedId === item.id;
+                const active = selectedIds.includes(item.id);
 
                 return (
                   <motion.button
@@ -50,14 +54,14 @@ export default function CatalogPicker({
                     whileTap={tap}
                     disabled={locked}
                     aria-pressed={active}
-                    onClick={() => onSelect(item)}
+                    onClick={() => onToggle(item)}
                     className="relative flex aspect-square flex-col items-center justify-end overflow-hidden rounded-2xl bg-violet-50 p-2 text-center disabled:opacity-45"
                   >
                     <Thumbnail src={item.preview_path} />
 
                     {active ? (
                       <motion.span
-                        layoutId="catalog-selection"
+                        layoutId={`catalog-selection-${category}`}
                         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                         className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-violet-600"
                       />

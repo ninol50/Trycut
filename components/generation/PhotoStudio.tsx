@@ -40,7 +40,17 @@ export default function PhotoStudio({
   const [consented, setConsented] = useState<boolean | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
-  const [selected, setSelected] = useState<PublicCatalogItem | null>(null);
+  // Un style par famille : demander deux coupes à la fois n'a pas de sens, et
+  // le modèle rendrait un mélange des deux.
+  const [selected, setSelected] = useState<readonly PublicCatalogItem[]>([]);
+
+  const toggleStyle = useCallback((item: PublicCatalogItem) => {
+    setSelected((current) => {
+      const already = current.some((candidate) => candidate.id === item.id);
+      const others = current.filter((candidate) => candidate.category !== item.category);
+      return already ? others : [...others, item];
+    });
+  }, []);
   const [error, setError] = useState<{ kind: ErrorKind; message?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [answers, setAnswers] = useState(() => ({}) as ReturnType<typeof readAnswers>);
@@ -104,7 +114,7 @@ export default function PhotoStudio({
   }, []);
 
   const launch = useCallback(async () => {
-    if (!imagePath || !selected || !consented || busy) return;
+    if (!imagePath || selected.length === 0 || !consented || busy) return;
     setBusy(true);
     setError(null);
 
@@ -114,7 +124,7 @@ export default function PhotoStudio({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           imagePath,
-          catalogItemId: selected.id,
+          catalogItemIds: selected.map((item) => item.id),
           profile: {
             texture: answerAsString(answers, 'texture'),
             length: answerAsString(answers, 'length'),
@@ -280,13 +290,14 @@ export default function PhotoStudio({
       <div className="mt-8">
         <h2 className="text-xl">Choisis un style</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Coupes, couleurs et accessoires. Un seul à la fois.
+          Coupes, barbes, couleurs et accessoires. Tu peux en combiner plusieurs —
+          une coupe et une barbe, par exemple. Un choix par famille.
         </p>
         <div className="mt-5">
           <CatalogPicker
             items={ranked}
-            selectedId={selected?.id ?? null}
-            onSelect={setSelected}
+            selectedIds={selected.map((item) => item.id)}
+            onToggle={toggleStyle}
             lockedPremium={lockedPremium}
           />
         </div>
@@ -297,7 +308,7 @@ export default function PhotoStudio({
         <motion.button
           type="button"
           whileTap={tap}
-          disabled={!imagePath || !selected || !consented || busy}
+          disabled={!imagePath || selected.length === 0 || !consented || busy}
           onClick={() => void launch()}
           className="btn-primary w-full disabled:opacity-50"
         >
