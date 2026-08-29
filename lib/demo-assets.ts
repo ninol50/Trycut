@@ -45,8 +45,9 @@ export const EXAMPLE_PAIRS: readonly ExamplePairAsset[] = [
 ] as const;
 
 export interface ResolvedExample {
-  before: string | null;
-  after: string | null;
+  slug: string;
+  before: string;
+  after: string;
   label: string;
 }
 
@@ -57,7 +58,7 @@ export function resolveExamples(): readonly ResolvedExample[] {
     const after = `/exemples/${pair.slug}-apres.jpg`;
 
     if (!hasPublicAsset(before) || !hasPublicAsset(after)) return [];
-    return [{ before, after, label: pair.label }];
+    return [{ slug: pair.slug, before, after, label: pair.label }];
   });
 }
 
@@ -110,41 +111,41 @@ export const HERO_PEOPLE: readonly HeroPersonAsset[] = [
   { id: 'personne-4', baseSlug: 'cut-middle-part', looks: [BOUCLES, LOCKS, BUZZ] },
 ] as const;
 
-export interface ResolvedHeroPerson {
+export interface HeroFrame {
   id: string;
-  baseSrc: string | null;
-  baseSlug: string;
-  looks: readonly (HeroLookAsset & { src: string | null })[];
+  label: string;
+  /** Photo, ou dessin de cette coupe faute de photo. */
+  before: { src: string | null; slug: string };
+  after: { src: string | null; slug: string };
 }
 
-/** Choisit photos ou dessins, sans jamais panacher les deux. */
-export function resolveHero(): readonly ResolvedHeroPerson[] {
-  const inPhotos = HERO_PEOPLE.map((person) => {
-    const looks = person.looks
-      .filter((look) => hasPublicAsset(`/hero/${person.id}-${look.slug}.jpg`))
-      .map((look) => ({ ...look, src: `/hero/${person.id}-${look.slug}.jpg` }));
+/**
+ * Images du hero.
+ *
+ * Ce sont les mêmes fichiers que la section exemples : une photo déposée une
+ * fois sert aux deux endroits. Rien à dupliquer, rien à tenir à jour deux fois.
+ *
+ * Faute de photo, on retombe sur les dessins — chaque personne du hero devient
+ * autant d'étapes qu'elle a de coupes.
+ */
+export function resolveHeroFrames(): readonly HeroFrame[] {
+  const photos = resolveExamples();
 
-    return { person, looks };
-  }).filter(
-    (candidate) =>
-      candidate.looks.length > 0 && hasPublicAsset(`/hero/${candidate.person.id}.jpg`),
-  );
-
-  if (inPhotos.length > 0) {
-    return inPhotos.map(({ person, looks }) => ({
-      id: person.id,
-      baseSrc: `/hero/${person.id}.jpg`,
-      baseSlug: person.baseSlug,
-      looks,
+  if (photos.length > 0) {
+    return photos.map((pair) => ({
+      id: pair.slug,
+      label: pair.label,
+      before: { src: pair.before, slug: pair.slug },
+      after: { src: pair.after, slug: pair.slug },
     }));
   }
 
-  // Faute de photo : une seule silhouette dessinée, qui parcourt toutes les
-  // coupes du hero sans se répéter.
-  const seen = new Set<string>();
-  const looks = HERO_PEOPLE.flatMap((person) => person.looks)
-    .filter((look) => (seen.has(look.slug) ? false : (seen.add(look.slug), true)))
-    .map((look) => ({ ...look, src: null }));
-
-  return [{ id: 'dessin', baseSrc: null, baseSlug: 'cut-cheveux-longs', looks }];
+  return HERO_PEOPLE.flatMap((person) =>
+    person.looks.map((look) => ({
+      id: `${person.id}-${look.slug}`,
+      label: look.label,
+      before: { src: null, slug: person.baseSlug },
+      after: { src: null, slug: look.slug },
+    })),
+  );
 }

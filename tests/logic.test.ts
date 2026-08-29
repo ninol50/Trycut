@@ -13,7 +13,7 @@ import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { EXAMPLE_PAIRS, HERO_PEOPLE, resolveExamples, resolveHero } from '@/lib/demo-assets';
+import { EXAMPLE_PAIRS, HERO_PEOPLE, resolveExamples, resolveHeroFrames } from '@/lib/demo-assets';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 16 coupes, 9 barbes, 8 couleurs et 10 accessoires', () => {
@@ -536,27 +536,36 @@ test('une personne du hero ne montre jamais une coupe deux fois', () => {
   }
 });
 
-test('le hero ne mélange jamais photo et dessin', () => {
+test('le hero ne mélange jamais photo et dessin dans la même étape', () => {
   // Une photo d'un côté du séparateur et un dessin de l'autre donnerait une
-  // carte incohérente. C'est tout l'un ou tout l'autre, personne par personne.
-  const people = resolveHero();
-  assert.ok(people.length > 0, 'le hero ne doit jamais être vide');
+  // carte incohérente. C'est tout l'un ou tout l'autre, étape par étape.
+  const frames = resolveHeroFrames();
+  assert.ok(frames.length > 0, 'le hero ne doit jamais être vide');
 
-  for (const person of people) {
-    const photos = person.looks.filter((look) => look.src !== null).length;
-    assert.ok(person.looks.length > 0, `${person.id} : aucune coupe`);
-
-    if (person.baseSrc === null) {
-      assert.equal(photos, 0, `${person.id} : départ dessiné mais coupes en photo`);
-    } else {
-      assert.equal(photos, person.looks.length, `${person.id} : départ en photo mais coupes dessinées`);
-    }
+  for (const frame of frames) {
+    assert.equal(
+      frame.before.src === null,
+      frame.after.src === null,
+      `${frame.id} : une moitié en photo, l'autre en dessin`,
+    );
+    assert.ok(frame.label.length > 0, `${frame.id} : étape sans nom`);
   }
+});
 
-  // Sans aucune photo déposée, on ne prétend pas montrer plusieurs personnes
-  // avec le même dessin.
-  if (people.every((person) => person.baseSrc === null)) {
-    assert.equal(people.length, 1, 'sans photo, une seule silhouette');
+test('le hero réutilise les photos des exemples, sans second dépôt', () => {
+  // Une photo déposée une fois doit servir aux deux endroits : sinon on tient
+  // deux dossiers à jour et l'un des deux finit par diverger.
+  const photos = resolveExamples();
+  const frames = resolveHeroFrames();
+
+  if (photos.length > 0) {
+    assert.equal(frames.length, photos.length, 'le hero doit reprendre chaque paire');
+    for (const frame of frames) {
+      assert.ok(frame.before.src, `${frame.id} : photo « avant » attendue`);
+      assert.ok(frame.after.src, `${frame.id} : photo « après » attendue`);
+    }
+  } else {
+    assert.ok(frames.every((frame) => frame.before.src === null), 'sans photo, tout est dessiné');
   }
 });
 

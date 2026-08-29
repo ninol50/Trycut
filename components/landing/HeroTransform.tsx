@@ -1,62 +1,40 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, useTransform } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import {
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from 'framer-motion';
 import StyleIllustration from '@/components/catalog/StyleIllustration';
-
-export interface HeroLook {
-  slug: string;
-  label: string;
-  /** Photo « après ». Absente : la coupe est dessinée. */
-  src: string | null;
-}
-
-export interface HeroPerson {
-  id: string;
-  /** Photo de départ de cette personne. Absente : dessin. */
-  baseSrc: string | null;
-  baseSlug: string;
-  looks: readonly HeroLook[];
-}
+import type { HeroFrame } from '@/lib/demo-assets';
 
 interface HeroTransformProps {
-  people: readonly HeroPerson[];
+  frames: readonly HeroFrame[];
 }
 
-/** Durée d'affichage d'une coupe avant de passer à la suivante. */
-const HOLD_MS = 5200;
+/** Durée d'une étape avant de passer à la personne suivante. */
+const HOLD_MS = 5600;
 
 /**
- * Carte du hero : la coupe change toute seule, et le séparateur avant/après
- * glisse sans qu'on y touche. C'est la démonstration du produit, pas une
- * vignette décorative — l'ancienne carte affichait une silhouette vide sous une
- * pastille « Transformation en cours » qui ne se résolvait jamais, ce qui
- * donnait exactement l'impression d'un rendu planté.
+ * Carte du hero : l'avant/après se joue tout seul.
  *
- * Les visuels sont dessinés tant qu'aucune photo n'est déposée : on ne met pas
- * le visage de quelqu'un sur une page marchande sans son accord.
+ * Le séparateur va et vient sans qu'on y touche — c'est une démonstration, pas
+ * un comparateur à manipuler ; celui de la section exemples, plus bas, se
+ * glisse au doigt. Chaque personne tient l'écran quelques secondes, puis la
+ * suivante prend sa place.
+ *
+ * Faute de photo, les mêmes étapes se jouent en dessin : la page ne montre
+ * jamais un cadre vide sous une pastille qui tourne dans le vide.
  */
-export default function HeroTransform({ people }: HeroTransformProps) {
+export default function HeroTransform({ frames }: HeroTransformProps) {
   const reduced = useReducedMotion();
-  // On avance coupe par coupe ; au bout des coupes d'une personne, on passe à
-  // la suivante. Un seul compteur suffit : les coupes sont mises bout à bout.
   const [step, setStep] = useState(0);
 
-  const frames = useMemo(
-    () =>
-      people.flatMap((person) =>
-        person.looks.map((look) => ({
-          key: `${person.id}-${look.slug}`,
-          baseSrc: person.baseSrc,
-          baseSlug: person.baseSlug,
-          look,
-        })),
-      ),
-    [people],
-  );
-
-  // Le séparateur va et vient tout seul entre 18 % et 82 %.
-  const progress = useMotionValue(reduced ? 0.5 : 0.18);
+  const progress = useMotionValue(reduced ? 0.5 : 0.16);
   const rightInset = useTransform(progress, (value) => `${(1 - value) * 100}%`);
   const clipPath = useMotionTemplate`inset(0 ${rightInset} 0 0)`;
   const dividerLeft = useTransform(progress, (value) => `${value * 100}%`);
@@ -66,8 +44,8 @@ export default function HeroTransform({ people }: HeroTransformProps) {
       progress.set(0.5);
       return;
     }
-    const controls = animate(progress, 0.82, {
-      duration: 3.4,
+    const controls = animate(progress, 0.84, {
+      duration: 2.8,
       ease: [0.16, 1, 0.3, 1],
       repeat: Infinity,
       repeatType: 'reverse',
@@ -85,56 +63,49 @@ export default function HeroTransform({ people }: HeroTransformProps) {
   }, [frames.length]);
 
   const frame = frames[step];
-  const look = frame?.look;
-  const baseSrc = frame?.baseSrc ?? null;
-  const baseSlug = frame?.baseSlug ?? 'cut-cheveux-longs';
+  if (!frame) return null;
+
+  const layer = (side: HeroFrame['before'], alt: string) =>
+    side.src ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={side.src} alt={alt} className="h-full w-full object-cover" />
+    ) : (
+      <StyleIllustration slug={side.slug} category="cut" />
+    );
 
   return (
     <div
       className="relative mx-auto overflow-hidden rounded-3xl border border-violet-200 bg-violet-50"
       style={{ width: '100%', maxWidth: 320, aspectRatio: '3 / 4' }}
     >
-      {/* Avant : la photo de départ, inchangée */}
+      {/* Avant */}
       <motion.div
-        key={`base-${baseSrc ?? baseSlug}`}
+        key={`avant-${frame.id}`}
         className="absolute inset-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-        {baseSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={baseSrc} alt="" aria-hidden="true" className="h-full w-full object-cover" />
-        ) : (
-          <StyleIllustration slug={baseSlug} category="cut" />
-        )}
+        {layer(frame.before, '')}
       </motion.div>
 
-      {/* Après : la coupe choisie, révélée par le séparateur */}
+      {/* Après, révélé par le séparateur */}
       <motion.div
         aria-hidden="true"
         className="absolute inset-0"
         style={reduced ? { clipPath: 'inset(0 50% 0 0)' } : { clipPath }}
       >
-        {look ? (
-          <motion.div
-            key={frame?.key ?? look.slug}
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {look.src ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={look.src} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <StyleIllustration slug={look.slug} category="cut" />
-            )}
-          </motion.div>
-        ) : null}
+        <motion.div
+          key={`apres-${frame.id}`}
+          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {layer(frame.after, '')}
+        </motion.div>
       </motion.div>
 
-      {/* Trait du séparateur */}
       <motion.span
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 w-[2px] bg-violet-600"
@@ -157,19 +128,16 @@ export default function HeroTransform({ people }: HeroTransformProps) {
         />
       ))}
 
-      {/* Nom de la coupe : un état qui avance, pas un chargement sans fin */}
-      {look ? (
-        <motion.span
-          key={look.label}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="badge-dark absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-medium"
-        >
-          <span className="h-2 w-2 rounded-full bg-violet-400" aria-hidden="true" />
-          {look.label}
-        </motion.span>
-      ) : null}
+      <motion.span
+        key={`nom-${frame.id}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="badge-dark absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-medium"
+      >
+        <span className="h-2 w-2 rounded-full bg-violet-400" aria-hidden="true" />
+        {frame.label}
+      </motion.span>
     </div>
   );
 }

@@ -1,8 +1,15 @@
 # Paires avant/après de la page d'accueil
 
-Section « Le rendu, avant le coup de ciseaux », au milieu de la page.
-Tant qu'aucune paire n'est complète, la section ne s'affiche pas du tout —
-il n'y a rien à désactiver et la page reste correcte.
+Ces fichiers servent **deux fois**, il n'y a donc qu'un seul dossier à tenir :
+
+1. la carte du hero, tout en haut, qui enchaîne les paires en animation
+   automatique — le séparateur va et vient tout seul ;
+2. la section « Le rendu, avant le coup de ciseaux », au milieu de la page, où
+   le comparateur se glisse au doigt.
+
+Tant qu'aucune paire n'est complète, le hero se joue en dessin et la section du
+milieu ne s'affiche pas du tout. La page reste correcte, il n'y a rien à
+désactiver.
 
 ## Fichiers attendus
 

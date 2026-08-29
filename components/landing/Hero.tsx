@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import HeroTransform, { type HeroPerson } from '@/components/landing/HeroTransform';
+import HeroTransform from '@/components/landing/HeroTransform';
+import Logo from '@/components/Logo';
+import type { HeroFrame } from '@/lib/demo-assets';
 import { useEntrance } from '@/components/motion';
 import { track } from '@/lib/analytics';
 
 interface HeroProps {
-  /** Personnes que le hero enchaîne. Sans photo, une seule silhouette dessinée. */
-  heroPeople: readonly HeroPerson[];
+  /** Étapes avant/après que le hero enchaîne tout seul. */
+  heroFrames: readonly HeroFrame[];
   /**
    * Nombre réel de coupes générées aujourd'hui. La pastille de preuve sociale
    * ne s'affiche qu'à partir d'un volume crédible — on n'invente pas de chiffre.
@@ -16,7 +18,7 @@ interface HeroProps {
   cutsToday: number | null;
 }
 
-export default function Hero({ heroPeople, cutsToday }: HeroProps) {
+export default function Hero({ heroFrames, cutsToday }: HeroProps) {
   const pill = useEntrance(0);
   const title = useEntrance(0.06);
   const subtitle = useEntrance(0.14);
@@ -36,12 +38,16 @@ export default function Hero({ heroPeople, cutsToday }: HeroProps) {
           </motion.p>
         ) : null}
 
+        <motion.div {...title} className="mb-5">
+          <Logo size={76} />
+        </motion.div>
+
         <motion.h1 {...title} className="text-[38px] leading-[1.04] tracking-[-0.035em]">
-          Trouve enfin la coupe qui te va.
+          Scan ta tête.
         </motion.h1>
 
         <motion.p {...subtitle} className="mt-5 text-lg text-slate-500">
-          Teste plusieurs styles sur ta propre photo et compare-les avant de choisir.
+          Pour découvrir les différentes coupes de cheveux qui te vont ou non.
         </motion.p>
 
         <motion.div {...cta} className="mt-7">
@@ -61,7 +67,7 @@ export default function Hero({ heroPeople, cutsToday }: HeroProps) {
         </motion.div>
 
         <motion.div {...visual} className="mt-10">
-          <HeroTransform people={heroPeople} />
+          <HeroTransform frames={heroFrames} />
         </motion.div>
       </div>
     </section>
