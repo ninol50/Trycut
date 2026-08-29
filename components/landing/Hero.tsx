@@ -62,7 +62,7 @@ export default function Hero({ heroFrames, cutsToday }: HeroProps) {
             </svg>
           </Link>
           <p className="mt-4 text-center text-sm text-slate-500">
-            15 coupes par mois · Résiliable à tout moment
+            À partir de 3 € par semaine · Sans engagement
           </p>
         </motion.div>
 

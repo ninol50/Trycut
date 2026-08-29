@@ -10,12 +10,13 @@ import { withCheckoutReference } from '@/lib/pricing';
 interface CheckoutButtonProps {
   plan: 'pack' | 'pass';
   label: string;
-  /** Lien de paiement Stripe. Emprunté dès qu'il est présent. */
+  /** Page de paiement Whop. */
   paymentLink?: string;
   variant?: 'primary' | 'secondary';
   /**
-   * Compte qui clique. Il part avec le lien de paiement : sans lui, Stripe
-   * encaisse et le webhook ne sait à qui attribuer les coupes.
+   * Compte qui clique. Son email part avec le lien : c'est lui qui rattache
+   * le paiement au compte, Whop ne transmettant pas de métadonnées sur une
+   * page d'offre publique.
    */
   userId: string | null;
   email?: string | null;
@@ -31,7 +32,7 @@ export default function CheckoutButton({
 }: CheckoutButtonProps) {
   const router = useRouter();
   const tap = useTapScale();
-  const [busy, setBusy] = useState(false);
+  const [busy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const start = async () => {
@@ -42,37 +43,12 @@ export default function CheckoutButton({
 
     track('checkout_completed', { plan, stage: 'redirect' });
 
-    // Lien de paiement Stripe : le plus direct, aucune clé serveur requise.
     if (paymentLink) {
       window.location.href = withCheckoutReference(paymentLink, userId, email);
       return;
     }
 
-    // Repli : Checkout créé côté serveur quand STRIPE_SECRET_KEY est configurée.
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      });
-      const data: unknown = await response.json().catch(() => null);
-      const url =
-        typeof data === 'object' && data !== null && 'url' in data
-          ? String((data as { url: unknown }).url)
-          : null;
-
-      if (!response.ok || !url) {
-        setError('Le paiement n’est pas disponible pour le moment.');
-        return;
-      }
-      window.location.href = url;
-    } catch {
-      setError('La connexion a été interrompue. Réessaie.');
-    } finally {
-      setBusy(false);
-    }
+    setError('Le paiement n’est pas disponible pour le moment.');
   };
 
   return (

@@ -57,7 +57,7 @@ export function createAnonSupabase() {
 
 /**
  * Client service-role : contourne la RLS. Réservé à ce qui ne peut pas s'en
- * passer — le cron de purge et l'octroi de crédits après paiement Stripe.
+ * passer — le cron de purge et l'octroi de crédits après paiement Whop.
  * Absent en développement, les appelants doivent gérer le null.
  */
 export function createAdminSupabase() {

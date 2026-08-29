@@ -8,6 +8,13 @@ import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
 import { createAnonToken, verifyAnonToken } from '@/lib/anon-token';
 import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
 import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pricing';
+import { createHmac } from 'node:crypto';
+import {
+  verifyWhopSignature,
+  extractEmail,
+  extractAmountCents,
+  planForAmount,
+} from '@/lib/whop';
 import { hasPaidAccess } from '@/lib/profile';
 import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
@@ -243,27 +250,50 @@ test('les offres et le nombre de coupes sont ceux demandés', () => {
   assert.equal(byId['free']?.price, '0 €');
   assert.equal(byId['free']?.credits, 0);
 
-  assert.equal(byId['pack']?.price, '9,99 €');
-  assert.equal(byId['pack']?.credits, 15);
-  assert.equal(byId['pack']?.highlighted, true);
+  // Hebdomadaire : point d'entrée, volontairement moins avantageux.
+  assert.equal(byId['pack']?.price, '3 €');
+  assert.equal(byId['pack']?.period, '/semaine');
+  assert.equal(byId['pack']?.credits, 5);
 
-  assert.equal(byId['pass']?.price, '17,90 €');
-  assert.equal(byId['pass']?.credits, 50);
+  // Mensuel : l'offre mise en avant, prix barré à 12 €.
+  assert.equal(byId['pass']?.price, '10 €');
+  assert.equal(byId['pass']?.strikePrice, '12 €');
+  assert.equal(byId['pass']?.period, '/mois');
+  assert.equal(byId['pass']?.credits, 23);
+  assert.equal(byId['pass']?.highlighted, true);
 });
 
-test('les offres payantes portent un lien de paiement Stripe', () => {
+test('le mensuel reste la meilleure affaire face à l’hebdomadaire', () => {
+  // Si l'hebdomadaire devenait plus intéressant, l'échelle de prix
+  // n'aurait plus de sens : personne ne prendrait le mensuel.
+  const byId = Object.fromEntries(PRICING.map((plan) => [plan.id, plan]));
+  const hebdo = byId['pack'];
+  const mensuel = byId['pass'];
+  assert.ok(hebdo && mensuel);
+
+  const coutMensuelDeLHebdo = 3 * (52 / 12);
+  const coupesMensuellesDeLHebdo = (hebdo?.credits ?? 0) * (52 / 12);
+
+  assert.ok(coutMensuelDeLHebdo > 10, 'l’hebdomadaire doit coûter plus cher sur un mois');
+  assert.ok(
+    (mensuel?.credits ?? 0) > coupesMensuellesDeLHebdo,
+    'le mensuel doit donner plus de coupes',
+  );
+});
+
+test('les offres payantes portent une page de paiement Whop', () => {
   for (const plan of PRICING) {
     if (plan.credits === 0) {
       assert.equal(plan.paymentLink, undefined);
       continue;
     }
-    assert.match(plan.paymentLink ?? '', /^https:\/\/buy\.stripe\.com\//);
+    assert.match(plan.paymentLink ?? '', /^https:\/\/whop\.com\//);
   }
 });
 
 test('le montant facturé suffit à retrouver l’offre', () => {
-  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[999], { plan: 'pack', credits: 15 });
-  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[1790], { plan: 'pass', credits: 50 });
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[300], { plan: 'pack', credits: 5 });
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[1000], { plan: 'pass', credits: 23 });
   assert.equal(PLAN_BY_AMOUNT_CENTS[1234], undefined);
 });
 
@@ -317,26 +347,23 @@ test('le repli statique ne contient aucun prompt', () => {
 
 test('le lien de paiement emporte le compte qui clique', () => {
   const link = withCheckoutReference(
-    'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06',
+    'https://whop.com/ldn1/abonnement-max/',
     '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
     'client@exemple.fr',
   );
   const url = new URL(link);
 
-  // Sans cet identifiant, le webhook ne sait pas qui créditer : le paiement
-  // passe et le compte reste à zéro coupe.
-  assert.equal(
-    url.searchParams.get('client_reference_id'),
-    '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
-  );
-  assert.equal(url.searchParams.get('prefilled_email'), 'client@exemple.fr');
-  assert.equal(url.origin + url.pathname, 'https://buy.stripe.com/3cIaEWgRT65x5ye2sU2wU06');
+  // Sans l'email, le webhook ne sait pas qui créditer : le paiement passe et
+  // le compte reste à zéro coupe.
+  assert.equal(url.searchParams.get('email'), 'client@exemple.fr');
+  assert.equal(url.searchParams.get('ref'), '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2');
+  assert.equal(url.origin + url.pathname, 'https://whop.com/ldn1/abonnement-max/');
 });
 
 test('un email absent ne vide pas le paramètre', () => {
-  const url = new URL(withCheckoutReference('https://buy.stripe.com/abc', 'user-1', null));
-  assert.equal(url.searchParams.has('prefilled_email'), false);
-  assert.equal(url.searchParams.get('client_reference_id'), 'user-1');
+  const url = new URL(withCheckoutReference('https://whop.com/ldn1/abonnement-max/', 'user-1', null));
+  assert.equal(url.searchParams.has('email'), false);
+  assert.equal(url.searchParams.get('ref'), 'user-1');
 });
 
 // ------------------------------------------------- rappel des fournisseurs IA
@@ -622,4 +649,99 @@ test('une seule image part au modèle, jamais une photo d’exemple', () => {
   assert.ok(!provider.includes('referenceUrls'), 'provider : plus de photo de référence');
   assert.ok(!route.includes('referenceUrl'), 'route : plus de photo de référence');
   assert.ok(!route.includes('REFERENCE_CLAUSE'), 'route : plus de clause de référence');
+});
+
+
+// ---------------------------------------------------------------- whop
+function signWhop(raw: string, secret: string, id: string, ts: string): string {
+  const key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');
+  return 'v1,' + createHmac('sha256', key).update(`${id}.${ts}.${raw}`).digest('base64');
+}
+
+test('une signature Whop valide est acceptée, une falsifiée non', () => {
+  const secret = 'whsec_' + Buffer.from('un-secret-de-test-trycut').toString('base64');
+  const raw = JSON.stringify({ action: 'payment.succeeded', data: { final_amount: 10 } });
+  const id = 'msg_123';
+  const now = Date.now();
+  const ts = String(Math.floor(now / 1000));
+
+  const headers = { id, timestamp: ts, signature: signWhop(raw, secret, id, ts) };
+  assert.equal(verifyWhopSignature(raw, headers, secret, now), true);
+
+  // corps modifié après signature
+  assert.equal(
+    verifyWhopSignature(raw.replace('10', '9999'), headers, secret, now),
+    false,
+    'un corps modifié doit être refusé',
+  );
+
+  // signature d'un autre secret
+  const autre = 'whsec_' + Buffer.from('un-autre-secret-entierement').toString('base64');
+  assert.equal(
+    verifyWhopSignature(raw, { ...headers, signature: signWhop(raw, autre, id, ts) }, secret, now),
+    false,
+    'une signature d’un autre secret doit être refusée',
+  );
+
+  // rejeu : même signature, mais vieille de deux heures
+  assert.equal(
+    verifyWhopSignature(raw, headers, secret, now + 2 * 60 * 60 * 1000),
+    false,
+    'un horodatage périmé doit être refusé',
+  );
+
+  // en-têtes manquants
+  assert.equal(verifyWhopSignature(raw, { id: null, timestamp: ts, signature: 'x' }, secret, now), false);
+});
+
+test('l’email de l’acheteur l’emporte sur les autres adresses', () => {
+  const payload = {
+    action: 'payment.succeeded',
+    data: {
+      company: { support_email: 'support@trycutapps.site' },
+      user: { email: 'Client@Example.COM' },
+    },
+  };
+  assert.equal(extractEmail(payload), 'client@example.com');
+  assert.equal(extractEmail({ data: {} }), null);
+});
+
+test('les montants Whop retombent sur la bonne offre', () => {
+  // 3 € et 10 €, exprimés en euros comme en centimes
+  assert.deepEqual(planForAmount(extractAmountCents({ data: { final_amount: 3 } })), {
+    plan: 'pack',
+    credits: 5,
+  });
+  assert.deepEqual(planForAmount(extractAmountCents({ data: { final_amount: 1000 } })), {
+    plan: 'pass',
+    credits: 23,
+  });
+  // un montant inconnu ne crédite rien plutôt que de créditer au hasard
+  assert.equal(planForAmount(extractAmountCents({ data: { final_amount: 7.5 } })), null);
+  assert.equal(planForAmount(null), null);
+});
+
+test('les offres affichées correspondent aux montants encaissés', () => {
+  for (const plan of PRICING) {
+    if (plan.id === 'free') continue;
+    const cents = Number(plan.price.replace(/[^0-9,]/g, '').replace(',', '.')) * 100;
+    const mapped = PLAN_BY_AMOUNT_CENTS[cents];
+    assert.ok(mapped, `${plan.name} : le prix affiché ${plan.price} n’est mappé à aucune offre`);
+    assert.equal(mapped?.plan, plan.id, `${plan.name} : mauvaise offre`);
+    assert.equal(
+      mapped?.credits,
+      plan.credits,
+      `${plan.name} : ${plan.credits} coupes affichées mais ${mapped?.credits} créditées`,
+    );
+  }
+});
+
+test('le lien de paiement emporte l’email du compte', () => {
+  const link = withCheckoutReference(
+    'https://whop.com/ldn1/abonnement-max/',
+    '11111111-2222-3333-4444-555555555555',
+    'client@example.com',
+  );
+  assert.ok(link.includes('email=client%40example.com'), 'email absent du lien');
+  assert.ok(link.includes('11111111-2222-3333-4444-555555555555'), 'repère de compte absent');
 });

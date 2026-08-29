@@ -12,7 +12,7 @@ export default function SignUpPage() {
         <h1 className="text-2xl">Garde tes résultats.</h1>
         <p className="mt-3 text-base text-slate-500">
           Crée ton compte, confirme ton email, et le catalogue s’ouvre. Générer une coupe
-          demande un abonnement — Pack ou Pass, résiliable à tout moment.
+          demande un abonnement — à la semaine ou au mois, sans engagement.
         </p>
 
         <div className="mt-8">

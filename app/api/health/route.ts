@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { env, isStripeConfigured, isSupabaseConfigured } from '@/lib/env';
+import { env, isWhopConfigured, isSupabaseConfigured } from '@/lib/env';
 import { loadCatalogWithSource } from '@/lib/catalog-server';
 
 export const runtime = 'nodejs';
@@ -64,20 +64,16 @@ export async function GET() {
     error: catalog.error,
   };
 
-  // --- Stripe : liens publics présents, secrets pour créditer -------------
+  // --- Whop : le webhook est ce qui crédite après paiement ----------------
   // Créditer un compte se fait avec la clé service_role : la session d'un
   // client ne peut pas s'octroyer des crédits. Sans elle, le webhook répond
-  // 503 même avec les deux secrets Stripe — l'annoncer prêt serait faux.
-  checks['stripe'] = {
+  // 503 même avec le secret Whop — l'annoncer prêt serait faux.
+  checks['whop'] = {
     paymentLinks: true,
-    secretKey: isStripeConfigured,
-    webhookSecret: Boolean(env.stripeWebhookSecret),
+    webhookSecret: isWhopConfigured,
     serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
-    /** Sans ces trois-là, un paiement encaisse mais ne crédite pas le compte. */
-    creditsOnPurchase:
-      isStripeConfigured &&
-      Boolean(env.stripeWebhookSecret) &&
-      Boolean(env.supabaseServiceRoleKey),
+    /** Sans ces deux-là, un paiement encaisse mais ne crédite pas le compte. */
+    creditsOnPurchase: isWhopConfigured && Boolean(env.supabaseServiceRoleKey),
   };
 
   // --- Emails --------------------------------------------------------------
@@ -91,7 +87,7 @@ export async function GET() {
   checks['serviceRole'] = {
     present: Boolean(env.supabaseServiceRoleKey),
     requiredFor: [
-      'créditer un compte après paiement (webhook Stripe)',
+      'créditer un compte après paiement (webhook Whop)',
       'cron de purge J+30',
       'stockage du rendu avec AI_PROVIDER=fal',
     ],

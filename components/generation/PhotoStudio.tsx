@@ -191,8 +191,8 @@ export default function PhotoStudio({
             Il te faut un abonnement pour générer.
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            Ton compte est actif et le catalogue reste consultable. Le Pack donne 15 coupes
-            par mois, le Pass 50. Résiliable à tout moment.
+            Ton compte est actif. L’offre à la semaine donne 5 coupes, celle au mois
+            23 coupes pour 10 €. Sans engagement.
           </p>
           <Link href="/tarifs" className="btn-primary mt-5 w-full">
             Voir les offres

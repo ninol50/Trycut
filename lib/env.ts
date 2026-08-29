@@ -54,11 +54,8 @@ export const env = {
   falKey: optional('FAL_KEY'),
   aiWebhookSecret: optional('AI_WEBHOOK_SECRET') ?? 'dev-ai-webhook-secret',
 
-  stripeSecretKey: optional('STRIPE_SECRET_KEY'),
-  stripeWebhookSecret: optional('STRIPE_WEBHOOK_SECRET'),
-  stripePricePack: optional('STRIPE_PRICE_PACK'),
-  stripePricePass: optional('STRIPE_PRICE_PASS'),
-  stripePricePackOneshot: optional('STRIPE_PRICE_PACK_ONESHOT'),
+  /** Secret de signature du webhook Whop, fourni préfixé `whsec_`. */
+  whopWebhookSecret: optional('WHOP_WEBHOOK_SECRET'),
 
   resendApiKey: optional('RESEND_API_KEY'),
   /**
@@ -90,4 +87,4 @@ export const env = {
 } as const;
 
 export const isSupabaseConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
-export const isStripeConfigured = Boolean(env.stripeSecretKey);
+export const isWhopConfigured = Boolean(env.whopWebhookSecret);

@@ -6,7 +6,7 @@ import { useInView } from '@/components/motion';
 import { track } from '@/lib/analytics';
 
 const REASSURANCE = [
-  'Paiement sécurisé par Stripe',
+  'Paiement sécurisé par Whop',
   'Résiliable à tout moment',
   'Résultat en 30 secondes',
 ] as const;

@@ -42,6 +42,11 @@ export default async function PricingPage({
               <div className="flex items-baseline justify-between">
                 <span className="font-display text-lg font-bold text-violet-900">{plan.name}</span>
                 <span className="font-display text-xl text-violet-900">
+                  {plan.strikePrice ? (
+                    <span className="mr-2 text-sm font-normal text-slate-500 line-through">
+                      {plan.strikePrice}
+                    </span>
+                  ) : null}
                   {plan.price}
                   <span className="text-sm font-normal text-slate-500">{plan.period}</span>
                 </span>
@@ -50,7 +55,7 @@ export default async function PricingPage({
               <p className="mt-2 text-sm font-semibold text-violet-600">
                 {plan.credits === 0
                   ? 'Aucune coupe incluse'
-                  : `${plan.credits} coupes par mois`}
+                  : `${plan.credits} coupes ${plan.creditsPeriod}`}
               </p>
 
               <ul className="mt-3 space-y-1 text-sm text-slate-500">

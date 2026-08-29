@@ -14,7 +14,7 @@ const QUESTIONS = [
   },
   {
     q: 'Il me faut un compte pour générer une coupe ?',
-    a: 'Oui. Tu peux parcourir le catalogue librement, mais générer une coupe demande un abonnement — Pack à 9,99 € pour 15 coupes par mois, Pass à 17,90 € pour 50. Tu résilies quand tu veux.',
+    a: 'Générer une coupe demande un abonnement : 3 € par semaine pour 5 coupes, ou 10 € par mois pour 23 coupes. Sans engagement.',
   },
   {
     q: 'Le résultat est-il fidèle à ce que fera mon coiffeur ?',
