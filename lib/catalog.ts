@@ -89,6 +89,7 @@ export function recommendedItems(
 
 export const CATEGORY_LABELS: Record<PublicCatalogItem['category'], string> = {
   cut: 'Coupes',
+  beard: 'Barbes',
   color: 'Couleurs',
   accessory: 'Accessoires',
 };

@@ -11,13 +11,25 @@ import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pric
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 
 // ------------------------------------------------------------------ catalogue
-test('le catalogue contient 20 coupes, 8 couleurs et 10 accessoires', () => {
+test('le catalogue contient 16 coupes, 9 barbes, 8 couleurs et 10 accessoires', () => {
   const count = (category: string) =>
     FALLBACK_CATALOG.filter((item) => item.category === category).length;
-  assert.equal(FALLBACK_CATALOG.length, 38);
-  assert.equal(count('cut'), 20);
+  assert.equal(FALLBACK_CATALOG.length, 43);
+  assert.equal(count('cut'), 16);
+  assert.equal(count('beard'), 9);
   assert.equal(count('color'), 8);
   assert.equal(count('accessory'), 10);
+});
+
+test('chaque consigne dit ce qu’elle ne doit pas toucher', () => {
+  // Un modèle d'édition change tout ce qu'on ne lui interdit pas : une coupe
+  // qui recolore les cheveux, ou une couleur qui raccourcit la coupe, sont des
+  // rendus ratés même quand l'image est belle.
+  for (const item of FALLBACK_CATALOG) {
+    const seeded = CATALOG_SEED.find((candidate) => candidate.slug === item.slug);
+    assert.ok(seeded, `gabarit absent pour ${item.slug}`);
+    assert.match(seeded.prompt_template, /Keep the existing/, `rien de préservé sur ${item.slug}`);
+  }
 });
 
 test('aucun slug dupliqué', () => {
@@ -71,14 +83,14 @@ test('recommendedItems renvoie toujours 12 entrées, même sans réponses', () =
 });
 
 test('« je ne sais pas » est neutre, il ne pénalise rien', () => {
-  const item = FALLBACK_CATALOG.find((candidate) => candidate.slug === 'cut-fade-bas');
+  const item = FALLBACK_CATALOG.find((candidate) => candidate.slug === 'cut-buzz');
   assert.ok(item);
   assert.equal(scoreItem(item, { face: 'inconnu' }), 0);
 });
 
 // --------------------------------------------------------------------- prompt
 test('le prompt reprend les précisions du profil, en anglais', () => {
-  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-fade-bas');
+  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-buzz');
   assert.ok(item);
   const prompt = buildPrompt(item.prompt_template, {
     texture: 'crepus',
@@ -95,7 +107,7 @@ test('le prompt reprend les précisions du profil, en anglais', () => {
 test('sans questionnaire, aucune précision vide n’est ajoutée', () => {
   // Les valeurs par défaut affirmaient « longueur actuelle, barbe inchangée » à
   // chaque rendu : trois phrases sans information qui diluaient la consigne.
-  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-fade-bas');
+  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-buzz');
   assert.ok(item);
   const prompt = buildPrompt(item.prompt_template, {});
 

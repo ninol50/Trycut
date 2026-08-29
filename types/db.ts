@@ -1,4 +1,4 @@
-export type CatalogCategory = 'cut' | 'color' | 'accessory';
+export type CatalogCategory = 'cut' | 'beard' | 'color' | 'accessory';
 export type GenerationStatus = 'queued' | 'processing' | 'succeeded' | 'failed';
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceled';
 export type Plan = 'free' | 'pack' | 'pass';

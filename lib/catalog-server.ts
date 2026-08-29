@@ -25,6 +25,9 @@ export async function loadCatalogWithSource(): Promise<CatalogResult> {
     const { data, error } = await supabase
       .from('catalog_items')
       .select(PUBLIC_COLUMNS)
+      // Un style retiré du catalogue reste en base : les coupes déjà générées
+      // le référencent et la contrainte d'intégrité interdit de l'effacer.
+      .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
     if (error) {

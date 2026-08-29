@@ -24,7 +24,7 @@ export default function CatalogPicker({
   lockedPremium,
 }: CatalogPickerProps) {
   const tap = useTapScale();
-  const categories = ['cut', 'color', 'accessory'] as const;
+  const categories = ['cut', 'beard', 'color', 'accessory'] as const;
 
   return (
     <div className="space-y-6">
