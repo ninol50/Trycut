@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CATEGORY_LABELS } from '@/lib/catalog';
 import { useTapScale } from '@/components/motion';
@@ -50,8 +51,10 @@ export default function CatalogPicker({
                     disabled={locked}
                     aria-pressed={active}
                     onClick={() => onSelect(item)}
-                    className="relative flex aspect-square flex-col items-center justify-end rounded-2xl bg-violet-50 p-2 text-center disabled:opacity-45"
+                    className="relative flex aspect-square flex-col items-center justify-end overflow-hidden rounded-2xl bg-violet-50 p-2 text-center disabled:opacity-45"
                   >
+                    <Thumbnail src={item.preview_path} />
+
                     {active ? (
                       <motion.span
                         layoutId="catalog-selection"
@@ -60,11 +63,11 @@ export default function CatalogPicker({
                       />
                     ) : null}
 
-                    <span className="relative text-[11px] font-medium leading-tight text-violet-900">
+                    <span className="relative z-10 rounded-md bg-white/85 px-1 text-[11px] font-medium leading-tight text-violet-900">
                       {item.label}
                     </span>
                     {locked ? (
-                      <span className="relative mt-1 text-[9px] uppercase text-violet-600">
+                      <span className="relative z-10 mt-1 text-[9px] uppercase text-violet-600">
                         premium
                       </span>
                     ) : null}
@@ -76,5 +79,25 @@ export default function CatalogPicker({
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Vignette du catalogue. Le fichier peut ne pas exister encore : on le masque
+ * en silence plutôt que d'afficher une image cassée.
+ */
+function Thumbnail({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      onError={() => setFailed(true)}
+      className="absolute inset-0 h-full w-full object-cover"
+    />
   );
 }

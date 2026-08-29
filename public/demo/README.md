@@ -1,43 +1,37 @@
-# Visuels de démonstration
+# Où déposer les photos
 
-Aucun de ces fichiers n'est généré par le code. Tant qu'ils sont absents, l'application
-rend un placeholder violet **aux dimensions explicites** : pas de layout shift, jamais de
-`<video>` cassé ni d'image manquante.
+Aucune image n'est générée par le code. Tant qu'un fichier est absent, l'app affiche un
+cadre violet aux **dimensions exactes** de l'image attendue : pas d'image cassée, pas de
+décalage de mise en page. Dépose le fichier au bon nom, il apparaît au rechargement.
 
-Dépose simplement les fichiers ici, aux noms exacts ci-dessous, et ils apparaissent.
+Toutes les images vont dans `public/demo/`.
 
-## Vidéo de démonstration (bloc signature de la landing)
+---
 
-| Fichier | Format | Dimensions | Poids max |
-|---|---|---|---|
-| `demo-loop.mp4` | H.264, sans piste audio | 720 × 1280 | < 2 Mo |
-| `demo-loop.webm` | VP9, sans piste audio | 720 × 1280 | < 2 Mo |
-| `demo-poster.jpg` | JPEG qualité 80 | 720 × 1280 | < 200 Ko |
+## 1. Les paires avant / après — les plus visibles
 
-Contenu attendu : un visage réel de face, la coupe qui se transforme, **en boucle de 4 à
-6 secondes**. La vidéo est décorative (`aria-hidden`), muette, sans contrôles. Avec
-`prefers-reduced-motion`, seul le poster est affiché — il doit donc se suffire à lui-même.
+Six fichiers, en **1080 × 1350** (format 4:5), JPEG qualité 82, moins de 400 Ko chacun.
 
-Les deux formats sont nécessaires : le `.webm` sert Chrome et Firefox, le `.mp4` sert
-Safari et iOS.
-
-## Paires avant / après
-
-Trois paires, en 1080 × 1350 (ratio 4:5), JPEG qualité 82, < 400 Ko chacune :
-
-| Avant | Après | Label affiché |
+| Avant | Après | Où ça s'affiche |
 |---|---|---|
-| `before-1.jpg` | `after-1.jpg` | dégradé bas |
-| `before-2.jpg` | `after-2.jpg` | platine |
-| `before-3.jpg` | `after-3.jpg` | chaîne fine |
+| `before-1.jpg` | `after-1.jpg` | `after-1.jpg` sert aussi de **photo du hero** (la grande carte à équerres). La paire alimente le comparateur qui glisse. |
+| `before-2.jpg` | `after-2.jpg` | Deuxième exemple, côte à côte |
+| `before-3.jpg` | `after-3.jpg` | Troisième exemple, côte à côte |
 
-Le cadrage doit être **strictement identique** entre le avant et le après : le comparateur
-superpose les deux images, tout décalage se voit immédiatement.
+**Le cadrage doit être identique entre l'avant et l'après.** Le comparateur superpose les
+deux images : le moindre décalage de tête se voit immédiatement. Même distance, même
+angle, même lumière — seule la coupe change.
 
-## Vignettes du catalogue
+---
 
-Un fichier par entrée, dans `public/demo/catalog/`, en **400 × 400**, JPEG qualité 80,
-< 60 Ko. Le nom du fichier correspond au `slug` de l'entrée :
+## 2. Les vignettes du catalogue
+
+Un fichier par style, dans `public/demo/catalog/`, en **400 × 400**, JPEG qualité 80,
+moins de 60 Ko. Le nom du fichier est le `slug` du style.
+
+Elles s'affichent en fond des tuiles de l'écran d'import. Celles qui manquent laissent
+simplement la tuile violette avec son libellé : tu peux les ajouter au fur et à mesure,
+rien ne casse.
 
 ```
 cut-fade-bas.jpg          cut-fade-haut.jpg         cut-fade-mid.jpg
@@ -54,19 +48,28 @@ color-noir-intense.jpg    color-roux-cuivre.jpg
 
 acc-chaine-fine.jpg       acc-chaine-maille.jpg     acc-chaine-pendentif.jpg
 acc-double-chaine.jpg     acc-creole-fine.jpg       acc-puce-discrete.jpg
-acc-anneau-epais.jpg      acc-grillz-simple.jpg     acc-grillz-complet.jpg
-acc-grillz-bas.jpg
+acc-anneau-epais.jpg      acc-grillz-simple.jpg     acc-grillz-bas.jpg
+acc-grillz-complet.jpg
 ```
 
-La liste exacte est dérivable à tout moment :
+La liste exacte se régénère à tout moment :
 
 ```bash
-node -e "const{CATALOG_SEED}=require('fs').readFileSync('lib/catalog-data.ts','utf8');" \
-  || grep -o '\"preview_path\": \"[^\"]*\"' lib/catalog-data.ts
+node -e "console.log(require('./lib/catalog.json').map(i=>i.preview_path.split('/').pop()).join('\n'))"
 ```
+
+---
+
+## 3. Les témoignages — optionnel
+
+La section des avis clients ne s'affiche **que** si `lib/testimonials.ts` contient des
+entrées. Elle est vide volontairement : n'y mets que de vrais avis, de personnes réelles
+ayant accepté d'être citées et d'afficher leur photo. Chaque entrée demande une paire
+avant/après supplémentaire, aux mêmes dimensions que ci-dessus.
+
+---
 
 ## Droits
 
 N'utilise que des visuels dont tu détiens les droits, avec l'accord écrit des personnes
-photographiées pour un usage commercial. Aucune image de tiers, aucun visuel repris d'un
-site existant.
+photographiées pour un usage commercial. Aucune image reprise d'un autre site.
