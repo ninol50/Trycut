@@ -77,7 +77,7 @@ test('« je ne sais pas » est neutre, il ne pénalise rien', () => {
 });
 
 // --------------------------------------------------------------------- prompt
-test('le prompt interpole les variables du profil', () => {
+test('le prompt reprend les précisions du profil, en anglais', () => {
   const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-fade-bas');
   assert.ok(item);
   const prompt = buildPrompt(item.prompt_template, {
@@ -86,10 +86,45 @@ test('le prompt interpole les variables du profil', () => {
     beard: 'fournie',
   });
 
-  assert.match(prompt, /crépus/);
-  assert.match(prompt, /courte/);
-  assert.match(prompt, /fournie/);
+  assert.match(prompt, /coily/);
+  assert.match(prompt, /short/);
+  assert.match(prompt, /full beard/);
   assert.doesNotMatch(prompt, /\{\{/, 'aucune variable ne doit rester non interpolée');
+});
+
+test('sans questionnaire, aucune précision vide n’est ajoutée', () => {
+  // Les valeurs par défaut affirmaient « longueur actuelle, barbe inchangée » à
+  // chaque rendu : trois phrases sans information qui diluaient la consigne.
+  const item = CATALOG_SEED.find((candidate) => candidate.slug === 'cut-fade-bas');
+  assert.ok(item);
+  const prompt = buildPrompt(item.prompt_template, {});
+
+  assert.doesNotMatch(prompt, /Current hair texture/);
+  assert.doesNotMatch(prompt, /Current hair length/);
+  assert.doesNotMatch(prompt, /Beard:/);
+});
+
+test('chaque rendu exige de préserver le visage', () => {
+  // Sans cette clause, le modèle d'édition reconstruit la personne au lieu de
+  // lui changer les cheveux.
+  for (const item of CATALOG_SEED) {
+    const prompt = buildPrompt(item.prompt_template, {});
+    assert.match(prompt, /face, identity/, `clause d'identité absente sur ${item.slug}`);
+    assert.match(prompt, /Photorealistic/, `exigence photoréaliste absente sur ${item.slug}`);
+  }
+});
+
+test('les consignes envoyées au modèle sont en anglais', () => {
+  // Le modèle est entraîné très majoritairement en anglais : une consigne
+  // française est suivie approximativement, ce qui donnait des rendus ratés.
+  const accents = /[àâäçéèêëîïôöùûüœ]/i;
+  for (const item of CATALOG_SEED) {
+    assert.doesNotMatch(
+      item.prompt_template,
+      accents,
+      `le gabarit de ${item.slug} contient encore du français`,
+    );
+  }
 });
 
 test('aucune variable ne subsiste sur l’ensemble du catalogue', () => {
