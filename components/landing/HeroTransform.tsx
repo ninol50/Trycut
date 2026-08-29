@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, useTransform } from 'framer-motion';
 import StyleIllustration from '@/components/catalog/StyleIllustration';
 
@@ -11,11 +11,16 @@ export interface HeroLook {
   src: string | null;
 }
 
-interface HeroTransformProps {
-  /** Photo de départ, commune à tous les looks. Absente : dessin. */
+export interface HeroPerson {
+  id: string;
+  /** Photo de départ de cette personne. Absente : dessin. */
   baseSrc: string | null;
   baseSlug: string;
   looks: readonly HeroLook[];
+}
+
+interface HeroTransformProps {
+  people: readonly HeroPerson[];
 }
 
 /** Durée d'affichage d'une coupe avant de passer à la suivante. */
@@ -31,9 +36,24 @@ const HOLD_MS = 5200;
  * Les visuels sont dessinés tant qu'aucune photo n'est déposée : on ne met pas
  * le visage de quelqu'un sur une page marchande sans son accord.
  */
-export default function HeroTransform({ baseSrc, baseSlug, looks }: HeroTransformProps) {
+export default function HeroTransform({ people }: HeroTransformProps) {
   const reduced = useReducedMotion();
-  const [index, setIndex] = useState(0);
+  // On avance coupe par coupe ; au bout des coupes d'une personne, on passe à
+  // la suivante. Un seul compteur suffit : les coupes sont mises bout à bout.
+  const [step, setStep] = useState(0);
+
+  const frames = useMemo(
+    () =>
+      people.flatMap((person) =>
+        person.looks.map((look) => ({
+          key: `${person.id}-${look.slug}`,
+          baseSrc: person.baseSrc,
+          baseSlug: person.baseSlug,
+          look,
+        })),
+      ),
+    [people],
+  );
 
   // Le séparateur va et vient tout seul entre 18 % et 82 %.
   const progress = useMotionValue(reduced ? 0.5 : 0.18);
@@ -56,15 +76,18 @@ export default function HeroTransform({ baseSrc, baseSlug, looks }: HeroTransfor
   }, [reduced, progress]);
 
   useEffect(() => {
-    if (looks.length <= 1) return;
+    if (frames.length <= 1) return;
     const timer = window.setInterval(
-      () => setIndex((current) => (current + 1) % looks.length),
+      () => setStep((current) => (current + 1) % frames.length),
       HOLD_MS,
     );
     return () => window.clearInterval(timer);
-  }, [looks.length]);
+  }, [frames.length]);
 
-  const look = looks[index];
+  const frame = frames[step];
+  const look = frame?.look;
+  const baseSrc = frame?.baseSrc ?? null;
+  const baseSlug = frame?.baseSlug ?? 'cut-cheveux-longs';
 
   return (
     <div
@@ -72,12 +95,20 @@ export default function HeroTransform({ baseSrc, baseSlug, looks }: HeroTransfor
       style={{ width: '100%', maxWidth: 320, aspectRatio: '3 / 4' }}
     >
       {/* Avant : la photo de départ, inchangée */}
-      {baseSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={baseSrc} alt="" aria-hidden="true" className="h-full w-full object-cover" />
-      ) : (
-        <StyleIllustration slug={baseSlug} category="cut" />
-      )}
+      <motion.div
+        key={`base-${baseSrc ?? baseSlug}`}
+        className="absolute inset-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {baseSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={baseSrc} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+        ) : (
+          <StyleIllustration slug={baseSlug} category="cut" />
+        )}
+      </motion.div>
 
       {/* Après : la coupe choisie, révélée par le séparateur */}
       <motion.div
@@ -87,7 +118,7 @@ export default function HeroTransform({ baseSrc, baseSlug, looks }: HeroTransfor
       >
         {look ? (
           <motion.div
-            key={look.slug}
+            key={frame?.key ?? look.slug}
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

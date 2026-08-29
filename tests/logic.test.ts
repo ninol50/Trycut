@@ -13,7 +13,7 @@ import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { HERO_BASE_SLUG, HERO_LOOKS, resolveHero } from '@/lib/demo-assets';
+import { HERO_PEOPLE, resolveHero } from '@/lib/demo-assets';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 16 coupes, 9 barbes, 8 couleurs et 10 accessoires', () => {
@@ -512,25 +512,51 @@ test('chaque coupe du hero existe au catalogue et sait se dessiner', () => {
     [...illustration.matchAll(/^ {2}'(cut-[a-z0-9-]+)':/gm)].map((match) => match[1]),
   );
 
-  for (const slug of [HERO_BASE_SLUG, ...HERO_LOOKS.map((look) => look.slug)]) {
+  const slugs = HERO_PEOPLE.flatMap((person) => [
+    person.baseSlug,
+    ...person.looks.map((look) => look.slug),
+  ]);
+
+  for (const slug of slugs) {
     const item = FALLBACK_CATALOG.find((candidate) => candidate.slug === slug);
     assert.ok(item, `${slug} : absent du catalogue`);
-    assert.equal(item?.category, 'cut', `${slug} : le hero ne montre que des coupes`);
+    assert.equal(item?.category, 'cut', 'le hero ne montre que des coupes');
     assert.ok(drawn.has(slug), `${slug} : aucun dessin dans StyleIllustration`);
   }
 });
 
-test('le hero ne bascule en photo que si le départ et une coupe sont là', () => {
-  // Panacher une photo et un dessin de part et d'autre du séparateur donnerait
-  // une carte incohérente. C'est tout l'un ou tout l'autre.
-  const hero = resolveHero();
-  const photos = hero.looks.filter((look) => look.src !== null).length;
+test('une personne du hero ne montre jamais une coupe deux fois', () => {
+  for (const person of HERO_PEOPLE) {
+    const slugs = person.looks.map((look) => look.slug);
+    assert.equal(new Set(slugs).size, slugs.length, `${person.id} : coupe en double`);
+    assert.ok(
+      !slugs.includes(person.baseSlug),
+      `${person.id} : la coupe de départ est aussi proposée en arrivée`,
+    );
+  }
+});
 
-  if (hero.baseSrc === null) {
-    assert.equal(photos, 0, 'départ dessiné : aucune coupe ne doit être en photo');
-    assert.ok(hero.looks.length > 0, 'le hero ne doit jamais être vide');
-  } else {
-    assert.equal(photos, hero.looks.length, 'départ en photo : toutes les coupes en photo');
+test('le hero ne mélange jamais photo et dessin', () => {
+  // Une photo d'un côté du séparateur et un dessin de l'autre donnerait une
+  // carte incohérente. C'est tout l'un ou tout l'autre, personne par personne.
+  const people = resolveHero();
+  assert.ok(people.length > 0, 'le hero ne doit jamais être vide');
+
+  for (const person of people) {
+    const photos = person.looks.filter((look) => look.src !== null).length;
+    assert.ok(person.looks.length > 0, `${person.id} : aucune coupe`);
+
+    if (person.baseSrc === null) {
+      assert.equal(photos, 0, `${person.id} : départ dessiné mais coupes en photo`);
+    } else {
+      assert.equal(photos, person.looks.length, `${person.id} : départ en photo mais coupes dessinées`);
+    }
+  }
+
+  // Sans aucune photo déposée, on ne prétend pas montrer plusieurs personnes
+  // avec le même dessin.
+  if (people.every((person) => person.baseSrc === null)) {
+    assert.equal(people.length, 1, 'sans photo, une seule silhouette');
   }
 });
 

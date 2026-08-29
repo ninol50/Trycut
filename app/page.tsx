@@ -27,12 +27,7 @@ export default async function LandingPage() {
     <>
       <Header />
       <main>
-        <Hero
-          heroBaseSrc={hero.baseSrc}
-          heroBaseSlug={hero.baseSlug}
-          heroLooks={hero.looks}
-          cutsToday={cutsToday}
-        />
+        <Hero heroPeople={hero} cutsToday={cutsToday} />
         <Steps />
         <Examples pairs={pairs} />
         <Testimonials />
