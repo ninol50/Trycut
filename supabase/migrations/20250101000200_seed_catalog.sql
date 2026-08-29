@@ -37,18 +37,18 @@ values
  '/demo/catalog/cut-lisse-cote.jpg', false, 60),
 
 ('cut-permanente-courte','Permanente courte','cut',
- array['court','raides','ondules','boucles','crepus','ovale','rond','carre','allonge','boucles','moderne'],
- 'Give the person a short perm: tight uniform curls kept short over the whole head, defined curl pattern, short tapered sides. Keep the existing hair colour, and keep the beard exactly as it is.',
+ array['allonge','boucles','carre','court','crepus','moderne','ondules','ovale','raides','rond'],
+ 'Give the person a short men''s perm: loose well defined curls about 4 cm long on top, falling slightly over the forehead, short tapered faded sides and back, natural springy curl pattern with visible separated curls. Keep the existing hair colour, and keep the beard exactly as it is.',
  '/demo/catalog/cut-permanente-courte.jpg', false, 70),
 
 ('cut-permanente-mi-longue','Permanente mi-longue','cut',
- array['mi-long','raides','ondules','boucles','crepus','ovale','rond','carre','allonge','boucles','moderne'],
- 'Give the person a medium length perm: springy defined curls reaching the neck, full volume on top, natural curl definition. Keep the existing hair colour, and keep the beard exactly as it is.',
+ array['allonge','boucles','carre','crepus','mi-long','moderne','ondules','ovale','raides','rond'],
+ 'Give the person a medium length men''s perm: loose well defined curls about 8 cm long with full volume on top, curls falling over the forehead and covering the top of the ears, short tapered sides, natural springy separated curls. Keep the existing hair colour, and keep the beard exactly as it is.',
  '/demo/catalog/cut-permanente-mi-longue.jpg', false, 80),
 
 ('cut-permanente-longue','Permanente longue','cut',
- array['long','raides','ondules','boucles','crepus','ovale','rond','carre','allonge','boucles','moderne'],
- 'Give the person a long perm: long permed curls falling to the shoulders, abundant volume, defined and separated curl pattern. Keep the existing hair colour, and keep the beard exactly as it is.',
+ array['allonge','boucles','carre','crepus','long','moderne','ondules','ovale','raides','rond'],
+ 'Give the person a long perm: loose well defined curls falling to the shoulders, abundant volume all around the head, natural springy separated curl pattern. Keep the existing hair colour, and keep the beard exactly as it is.',
  '/demo/catalog/cut-permanente-longue.jpg', false, 90),
 
 ('cut-afro-court','Afro court','cut',
