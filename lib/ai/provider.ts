@@ -1,4 +1,5 @@
 import { env } from '@/lib/env';
+import { buildFalEndpoint } from '@/lib/ai/callback';
 
 export interface GenerateInput {
   /** URL signée de la photo source, lisible par le provider. */
@@ -71,6 +72,9 @@ async function scheduleMockCallback(input: GenerateInput, jobId: string): Promis
 }
 
 // ------------------------------------------------------------------- fal
+/** Modèle d'édition d'image : il garde le visage et ne change que la coupe. */
+const FAL_MODEL = 'fal-ai/flux-pro/kontext';
+
 /**
  * FalProvider : stub prêt à brancher. Actif dès que `AI_PROVIDER=fal`
  * et que `FAL_KEY` est renseignée.
@@ -81,21 +85,22 @@ export const falProvider: AiProvider = {
     const key = env.falKey;
     if (!key) throw new Error('FAL_KEY manquante alors que AI_PROVIDER=fal');
 
-    const response = await fetch('https://queue.fal.run/fal-ai/flux-pro/kontext', {
-      method: 'POST',
-      headers: {
-        authorization: `Key ${key}`,
-        'content-type': 'application/json',
+    const response = await fetch(
+      buildFalEndpoint(FAL_MODEL, input.webhookUrl, input.generationId, input.callbackSecret),
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Key ${key}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: input.prompt,
+          image_url: input.imageUrl,
+          num_images: 1,
+          output_format: 'jpeg',
+        }),
       },
-      body: JSON.stringify({
-        prompt: input.prompt,
-        image_url: input.imageUrl,
-        num_images: 1,
-        output_format: 'jpeg',
-        // fal.ai ne renvoie pas nos en-têtes : le jeton signé voyage dans l'URL.
-        fal_webhook: `${input.webhookUrl}?generation_id=${input.generationId}&secret=${encodeURIComponent(input.callbackSecret)}`,
-      }),
-    });
+    );
 
     if (!response.ok) {
       const detail = await response.text();

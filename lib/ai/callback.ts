@@ -37,3 +37,27 @@ export function extractResultImageUrl(payload: unknown): string | null {
   const link = (first as { url?: unknown }).url;
   return typeof link === 'string' && link.length > 0 ? link : null;
 }
+
+/**
+ * URL d'appel de la file d'attente fal.ai.
+ *
+ * `fal_webhook` est un paramètre de l'URL de requête, pas un champ du corps.
+ * Placé dans le corps, il est ignoré sans erreur : la tâche est acceptée, elle
+ * se termine, et le rappel n'arrive jamais. L'écran de suivi tourne alors
+ * jusqu'à expiration alors que l'image existe.
+ */
+export function buildFalEndpoint(
+  model: string,
+  webhookUrl: string,
+  generationId: string,
+  callbackSecret: string,
+): string {
+  const callback = new URL(webhookUrl);
+  callback.searchParams.set('generation_id', generationId);
+  // fal ne relaie pas nos en-têtes : le secret de la ligne voyage dans l'URL.
+  callback.searchParams.set('secret', callbackSecret);
+
+  const endpoint = new URL(`https://queue.fal.run/${model}`);
+  endpoint.searchParams.set('fal_webhook', callback.toString());
+  return endpoint.toString();
+}

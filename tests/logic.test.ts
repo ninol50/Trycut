@@ -8,7 +8,7 @@ import { sniffImageMime, isAcceptedMime, extensionFor } from '@/lib/upload';
 import { createAnonToken, verifyAnonToken } from '@/lib/anon-token';
 import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
 import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pricing';
-import { isFailureCallback, extractResultImageUrl } from '@/lib/ai/callback';
+import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 
 // ------------------------------------------------------------------ catalogue
 test('le catalogue contient 20 coupes, 8 couleurs et 10 accessoires', () => {
@@ -288,4 +288,25 @@ test('une enveloppe vide ne fait pas passer une image fantome', () => {
   assert.equal(extractResultImageUrl({ status: 'OK', payload: { images: [] } }), null);
   assert.equal(extractResultImageUrl({ status: 'OK' }), null);
   assert.equal(extractResultImageUrl(null), null);
+});
+
+test('l’adresse de rappel voyage dans l’URL, pas dans le corps', () => {
+  // Placé dans le corps de la requête, fal_webhook est ignoré sans erreur :
+  // la tâche est acceptée, se termine, et le rappel n'arrive jamais.
+  const endpoint = new URL(
+    buildFalEndpoint(
+      'fal-ai/flux-pro/kontext',
+      'https://trycutapps.site/api/webhooks/ai',
+      'gen-1',
+      'secret/avec+caracteres',
+    ),
+  );
+
+  assert.equal(endpoint.origin + endpoint.pathname, 'https://queue.fal.run/fal-ai/flux-pro/kontext');
+
+  const callback = new URL(endpoint.searchParams.get('fal_webhook') ?? '');
+  assert.equal(callback.origin + callback.pathname, 'https://trycutapps.site/api/webhooks/ai');
+  assert.equal(callback.searchParams.get('generation_id'), 'gen-1');
+  // Le secret doit ressortir intact malgré le double encodage.
+  assert.equal(callback.searchParams.get('secret'), 'secret/avec+caracteres');
 });
