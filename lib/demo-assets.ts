@@ -36,10 +36,14 @@ export interface ExamplePairAsset {
  * passer la photo « avant » dans Trycut et de reprendre le résultat tel quel.
  */
 export const EXAMPLE_PAIRS: readonly ExamplePairAsset[] = [
-  { slug: 'cut-permanente-mi-longue', label: 'Cheveux bouclés mi-longs' },
-  { slug: 'cut-buzz', label: 'Buzz cut' },
+  // La première paire complète devient le comparateur que l'on fait glisser :
+  // mettre en tête celle dont les deux images viennent de la même photo, donc
+  // parfaitement superposées.
+  { slug: 'cut-permanente-courte', label: 'Cheveux bouclés' },
   { slug: 'cut-locks', label: 'Locks' },
   { slug: 'cut-afro-court', label: 'Afro court' },
+  { slug: 'cut-permanente-mi-longue', label: 'Cheveux bouclés mi-longs' },
+  { slug: 'cut-buzz', label: 'Buzz cut' },
   { slug: 'cut-degrade-espagnol', label: 'Dégradé espagnol' },
   { slug: 'cut-chauve', label: 'Crâne rasé' },
 ] as const;
