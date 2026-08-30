@@ -26,6 +26,38 @@ export function readWhopHeaders(get: (name: string) => string | null): WhopHeade
   };
 }
 
+/**
+ * Clés candidates dérivées du secret.
+ *
+ * Whop délivre un secret préfixé `ws_`, là où la spécification Standard
+ * Webhooks décrit un `whsec_` suivi d'une clé en base64. Le format exact de la
+ * clé n'étant pas vérifiable depuis cet environnement, on essaie les
+ * interprétations plausibles plutôt que d'en parier une : se tromper ferait
+ * rejeter tous les paiements.
+ *
+ * Ça n'affaiblit rien — il faut toujours produire un HMAC valide, et toutes
+ * ces clés dérivent du même secret.
+ */
+function candidateKeys(secret: string): Buffer[] {
+  const sansPrefixe = secret.replace(/^(whsec_|ws_)/, '');
+  const keys = [
+    Buffer.from(secret, 'utf8'),
+    Buffer.from(sansPrefixe, 'utf8'),
+    Buffer.from(sansPrefixe, 'base64'),
+    Buffer.from(secret, 'base64'),
+  ];
+
+  // Deux clés identiques ne servent à rien, et une clé vide n'est pas une clé.
+  const vues = new Set<string>();
+  return keys.filter((key) => {
+    if (key.length === 0) return false;
+    const empreinte = key.toString('hex');
+    if (vues.has(empreinte)) return false;
+    vues.add(empreinte);
+    return true;
+  });
+}
+
 export function verifyWhopSignature(
   raw: string,
   headers: WhopHeaders,
@@ -39,19 +71,22 @@ export function verifyWhopSignature(
   if (!Number.isFinite(sent)) return false;
   if (Math.abs(now / 1000 - sent) > TOLERANCE_SECONDS) return false;
 
-  const key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');
-  const expected = createHmac('sha256', key)
-    .update(`${id}.${timestamp}.${raw}`)
-    .digest('base64');
-
   // L'en-tête peut porter plusieurs signatures, séparées par des espaces,
   // chacune préfixée de sa version : « v1,<base64> ».
-  for (const part of signature.split(' ')) {
-    const value = part.includes(',') ? part.slice(part.indexOf(',') + 1) : part;
-    const a = Buffer.from(value);
-    const b = Buffer.from(expected);
-    if (a.length === b.length && timingSafeEqual(a, b)) return true;
+  const envoyees = signature
+    .split(' ')
+    .map((part) => (part.includes(',') ? part.slice(part.indexOf(',') + 1) : part))
+    .filter((part) => part.length > 0);
+
+  for (const key of candidateKeys(secret)) {
+    const attendue = createHmac('sha256', key).update(`${id}.${timestamp}.${raw}`).digest('base64');
+    for (const envoyee of envoyees) {
+      const a = Buffer.from(envoyee);
+      const b = Buffer.from(attendue);
+      if (a.length === b.length && timingSafeEqual(a, b)) return true;
+    }
   }
+
   return false;
 }
 

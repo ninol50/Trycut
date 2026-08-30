@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { env, isWhopConfigured, isSupabaseConfigured } from '@/lib/env';
+import { env, isSupabaseConfigured } from '@/lib/env';
+import { resolveWhopSecret } from '@/lib/whop-secret';
 import { loadCatalogWithSource } from '@/lib/catalog-server';
 
 export const runtime = 'nodejs';
@@ -65,15 +66,16 @@ export async function GET() {
   };
 
   // --- Whop : le webhook est ce qui crédite après paiement ----------------
-  // Créditer un compte se fait avec la clé service_role : la session d'un
-  // client ne peut pas s'octroyer des crédits. Sans elle, le webhook répond
-  // 503 même avec le secret Whop — l'annoncer prêt serait faux.
+  // Le secret peut venir de la variable d'environnement ou de la base, posé
+  // depuis la page admin. Ne regarder que la variable dirait « non configuré »
+  // à une installation qui fonctionne.
+  const whopSecret = await resolveWhopSecret();
   checks['whop'] = {
     paymentLinks: true,
-    webhookSecret: isWhopConfigured,
+    webhookSecret: whopSecret !== null,
     serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
     /** Sans ces deux-là, un paiement encaisse mais ne crédite pas le compte. */
-    creditsOnPurchase: isWhopConfigured && Boolean(env.supabaseServiceRoleKey),
+    creditsOnPurchase: whopSecret !== null && Boolean(env.supabaseServiceRoleKey),
   };
 
   // --- Emails --------------------------------------------------------------

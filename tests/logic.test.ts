@@ -822,3 +822,41 @@ test('le secret du webhook n’est jamais renvoyé au navigateur', () => {
   assert.ok(composant.includes("type=\"password\""), 'le champ doit être masqué');
   assert.ok(!composant.includes('defaultValue'), 'le champ ne doit jamais être pré-rempli');
 });
+
+test('un secret Whop au format ws_ est accepté comme un whsec_', () => {
+  // Whop délivre un secret préfixé « ws_ », la spécification décrit « whsec_ »
+  // suivi d'une clé en base64. Parier sur un seul format ferait rejeter tous
+  // les paiements — c'est le bug qui attendait au premier encaissement.
+  const raw = JSON.stringify({ action: 'payment.succeeded', data: { final_amount: 3 } });
+  const id = 'msg_ws';
+  const now = Date.now();
+  const ts = String(Math.floor(now / 1000));
+
+  const wsSecret = 'ws_' + 'a'.repeat(65);
+  const signeBrut =
+    'v1,' + createHmac('sha256', Buffer.from(wsSecret, 'utf8')).update(`${id}.${ts}.${raw}`).digest('base64');
+  assert.equal(
+    verifyWhopSignature(raw, { id, timestamp: ts, signature: signeBrut }, wsSecret, now),
+    true,
+    'clé = secret complet en texte',
+  );
+
+  const signeSansPrefixe =
+    'v1,' +
+    createHmac('sha256', Buffer.from(wsSecret.slice(3), 'utf8')).update(`${id}.${ts}.${raw}`).digest('base64');
+  assert.equal(
+    verifyWhopSignature(raw, { id, timestamp: ts, signature: signeSansPrefixe }, wsSecret, now),
+    true,
+    'clé = secret sans son préfixe',
+  );
+
+  // Élargir les clés candidates ne doit rien laisser passer d'étranger.
+  const autre = 'ws_' + 'b'.repeat(65);
+  const signeAutre =
+    'v1,' + createHmac('sha256', Buffer.from(autre, 'utf8')).update(`${id}.${ts}.${raw}`).digest('base64');
+  assert.equal(
+    verifyWhopSignature(raw, { id, timestamp: ts, signature: signeAutre }, wsSecret, now),
+    false,
+    'un secret étranger reste refusé',
+  );
+});

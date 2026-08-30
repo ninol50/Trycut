@@ -87,4 +87,3 @@ export const env = {
 } as const;
 
 export const isSupabaseConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
-export const isWhopConfigured = Boolean(env.whopWebhookSecret);
