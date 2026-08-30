@@ -806,3 +806,19 @@ test('une résiliation ferme l’accès, quel que soit son nom d’événement',
   // activation suivie du paiement créditerait deux fois.
   assert.ok(!(GRANTING_EVENTS as readonly string[]).includes('membership.activated'));
 });
+
+test('le secret du webhook n’est jamais renvoyé au navigateur', () => {
+  // Le champ admin sert à poser le secret, pas à le relire. Le renvoyer, même
+  // à un administrateur, le ferait transiter dans une réponse HTTP et vivre
+  // dans l'historique du navigateur.
+  const route = readFileSync(join(process.cwd(), 'app/api/admin/whop/route.ts'), 'utf8');
+  const composant = readFileSync(join(process.cwd(), 'components/admin/WhopSecret.tsx'), 'utf8');
+
+  assert.ok(!route.includes('whop_webhook_secret'), 'la route ne doit jamais lire la colonne');
+  assert.ok(route.includes('admin_has_whop_secret'), 'la présence passe par la fonction dédiée');
+  assert.ok(route.includes('admin_set_whop_secret'), 'la pose passe par la fonction dédiée');
+
+  // Le champ est en saisie masquée et jamais pré-rempli.
+  assert.ok(composant.includes("type=\"password\""), 'le champ doit être masqué');
+  assert.ok(!composant.includes('defaultValue'), 'le champ ne doit jamais être pré-rempli');
+});

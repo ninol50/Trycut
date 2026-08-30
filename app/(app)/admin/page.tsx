@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import AdminSignups, { type Signup } from '@/components/admin/AdminSignups';
+import WhopSecret from '@/components/admin/WhopSecret';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { loadProfile } from '@/lib/profile';
 
@@ -35,6 +36,8 @@ export default async function AdminPage() {
       ) : (
         <AdminSignups initial={signups} />
       )}
+
+      <WhopSecret />
     </div>
   );
 }

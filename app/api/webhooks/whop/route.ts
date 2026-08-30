@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase/server';
-import { env, isSupabaseConfigured } from '@/lib/env';
+import { isSupabaseConfigured } from '@/lib/env';
+import { resolveWhopSecret } from '@/lib/whop-secret';
 import { sendSubscriptionEmail } from '@/lib/email';
 import {
   GRANTING_EVENTS,
@@ -41,26 +42,32 @@ async function must<T extends { error: { message: string } | null }>(
  * page tarifs demande de payer avec l'adresse du compte.
  */
 export async function POST(request: NextRequest) {
-  if (!isSupabaseConfigured || !env.whopWebhookSecret) {
+  if (!isSupabaseConfigured) {
     return NextResponse.json({ error: 'indisponible' }, { status: 503 });
   }
-
-  const raw = await request.text();
-  const headers = readWhopHeaders((name) => request.headers.get(name));
-
-  if (!verifyWhopSignature(raw, headers, env.whopWebhookSecret)) {
-    console.error('[webhooks/whop] signature refusée');
-    return NextResponse.json({ error: 'signature' }, { status: 400 });
-  }
-
-  const payload: unknown = JSON.parse(raw);
-  const event = eventName(payload);
 
   const admin = createAdminSupabase();
   if (!admin) {
     console.error('[webhooks/whop] SUPABASE_SERVICE_ROLE_KEY absente');
     return NextResponse.json({ error: 'service_role_manquante' }, { status: 503 });
   }
+
+  const secret = await resolveWhopSecret();
+  if (!secret) {
+    console.error('[webhooks/whop] aucun secret de signature configuré');
+    return NextResponse.json({ error: 'indisponible' }, { status: 503 });
+  }
+
+  const raw = await request.text();
+  const headers = readWhopHeaders((name) => request.headers.get(name));
+
+  if (!verifyWhopSignature(raw, headers, secret)) {
+    console.error('[webhooks/whop] signature refusée');
+    return NextResponse.json({ error: 'signature' }, { status: 400 });
+  }
+
+  const payload: unknown = JSON.parse(raw);
+  const event = eventName(payload);
 
   // Corps complet journalisé : c'est ce qui permettra de resserrer la lecture
   // des champs sur un vrai paiement plutôt que sur une supposition.
