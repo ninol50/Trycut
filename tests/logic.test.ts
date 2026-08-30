@@ -10,6 +10,8 @@ import { getSteps, ONBOARDING_STEPS } from '@/lib/onboarding';
 import { PRICING, PLAN_BY_AMOUNT_CENTS, withCheckoutReference } from '@/lib/pricing';
 import { createHmac } from 'node:crypto';
 import {
+  GRANTING_EVENTS,
+  REVOKING_EVENTS,
   verifyWhopSignature,
   extractEmail,
   extractAmountCents,
@@ -778,4 +780,29 @@ test('le lien de paiement emporte l’email du compte', () => {
   assert.ok(link.includes('email=client%40example.com'), 'email absent du lien');
   assert.ok(link.includes('11111111-2222-3333-4444-555555555555'), 'repère de compte absent');
   assert.ok(link.startsWith('https://whop.com/checkout/plan_'), 'lien de paiement altéré');
+});
+
+test('une résiliation ferme l’accès, quel que soit son nom d’événement', () => {
+  // Whop nomme l'annulation « went_invalid » dans sa documentation et
+  // « deactivated » dans son assistant. Rater un nom, c'est laisser l'accès
+  // ouvert à quelqu'un qui a résilié.
+  for (const nom of [
+    'membership.went_invalid',
+    'membership.deactivated',
+    'membership.cancelled',
+    'payment.failed',
+  ]) {
+    assert.ok(
+      (REVOKING_EVENTS as readonly string[]).includes(nom),
+      `${nom} : non écouté, l’accès resterait ouvert`,
+    );
+  }
+
+  // Un paiement réussi ne doit évidemment jamais fermer l'accès.
+  assert.ok(!(REVOKING_EVENTS as readonly string[]).includes('payment.succeeded'));
+  assert.ok((GRANTING_EVENTS as readonly string[]).includes('payment.succeeded'));
+
+  // Et l'activation ne crédite pas : seul le paiement crédite, sinon une
+  // activation suivie du paiement créditerait deux fois.
+  assert.ok(!(GRANTING_EVENTS as readonly string[]).includes('membership.activated'));
 });

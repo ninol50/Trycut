@@ -164,9 +164,19 @@ export function planForPayload(payload: unknown): { plan: 'pack' | 'pass'; credi
 
 /** Événements qui accordent l'accès, et ceux qui le referment. */
 export const GRANTING_EVENTS = ['payment.succeeded', 'payment_succeeded'] as const;
+/**
+ * Deux nominations coexistent selon les versions de l'API Whop —
+ * `went_invalid` dans la documentation, `deactivated` dans l'assistant du
+ * tableau de bord. On écoute les deux : un nom manquant, et une résiliation
+ * laisserait l'accès ouvert indéfiniment.
+ */
 export const REVOKING_EVENTS = [
   'membership.went_invalid',
   'membership_went_invalid',
+  'membership.deactivated',
+  'membership_deactivated',
+  'membership.cancelled',
+  'membership.canceled',
   'payment.failed',
   'payment_failed',
 ] as const;
