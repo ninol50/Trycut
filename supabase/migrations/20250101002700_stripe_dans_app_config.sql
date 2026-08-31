@@ -38,10 +38,12 @@ begin
     raise exception 'réservé aux administrateurs' using errcode = '42501';
   end if;
 
-  -- Coller depuis un téléphone ramène presque toujours du texte autour de la
-  -- clé : on extrait le jeton plutôt que de faire confiance au presse-papier.
-  v_jeton := public.extraire_jeton(p_key, 'sk_');
-  if v_jeton is null or v_jeton = '' then
+  -- Une clé Stripe a une forme reconnaissable. Le repli « premier mot collé »
+  -- utilisé pour Whop est ici dangereux : il a laissé enregistrer une valeur
+  -- tronquée qui n'ouvrait rien, en affichant « clé enregistrée ». On exige le
+  -- préfixe et une longueur plausible.
+  v_jeton := substring(p_key from '((sk|rk)_(live|test)_[A-Za-z0-9]+)');
+  if v_jeton is null or length(v_jeton) < 20 then
     raise exception 'clé Stripe illisible' using errcode = '22023';
   end if;
 

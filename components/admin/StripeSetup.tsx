@@ -114,8 +114,9 @@ export default function StripeSetup() {
       <div className="mt-5">
         <p className="text-sm font-semibold text-violet-900">Clé secrète Stripe</p>
         <p className="mt-1 text-xs text-slate-500">
-          Chez Stripe : Développeurs → Clés d’API → Secret key. Commence par « sk_ ».
-          Elle n’est jamais réaffichée ici.
+          Chez Stripe : Développeurs → Clés d’API → <b>Secret key</b> → Reveal,
+          puis copie la clé entière. Elle commence par « sk_ » et fait une
+          centaine de caractères. Elle n’est jamais réaffichée ici.
         </p>
         <input
           value={cle}
