@@ -15,6 +15,8 @@ export interface PricingPlan {
   creditsPeriod: string;
   highlighted: boolean;
   features: readonly string[];
+  /** Texte du bouton. Le genre change d'une offre à l'autre. */
+  cta: string;
   /** Lien de paiement Stripe. Absent sur l'offre gratuite. */
   paymentLink?: string;
 }
@@ -52,6 +54,7 @@ export const PRICING: readonly PricingPlan[] = [
   {
     id: 'free',
     name: 'Découverte',
+    cta: 'Créer mon compte',
     price: '0 €',
     period: '',
     credits: 0,
@@ -62,6 +65,7 @@ export const PRICING: readonly PricingPlan[] = [
   {
     id: 'pack',
     name: 'Semaine',
+    cta: 'Prendre la semaine',
     price: '3,99 €',
     period: '/semaine',
     credits: 5,
@@ -73,6 +77,7 @@ export const PRICING: readonly PricingPlan[] = [
   {
     id: 'pass',
     name: 'Mois',
+    cta: 'Prendre le mois',
     price: '11,99 €',
     period: '/mois',
     credits: 20,
@@ -89,6 +94,7 @@ export const PRICING: readonly PricingPlan[] = [
   {
     id: 'trimestre',
     name: 'Trimestre',
+    cta: 'Prendre le trimestre',
     price: '22 €',
     period: '/3 mois',
     credits: 60,

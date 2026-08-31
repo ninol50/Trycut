@@ -69,7 +69,7 @@ export default async function PricingPage({
                   <CheckoutButton
                     plan={plan.id === 'free' ? 'pack' : plan.id}
                     paymentLink={plan.paymentLink}
-                    label={`Prendre le ${plan.name.toLowerCase()}`}
+                    label={plan.cta}
                     variant={plan.highlighted ? 'primary' : 'secondary'}
                     userId={user?.id ?? null}
                     email={user?.email ?? null}
@@ -86,7 +86,7 @@ export default async function PricingPage({
 
         <div className="mt-8 rounded-2xl bg-violet-50 p-5 text-sm text-slate-500">
           <p className="font-semibold text-violet-900">Bon à savoir</p>
-          <p className="mt-2">Les coupes ne sont pas reportables d’un mois sur l’autre.</p>
+          <p className="mt-2">Les coupes ne sont pas reportables d’une période à l’autre.</p>
           <p className="mt-2">
             Tu peux résilier à tout moment en écrivant à trycutsee@hotmail.com. L’accès reste
             actif jusqu’à la fin de la période déjà payée.

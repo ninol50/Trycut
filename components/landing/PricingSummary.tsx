@@ -51,7 +51,7 @@ export default function PricingSummary({ ctaHref }: { ctaHref: string }) {
       </div>
 
       <p className="mt-4 text-center text-sm text-slate-500">
-        Les coupes ne sont pas reportables d’un mois sur l’autre.
+        Les coupes ne sont pas reportables d’une période à l’autre.
       </p>
 
       <Link
