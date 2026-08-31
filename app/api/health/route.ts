@@ -69,7 +69,7 @@ export async function GET() {
   // client ne peut pas s'octroyer des crédits. Sans elle, le webhook répond
   // 503 même avec les deux secrets — l'annoncer prêt serait faux.
   checks['stripe'] = {
-    paymentLinks: Boolean(process.env.NEXT_PUBLIC_STRIPE_LINK_HEBDO || process.env.NEXT_PUBLIC_STRIPE_LINK_MENSUEL),
+    paymentLinks: Boolean(process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || process.env.NEXT_PUBLIC_STRIPE_LINK_COMPLET),
     secretKey: isStripeConfigured,
     webhookSecret: Boolean(env.stripeWebhookSecret),
     serviceRoleKey: Boolean(env.supabaseServiceRoleKey),

@@ -18,7 +18,7 @@ export default function PaywallNotice({ reason = 'none' }: { reason?: 'none' | '
       <p className="mt-4 text-base text-slate-500">
         {pastDue
           ? 'L’accès reprend dès que la facture est réglée. Tes coupes restantes sont conservées.'
-          : 'L’essai virtuel est réservé aux abonnés. 3 € par semaine pour 5 coupes, ou 10 € par mois pour 23 coupes.'}
+          : 'L’essai virtuel est réservé aux abonnés. 7,99 € par mois pour 15 coupes, ou 9,99 € pour 25 coupes.'}
       </p>
 
       <div className="mt-8 space-y-3">

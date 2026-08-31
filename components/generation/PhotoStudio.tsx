@@ -191,8 +191,8 @@ export default function PhotoStudio({
             Il te faut un abonnement pour générer.
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            Ton compte est actif. L’offre à la semaine donne 5 coupes, celle au mois
-            23 coupes pour 10 €. Sans engagement.
+            Ton compte est actif. L’offre Essentiel donne 15 coupes par mois pour
+            7,99 €, l’offre Complet 25 coupes pour 9,99 €. Sans engagement.
           </p>
           <Link href="/tarifs" className="btn-primary mt-5 w-full">
             Voir les offres

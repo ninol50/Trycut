@@ -64,7 +64,7 @@ export default function Hero({ heroFrames, cutsToday, ctaHref }: HeroProps) {
             </svg>
           </Link>
           <p className="mt-4 text-center text-sm text-slate-500">
-            À partir de 3 € par semaine · Sans engagement
+            À partir de 7,99 € par mois · Sans engagement
           </p>
         </motion.div>
 

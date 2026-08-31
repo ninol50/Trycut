@@ -55,6 +55,6 @@ export const publicEnv = {
     : process.env.NEXT_PUBLIC_ONBOARDING_LENGTH === 'full'
       ? 'full'
       : 'none') as 'none' | 'short' | 'full',
-  stripeLinkHebdo: process.env.NEXT_PUBLIC_STRIPE_LINK_HEBDO || '',
-  stripeLinkMensuel: process.env.NEXT_PUBLIC_STRIPE_LINK_MENSUEL || '',
+  stripeLinkEssentiel: process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || '',
+  stripeLinkComplet: process.env.NEXT_PUBLIC_STRIPE_LINK_COMPLET || '',
 } as const;

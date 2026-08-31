@@ -19,14 +19,14 @@ export interface PricingPlan {
 
 /**
  * Liens de paiement Stripe, à créer pour les deux offres actuelles :
- * 3 € par semaine et 10 € par mois. Publics par nature — ils sont dans le
+ * 7,99 € et 9,99 € par mois. Publics par nature — ils sont dans le
  * HTML — et posés par variable d'environnement.
  *
  * `||` et non `??` : Vercel définit les variables même vides, et une valeur
  * vide doit retomber sur le défaut plutôt que de produire un bouton mort.
  */
-const LINK_HEBDO = process.env.NEXT_PUBLIC_STRIPE_LINK_HEBDO || '';
-const LINK_MENSUEL = process.env.NEXT_PUBLIC_STRIPE_LINK_MENSUEL || '';
+const LINK_ESSENTIEL = process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || '';
+const LINK_COMPLET = process.env.NEXT_PUBLIC_STRIPE_LINK_COMPLET || '';
 
 /**
  * Identifiants d'offre Whop, conservés : le jour où le volume justifiera de
@@ -38,9 +38,9 @@ export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
 };
 
 /**
- * Deux offres, et la mensuelle est volontairement la meilleure affaire :
- * 3 €/semaine revient à environ 13 € par mois pour 21 coupes, contre 10 € pour
- * 23 coupes. L'hebdomadaire sert de point d'entrée, pas de bonne affaire.
+ * Deux offres mensuelles, et la seconde est la meilleure affaire : deux euros
+ * de plus donnent dix coupes de plus. Un écart trop grand rendrait la première
+ * inutile, un écart trop faible rendrait la seconde sans intérêt.
  *
  * Les identifiants 'pack' et 'pass' sont conservés : ce sont les valeurs de
  * l'énumération `plan_tier` en base, et tout le contrôle d'accès s'appuie
@@ -60,35 +60,34 @@ export const PRICING: readonly PricingPlan[] = [
   },
   {
     id: 'pack',
-    name: 'Semaine',
-    price: '3 €',
-    period: '/semaine',
-    credits: 5,
-    creditsPeriod: 'par semaine',
+    name: 'Essentiel',
+    price: '7,99 €',
+    period: '/mois',
+    credits: 15,
+    creditsPeriod: 'par mois',
     highlighted: false,
-    features: ['5 coupes par semaine', 'HD sans filigrane', 'Historique conservé'],
-    paymentLink: LINK_HEBDO,
+    features: ['15 coupes par mois', 'HD sans filigrane', 'Historique conservé'],
+    paymentLink: LINK_ESSENTIEL,
   },
   {
     id: 'pass',
-    name: 'Mois',
-    price: '10 €',
-    strikePrice: '12 €',
+    name: 'Complet',
+    price: '9,99 €',
     period: '/mois',
-    credits: 23,
+    credits: 25,
     creditsPeriod: 'par mois',
     highlighted: true,
     features: [
-      '23 coupes par mois',
+      '25 coupes par mois',
       'HD sans filigrane',
       'Historique conservé',
       'Le meilleur rapport qualité-prix',
     ],
-    paymentLink: LINK_MENSUEL,
+    paymentLink: LINK_COMPLET,
   },
 ] as const;
 
-export const CREDITS_BY_PLAN: Record<PlanId, number> = { free: 0, pack: 5, pass: 23 };
+export const CREDITS_BY_PLAN: Record<PlanId, number> = { free: 0, pack: 15, pass: 25 };
 
 /**
  * Montant encaissé en centimes → offre.
@@ -98,8 +97,8 @@ export const CREDITS_BY_PLAN: Record<PlanId, number> = { free: 0, pack: 5, pass:
  * créditer au hasard.
  */
 export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: 'pack' | 'pass'; credits: number }> = {
-  300: { plan: 'pack', credits: 5 },
-  1000: { plan: 'pass', credits: 23 },
+  799: { plan: 'pack', credits: 15 },
+  999: { plan: 'pass', credits: 25 },
 };
 
 /**

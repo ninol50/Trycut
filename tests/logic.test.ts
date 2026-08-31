@@ -257,35 +257,55 @@ test('les offres et le nombre de coupes sont ceux demandés', () => {
   assert.equal(byId['free']?.price, '0 €');
   assert.equal(byId['free']?.credits, 0);
 
-  // Hebdomadaire : point d'entrée, volontairement moins avantageux.
-  assert.equal(byId['pack']?.price, '3 €');
-  assert.equal(byId['pack']?.period, '/semaine');
-  assert.equal(byId['pack']?.credits, 5);
+  assert.equal(byId['pack']?.price, '7,99 €');
+  assert.equal(byId['pack']?.period, '/mois');
+  assert.equal(byId['pack']?.credits, 15);
 
-  // Mensuel : l'offre mise en avant, prix barré à 12 €.
-  assert.equal(byId['pass']?.price, '10 €');
-  assert.equal(byId['pass']?.strikePrice, '12 €');
+  assert.equal(byId['pass']?.price, '9,99 €');
   assert.equal(byId['pass']?.period, '/mois');
-  assert.equal(byId['pass']?.credits, 23);
+  assert.equal(byId['pass']?.credits, 25);
   assert.equal(byId['pass']?.highlighted, true);
 });
 
-test('le mensuel reste la meilleure affaire face à l’hebdomadaire', () => {
-  // Si l'hebdomadaire devenait plus intéressant, l'échelle de prix
-  // n'aurait plus de sens : personne ne prendrait le mensuel.
+test('l’offre mise en avant reste la meilleure affaire', () => {
+  // Deux euros de plus doivent donner nettement plus de coupes, sinon
+  // l'offre supérieure n'a aucun intérêt et personne ne la prend.
   const byId = Object.fromEntries(PRICING.map((plan) => [plan.id, plan]));
-  const hebdo = byId['pack'];
-  const mensuel = byId['pass'];
-  assert.ok(hebdo && mensuel);
+  const bas = byId['pack'];
+  const haut = byId['pass'];
+  assert.ok(bas && haut);
 
-  const coutMensuelDeLHebdo = 3 * (52 / 12);
-  const coupesMensuellesDeLHebdo = (hebdo?.credits ?? 0) * (52 / 12);
+  const prix = (value: string) => Number(value.replace(/[^0-9,]/g, '').replace(',', '.'));
+  const parCoupe = (plan: typeof bas) => prix(plan?.price ?? '0') / (plan?.credits ?? 1);
 
-  assert.ok(coutMensuelDeLHebdo > 10, 'l’hebdomadaire doit coûter plus cher sur un mois');
+  assert.ok(prix(haut?.price ?? '0') > prix(bas?.price ?? '0'), 'l’offre haute doit coûter plus cher');
   assert.ok(
-    (mensuel?.credits ?? 0) > coupesMensuellesDeLHebdo,
-    'le mensuel doit donner plus de coupes',
+    parCoupe(haut) < parCoupe(bas),
+    'l’offre haute doit revenir moins cher à la coupe',
   );
+});
+
+test('le montant facturé suffit à retrouver l’offre', () => {
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[799], { plan: 'pack', credits: 15 });
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[999], { plan: 'pass', credits: 25 });
+  assert.equal(PLAN_BY_AMOUNT_CENTS[1234], undefined);
+});
+
+test('les offres affichées correspondent aux montants encaissés', () => {
+  for (const plan of PRICING) {
+    if (plan.id === 'free') continue;
+    const cents = Math.round(
+      Number(plan.price.replace(/[^0-9,]/g, '').replace(',', '.')) * 100,
+    );
+    const mapped = PLAN_BY_AMOUNT_CENTS[cents];
+    assert.ok(mapped, `${plan.name} : le prix affiché ${plan.price} n’est mappé à aucune offre`);
+    assert.equal(mapped?.plan, plan.id, `${plan.name} : mauvaise offre`);
+    assert.equal(
+      mapped?.credits,
+      plan.credits,
+      `${plan.name} : ${plan.credits} coupes affichées mais ${mapped?.credits} créditées`,
+    );
+  }
 });
 
 test('les identifiants d’offre Whop restent distincts', () => {
@@ -299,25 +319,19 @@ test('l’identifiant d’offre l’emporte sur le montant', () => {
   // Le montant peut arriver dans une unité inattendue ; l'identifiant, non.
   const payload = {
     action: 'payment.succeeded',
-    data: { final_amount: 3, plan: { id: WHOP_PLAN_IDS.pass } },
+    data: { final_amount: 7.99, plan: { id: WHOP_PLAN_IDS.pass } },
   };
   assert.equal(extractPlanId(payload), WHOP_PLAN_IDS.pass);
   assert.deepEqual(planForPayload(payload), { plan: 'pass', credits: CREDITS_BY_PLAN.pass });
 
   // Sans identifiant connu, on retombe sur le montant.
-  assert.deepEqual(planForPayload({ data: { final_amount: 3 } }), {
+  assert.deepEqual(planForPayload({ data: { final_amount: 7.99 } }), {
     plan: 'pack',
     credits: CREDITS_BY_PLAN.pack,
   });
 
   // Ni l'un ni l'autre : on ne crédite rien.
   assert.equal(planForPayload({ data: { final_amount: 7.5 } }), null);
-});
-
-test('le montant facturé suffit à retrouver l’offre', () => {
-  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[300], { plan: 'pack', credits: 5 });
-  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[1000], { plan: 'pass', credits: 23 });
-  assert.equal(PLAN_BY_AMOUNT_CENTS[1234], undefined);
 });
 
 // ------------------------------------------------- authentification du webhook
@@ -734,13 +748,13 @@ test('l’email de l’acheteur l’emporte sur les autres adresses', () => {
 
 test('les montants Whop retombent sur la bonne offre', () => {
   // 3 € et 10 €, exprimés en euros comme en centimes
-  assert.deepEqual(planForAmount(extractAmountCents({ data: { final_amount: 3 } })), {
+  assert.deepEqual(planForAmount(extractAmountCents({ data: { final_amount: 7.99 } })), {
     plan: 'pack',
-    credits: 5,
+    credits: CREDITS_BY_PLAN.pack,
   });
-  assert.deepEqual(planForAmount(extractAmountCents({ data: { final_amount: 1000 } })), {
+  assert.deepEqual(planForAmount(extractAmountCents({ data: { final_amount: 999 } })), {
     plan: 'pass',
-    credits: 23,
+    credits: CREDITS_BY_PLAN.pass,
   });
   // un montant inconnu ne crédite rien plutôt que de créditer au hasard
   assert.equal(planForAmount(extractAmountCents({ data: { final_amount: 7.5 } })), null);

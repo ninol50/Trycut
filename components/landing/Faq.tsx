@@ -14,7 +14,7 @@ const QUESTIONS = [
   },
   {
     q: 'Il me faut un compte pour générer une coupe ?',
-    a: 'Générer une coupe demande un abonnement : 3 € par semaine pour 5 coupes, ou 10 € par mois pour 23 coupes. Sans engagement.',
+    a: 'Générer une coupe demande un abonnement : 7,99 € par mois pour 15 coupes, ou 9,99 € pour 25 coupes. Sans engagement.',
   },
   {
     q: 'Le résultat est-il fidèle à ce que fera mon coiffeur ?',
