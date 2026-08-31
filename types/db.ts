@@ -20,6 +20,8 @@ export type GenerationErrorCode =
 export interface Profile {
   id: string;
   email: string;
+  /** Adresse retenue au moment de payer. Rattache un encaissement au compte. */
+  billing_email: string | null;
   first_name: string | null;
   stripe_customer_id: string | null;
   subscription_status: SubscriptionStatus;

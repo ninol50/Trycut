@@ -21,6 +21,7 @@ import {
   planForPayload,
 } from '@/lib/whop';
 import { CREDITS_BY_PLAN, WHOP_PLAN_IDS } from '@/lib/pricing';
+import { extractMemberships } from '@/lib/whop-api';
 import { hasPaidAccess } from '@/lib/profile';
 import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
@@ -808,22 +809,60 @@ test('une résiliation ferme l’accès, quel que soit son nom d’événement',
   assert.ok(!(GRANTING_EVENTS as readonly string[]).includes('membership.activated'));
 });
 
-test('le secret du webhook n’est jamais renvoyé au navigateur', () => {
-  // Le champ admin sert à poser le secret, pas à le relire. Le renvoyer, même
-  // à un administrateur, le ferait transiter dans une réponse HTTP et vivre
-  // dans l'historique du navigateur.
+test('ni le secret ni la clé Whop ne sont renvoyés au navigateur', () => {
+  // La page admin sert à poser ces valeurs, pas à les relire. Les renvoyer,
+  // même à un administrateur, les ferait transiter dans une réponse HTTP et
+  // vivre dans l'historique du navigateur.
   const route = readFileSync(join(process.cwd(), 'app/api/admin/whop/route.ts'), 'utf8');
   const composant = readFileSync(join(process.cwd(), 'components/admin/WhopSecret.tsx'), 'utf8');
 
-  assert.ok(!route.includes('whop_webhook_secret'), 'la route ne doit jamais lire la colonne');
-  assert.ok(route.includes('admin_has_whop_secret'), 'la présence passe par la fonction dédiée');
-  assert.ok(route.includes('admin_set_whop_secret'), 'la pose passe par la fonction dédiée');
+  assert.ok(!route.includes(".select('whop_webhook_secret'"), 'la route ne doit pas lire la colonne du secret');
+  assert.ok(!route.includes(".select('whop_api_key'"), 'la route ne doit pas lire la colonne de la clé');
+  assert.ok(!route.includes('app_config'), 'la route ne touche jamais la table directement');
+  assert.ok(route.includes('admin_whop_status'), 'la présence passe par la fonction dédiée');
 
-  // Le champ est en saisie masquée et jamais pré-rempli.
-  assert.ok(composant.includes("type=\"password\""), 'le champ doit être masqué');
-  assert.ok(!composant.includes('defaultValue'), 'le champ ne doit jamais être pré-rempli');
+  assert.ok(composant.includes('type="password"'), 'les champs doivent être masqués');
+  assert.ok(!composant.includes('defaultValue'), 'aucun champ ne doit être pré-rempli');
 });
 
+test('les abonnements Whop sont lus quelle que soit la forme de la réponse', () => {
+  // La documentation Whop n'est pas consultable depuis cet environnement :
+  // la lecture parcourt l'arbre au lieu de supposer un chemin, sinon un nom de
+  // champ inattendu ferait échouer tous les abonnements en silence.
+  const reponse = {
+    pagination: { current_page: 1 },
+    data: [
+      {
+        id: 'mem_1',
+        status: 'active',
+        valid: true,
+        user: { id: 'user_1', email: 'Abonne.Semaine@Example.com' },
+        plan: { id: WHOP_PLAN_IDS.pack },
+      },
+      {
+        id: 'mem_2',
+        valid: true,
+        member: { email: 'abonne.mois@example.com' },
+        plan_id: WHOP_PLAN_IDS.pass,
+      },
+    ],
+  };
+
+  const rows = extractMemberships(reponse);
+  assert.equal(rows.length, 2, 'les deux abonnements doivent être lus');
+  assert.deepEqual(
+    rows.find((row) => row.email === 'abonne.semaine@example.com'),
+    { email: 'abonne.semaine@example.com', plan: 'pack' },
+  );
+  assert.deepEqual(
+    rows.find((row) => row.email === 'abonne.mois@example.com'),
+    { email: 'abonne.mois@example.com', plan: 'pass' },
+  );
+
+  // Une réponse sans offre connue ne doit accorder aucun accès.
+  assert.deepEqual(extractMemberships({ data: [{ user: { email: 'x@y.fr' } }] }), []);
+  assert.deepEqual(extractMemberships({}), []);
+});
 test('un secret Whop au format ws_ est accepté comme un whsec_', () => {
   // Whop délivre un secret préfixé « ws_ », la spécification décrit « whsec_ »
   // suivi d'une clé en base64. Parier sur un seul format ferait rejeter tous
