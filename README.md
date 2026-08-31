@@ -157,12 +157,19 @@ compte, **3 essais gratuits / 24 h** par IP, **1 essai anonyme** par jeton.
 | Offre | Prix | Coupes / mois |
 |---|---|---|
 | Découverte | 0 € | 0 |
-| **Pack** | **9,99 €/mois** | 15 |
-| Pass | 17,90 €/mois | 50 |
+| Essentiel | 7,99 €/mois | 15 |
+| **Complet** | **9,99 €/mois** | 25 |
 
-Les boutons pointent sur des **liens de paiement Stripe**, codés dans `lib/pricing.ts` et
-surchargeables par `NEXT_PUBLIC_STRIPE_LINK_PACK` / `NEXT_PUBLIC_STRIPE_LINK_PASS`. Aucune
-clé serveur n'est nécessaire pour encaisser.
+Deux offres mensuelles, et la seconde est la meilleure affaire : deux euros de plus
+donnent dix coupes de plus, donc elle revient moins cher à la coupe. Un test refuse
+l'inverse.
+
+Les boutons pointent sur des **liens de paiement Stripe**, posés par
+`NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL` / `NEXT_PUBLIC_STRIPE_LINK_COMPLET`. Aucune clé
+serveur n'est nécessaire pour encaisser — elle ne sert qu'à créditer ensuite.
+
+Les identifiants internes restent `pack` et `pass` : ce sont les valeurs de
+l'énumération `plan_tier` en base, et tout le contrôle d'accès s'appuie dessus.
 
 Pour que le paiement **crédite réellement le compte**, il reste à brancher le webhook :
 
