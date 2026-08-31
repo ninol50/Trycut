@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type Stripe from 'stripe';
-import { getStripe, planForPrice } from '@/lib/stripe';
+import { stripeWith, planForPrice } from '@/lib/stripe';
+import { resolveStripeConfig, type StripeConfig } from '@/lib/stripe-config';
+import { PLAN_LABELS } from '@/lib/pricing';
 import { createAdminSupabase } from '@/lib/supabase/server';
-import { env, isStripeConfigured, isSupabaseConfigured } from '@/lib/env';
+import { isSupabaseConfigured } from '@/lib/env';
 import type { SubscriptionStatus } from '@/types/db';
 import { sendSubscriptionEmail } from '@/lib/email';
 
@@ -13,9 +15,11 @@ export const runtime = 'nodejs';
  * arrivent en double systématiquement.
  */
 export async function POST(request: NextRequest) {
-  if (!isStripeConfigured || !isSupabaseConfigured || !env.stripeWebhookSecret) {
+  const config = await resolveStripeConfig();
+  if (!config.secretKey || !config.webhookSecret || !isSupabaseConfigured) {
     return NextResponse.json({ error: 'indisponible' }, { status: 503 });
   }
+  const stripe = stripeWith(config.secretKey);
 
   const signature = request.headers.get('stripe-signature');
   if (!signature) return NextResponse.json({ error: 'signature' }, { status: 400 });
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
   let event: Stripe.Event;
 
   try {
-    event = getStripe().webhooks.constructEvent(raw, signature, env.stripeWebhookSecret);
+    event = stripe.webhooks.constructEvent(raw, signature, config.webhookSecret);
   } catch (error) {
     console.error('[webhooks/stripe] signature', error);
     return NextResponse.json({ error: 'signature' }, { status: 400 });
@@ -49,17 +53,17 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        await handleCheckoutCompleted(event.data.object, admin);
+        await handleCheckoutCompleted(event.data.object, admin, stripe, config);
         break;
       }
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        await handleSubscriptionChange(event.data.object, admin);
+        await handleSubscriptionChange(event.data.object, admin, config);
         break;
       }
       case 'invoice.paid': {
-        await handleInvoicePaid(event.data.object, admin);
+        await handleInvoicePaid(event.data.object, admin, config);
         break;
       }
       case 'invoice.payment_failed': {
@@ -111,6 +115,8 @@ async function userIdForCustomer(customer: string, admin: Admin): Promise<string
 async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
   admin: Admin,
+  stripe: Stripe,
+  config: StripeConfig,
 ): Promise<void> {
   const userId =
     session.client_reference_id ??
@@ -130,9 +136,13 @@ async function handleCheckoutCompleted(
 
   // Les liens de paiement Stripe ne portent pas d'identifiant de prix connu :
   // on lit la ligne facturée et on retombe sur le montant.
-  const items = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 1 });
+  const items = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
   const line = items.data[0];
-  const mapped = planForPrice(line?.price?.id, line?.amount_total ?? session.amount_total);
+  const mapped = planForPrice(
+    line?.price?.id,
+    line?.amount_total ?? session.amount_total,
+    config,
+  );
   if (!mapped) return;
 
   await must(
@@ -153,11 +163,9 @@ async function handleCheckoutCompleted(
 
   const email = session.customer_details?.email ?? null;
   if (email) {
-    void sendSubscriptionEmail(
-      email,
-      mapped.plan === 'pack' ? 'Pack' : 'Pass',
-      mapped.credits,
-    ).catch(() => undefined);
+    void sendSubscriptionEmail(email, PLAN_LABELS[mapped.plan], mapped.credits).catch(
+      () => undefined,
+    );
   }
 }
 
@@ -179,6 +187,7 @@ function periodEnd(subscription: Stripe.Subscription): string | null {
 async function handleSubscriptionChange(
   subscription: Stripe.Subscription,
   admin: Admin,
+  config: StripeConfig,
 ): Promise<void> {
   const customer =
     typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
@@ -186,7 +195,7 @@ async function handleSubscriptionChange(
   if (!userId) return;
 
   const price = subscription.items.data[0]?.price;
-  const mapped = planForPrice(price?.id, price?.unit_amount ?? null);
+  const mapped = planForPrice(price?.id, price?.unit_amount ?? null, config);
   const status = STATUS_MAP[subscription.status] ?? 'none';
   const canceled = subscription.status === 'canceled' || status === 'canceled';
 
@@ -205,7 +214,11 @@ async function handleSubscriptionChange(
   );
 }
 
-async function handleInvoicePaid(invoice: Stripe.Invoice, admin: Admin): Promise<void> {
+async function handleInvoicePaid(
+  invoice: Stripe.Invoice,
+  admin: Admin,
+  config: StripeConfig,
+): Promise<void> {
   const customer = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
   if (!customer) return;
 
@@ -215,7 +228,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice, admin: Admin): Promise
   const line = invoice.lines.data[0];
   const rawPrice = line?.pricing?.price_details?.price;
   const priceId = typeof rawPrice === 'string' ? rawPrice : rawPrice?.id;
-  const mapped = planForPrice(priceId, line?.amount ?? null);
+  const mapped = planForPrice(priceId, line?.amount ?? null, config);
   if (!mapped) return;
 
   // Crédits du mois. Non reportables : on remet le solde au forfait,

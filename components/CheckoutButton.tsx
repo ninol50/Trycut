@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useTapScale } from '@/components/motion';
 import { track } from '@/lib/analytics';
-import { withCheckoutReference } from '@/lib/pricing';
+import { withCheckoutReference, type PaidPlanId } from '@/lib/pricing';
 
 interface CheckoutButtonProps {
-  plan: 'pack' | 'pass';
+  plan: PaidPlanId;
   label: string;
-  /** Page de paiement Whop. */
+  /** Lien de paiement Stripe. */
   paymentLink?: string;
   variant?: 'primary' | 'secondary';
   /**

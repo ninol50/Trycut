@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { env, isStripeConfigured, isSupabaseConfigured } from '@/lib/env';
+import { env, isSupabaseConfigured } from '@/lib/env';
+import { resolveStripeConfig, crediteApresPaiement } from '@/lib/stripe-config';
 import { loadCatalogWithSource } from '@/lib/catalog-server';
+import { PRICING } from '@/lib/pricing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,16 +70,17 @@ export async function GET() {
   // Créditer un compte se fait avec la clé service_role : la session d'un
   // client ne peut pas s'octroyer des crédits. Sans elle, le webhook répond
   // 503 même avec les deux secrets — l'annoncer prêt serait faux.
+  // Les réglages Stripe peuvent venir de l'environnement ou de la base : c'est
+  // l'état résolu qui compte, pas la seule variable.
+  const stripe = await resolveStripeConfig();
   checks['stripe'] = {
-    paymentLinks: Boolean(process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || process.env.NEXT_PUBLIC_STRIPE_LINK_COMPLET),
-    secretKey: isStripeConfigured,
-    webhookSecret: Boolean(env.stripeWebhookSecret),
+    paymentLinks: PRICING.filter((plan) => Boolean(plan.paymentLink)).length,
+    secretKey: Boolean(stripe.secretKey),
+    modeTest: stripe.secretKey?.startsWith('sk_test_') ?? false,
+    webhookSecret: Boolean(stripe.webhookSecret),
     serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
     /** Sans ces trois-là, un paiement encaisse mais ne crédite pas le compte. */
-    creditsOnPurchase:
-      isStripeConfigured &&
-      Boolean(env.stripeWebhookSecret) &&
-      Boolean(env.supabaseServiceRoleKey),
+    creditsOnPurchase: crediteApresPaiement(stripe),
   };
 
   // --- Emails --------------------------------------------------------------
@@ -93,8 +96,6 @@ export async function GET() {
   // seule la liste des noms réellement reçus par le serveur permet de trancher.
   // Uniquement les noms : une valeur exposée ici serait publique.
   const attendues = [
-    'NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL',
-    'NEXT_PUBLIC_STRIPE_LINK_COMPLET',
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
     'STRIPE_PRICE_PACK',

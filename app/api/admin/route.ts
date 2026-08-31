@@ -18,7 +18,7 @@ const schema = z.union([
   z.object({
     userId: z.string().uuid(),
     /** Abonnement rattaché à la main depuis Whop. `free` le retire. */
-    plan: z.enum(['free', 'pack', 'pass']),
+    plan: z.enum(['free', 'pack', 'pass', 'trimestre']),
   }),
 ]);
 

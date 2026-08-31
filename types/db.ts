@@ -1,7 +1,7 @@
 export type CatalogCategory = 'cut' | 'beard' | 'color' | 'accessory';
 export type GenerationStatus = 'queued' | 'processing' | 'succeeded' | 'failed';
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceled';
-export type Plan = 'free' | 'pack' | 'pass';
+export type Plan = 'free' | 'pack' | 'pass' | 'trimestre';
 export type CreditReason =
   | 'signup_bonus'
   | 'generation'

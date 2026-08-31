@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getStripe } from '@/lib/stripe';
+import { stripeWith } from '@/lib/stripe';
+import { resolveStripeConfig } from '@/lib/stripe-config';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { loadProfile } from '@/lib/profile';
-import { env, isStripeConfigured } from '@/lib/env';
+import { env } from '@/lib/env';
 
 export const runtime = 'nodejs';
 
@@ -11,10 +12,11 @@ export const runtime = 'nodejs';
  * Checkout Stripe. Abonnement par défaut ; le paiement unique n'est proposé
  * que si `ENABLE_ONE_TIME_PACK` est activé (défaut : false).
  */
-const schema = z.object({ plan: z.enum(['pack', 'pass']) });
+const schema = z.object({ plan: z.enum(['pack', 'pass', 'trimestre']) });
 
 export async function POST(request: NextRequest) {
-  if (!isStripeConfigured) {
+  const config = await resolveStripeConfig();
+  if (!config.secretKey) {
     return NextResponse.json(
       { error: 'stripe', message: 'Le paiement n’est pas encore configuré.' },
       { status: 503 },
@@ -32,7 +34,12 @@ export async function POST(request: NextRequest) {
   }
 
   const { plan } = parsed.data;
-  const priceId = plan === 'pack' ? env.stripePricePack : env.stripePricePass;
+  const priceId =
+    plan === 'pack'
+      ? config.pricePack
+      : plan === 'pass'
+        ? config.pricePass
+        : config.priceTrimestre;
 
   if (!priceId) {
     return NextResponse.json(
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const stripe = getStripe();
+  const stripe = stripeWith(config.secretKey);
   const supabase = await createServerSupabase();
 
   // Un seul client Stripe par compte.

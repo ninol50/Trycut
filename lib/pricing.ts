@@ -1,4 +1,6 @@
-export type PlanId = 'free' | 'pack' | 'pass';
+export type PlanId = 'free' | 'pack' | 'pass' | 'trimestre';
+/** Offres payantes, telles qu'elles existent dans l'énumération `plan_tier`. */
+export type PaidPlanId = Exclude<PlanId, 'free'>;
 
 export interface PricingPlan {
   id: PlanId;
@@ -18,34 +20,33 @@ export interface PricingPlan {
 }
 
 /**
- * Liens de paiement Stripe, à créer pour les deux offres actuelles :
- * 7,99 € et 9,99 € par mois. Publics par nature — ils sont dans le
- * HTML — et posés par variable d'environnement.
+ * Liens de paiement Stripe.
  *
- * `||` et non `??` : Vercel définit les variables même vides, et une valeur
- * vide doit retomber sur le défaut plutôt que de produire un bouton mort.
+ * Ils sont écrits ici et non posés par variable d'environnement : un lien de
+ * paiement est public par nature — il figure en clair dans le HTML de la page
+ * tarifs — donc rien ne justifie de le cacher, et une variable en moins est
+ * une panne en moins. Les variables restent prioritaires quand elles existent,
+ * pour pouvoir changer un lien sans toucher au code.
+ *
+ * `||` et non `??` : une variable définie mais vide doit retomber sur le
+ * défaut plutôt que produire un bouton mort.
  */
-const LINK_ESSENTIEL = process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || '';
-const LINK_COMPLET = process.env.NEXT_PUBLIC_STRIPE_LINK_COMPLET || '';
+const LINK_SEMAINE =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_SEMAINE || 'https://buy.stripe.com/fZubJ07hjfG71hY3wY2wU08';
+const LINK_MOIS =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_MOIS || 'https://buy.stripe.com/4gM3cucBD2Tl8Kq4B22wU09';
+const LINK_TRIMESTRE =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_TRIMESTRE || 'https://buy.stripe.com/aFa8wOgRT51t6Ci3wY2wU0a';
 
 /**
- * Identifiants d'offre Whop, conservés : le jour où le volume justifiera de
- * repasser chez eux, le rattachement se fera par là.
- */
-export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
-  pack: 'plan_TgQeVRautIvVk',
-  pass: 'plan_FqNwkkzr18mMH',
-};
-
-/**
- * Deux offres mensuelles, et la seconde est la meilleure affaire : deux euros
- * de plus donnent dix coupes de plus. Un écart trop grand rendrait la première
- * inutile, un écart trop faible rendrait la seconde sans intérêt.
+ * Trois rythmes d'abonnement. Le prix par coupe baisse avec l'engagement :
+ * 0,80 € à la semaine, 0,60 € au mois, 0,37 € au trimestre. C'est ce qui
+ * justifie les trois offres — sans écart, la plus courte gagnerait toujours.
  *
- * Les identifiants 'pack' et 'pass' sont conservés : ce sont les valeurs de
- * l'énumération `plan_tier` en base, et tout le contrôle d'accès s'appuie
- * dessus. Les renommer imposerait une migration d'énumération pour un gain
- * purement cosmétique.
+ * Les identifiants 'pack' et 'pass' sont conservés pour la semaine et le mois :
+ * ce sont les valeurs de l'énumération `plan_tier` en base, et tout le contrôle
+ * d'accès s'appuie dessus. Les renommer imposerait une migration d'énumération
+ * pour un gain purement cosmétique.
  */
 export const PRICING: readonly PricingPlan[] = [
   {
@@ -60,45 +61,85 @@ export const PRICING: readonly PricingPlan[] = [
   },
   {
     id: 'pack',
-    name: 'Essentiel',
-    price: '7,99 €',
-    period: '/mois',
-    credits: 15,
-    creditsPeriod: 'par mois',
+    name: 'Semaine',
+    price: '3,99 €',
+    period: '/semaine',
+    credits: 5,
+    creditsPeriod: 'par semaine',
     highlighted: false,
-    features: ['15 coupes par mois', 'HD sans filigrane', 'Historique conservé'],
-    paymentLink: LINK_ESSENTIEL,
+    features: ['5 coupes par semaine', 'HD sans filigrane', 'Sans engagement'],
+    paymentLink: LINK_SEMAINE,
   },
   {
     id: 'pass',
-    name: 'Complet',
-    price: '9,99 €',
+    name: 'Mois',
+    price: '11,99 €',
     period: '/mois',
-    credits: 25,
+    credits: 20,
     creditsPeriod: 'par mois',
+    highlighted: false,
+    features: [
+      '20 coupes par mois',
+      'HD sans filigrane',
+      'Catalogue complet',
+      'Historique conservé',
+    ],
+    paymentLink: LINK_MOIS,
+  },
+  {
+    id: 'trimestre',
+    name: 'Trimestre',
+    price: '22 €',
+    period: '/3 mois',
+    credits: 60,
+    creditsPeriod: 'par trimestre',
     highlighted: true,
     features: [
-      '25 coupes par mois',
+      '60 coupes sur trois mois',
       'HD sans filigrane',
+      'Catalogue complet',
       'Historique conservé',
-      'Le meilleur rapport qualité-prix',
+      'Le meilleur prix à la coupe',
     ],
-    paymentLink: LINK_COMPLET,
+    paymentLink: LINK_TRIMESTRE,
   },
 ] as const;
 
-export const CREDITS_BY_PLAN: Record<PlanId, number> = { free: 0, pack: 15, pass: 25 };
+export const CREDITS_BY_PLAN: Record<PlanId, number> = {
+  free: 0,
+  pack: 5,
+  pass: 20,
+  trimestre: 60,
+};
+
+/**
+ * Identifiants d'offre Whop, conservés en sommeil : le jour où le volume
+ * justifiera d'y repasser, le rattachement se fera par là. Ils ne couvrent que
+ * les deux offres qui existaient chez eux.
+ */
+export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
+  pack: 'plan_TgQeVRautIvVk',
+  pass: 'plan_FqNwkkzr18mMH',
+};
+
+/** Libellé lisible d'une offre, pour les emails et les journaux. */
+export const PLAN_LABELS: Record<PaidPlanId, string> = {
+  pack: 'abonnement à la semaine',
+  pass: 'abonnement au mois',
+  trimestre: 'abonnement au trimestre',
+};
 
 /**
  * Montant encaissé en centimes → offre.
  *
- * Le webhook n'a pas d'identifiant de prix connu d'avance : le montant
- * facturé, lui, est fiable. Une offre inconnue ne crédite rien plutôt que de
- * créditer au hasard.
+ * Le webhook n'a pas d'identifiant de prix connu d'avance quand le paiement
+ * passe par un lien : le montant facturé, lui, est fiable. Une offre inconnue
+ * ne crédite rien plutôt que de créditer au hasard.
  */
-export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: 'pack' | 'pass'; credits: number }> = {
-  799: { plan: 'pack', credits: 15 },
-  999: { plan: 'pass', credits: 25 },
+export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: PaidPlanId; credits: number }> = {
+  399: { plan: 'pack', credits: 5 },
+  1199: { plan: 'pass', credits: 20 },
+  2200: { plan: 'trimestre', credits: 60 },
 };
 
 /**

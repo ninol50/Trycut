@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const PLAN_LABELS: Record<Plan, string> = {
   free: 'Essai',
+  trimestre: 'Trimestre',
   pack: 'Semaine',
   pass: 'Mois',
 };

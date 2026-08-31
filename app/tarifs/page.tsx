@@ -67,7 +67,7 @@ export default async function PricingPage({
               <div className="mt-5">
                 {plan.paymentLink ? (
                   <CheckoutButton
-                    plan={plan.id === 'pack' ? 'pack' : 'pass'}
+                    plan={plan.id === 'free' ? 'pack' : plan.id}
                     paymentLink={plan.paymentLink}
                     label={`Prendre le ${plan.name.toLowerCase()}`}
                     variant={plan.highlighted ? 'primary' : 'secondary'}

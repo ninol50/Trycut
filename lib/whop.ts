@@ -1,5 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { CREDITS_BY_PLAN, PLAN_BY_AMOUNT_CENTS, WHOP_PLAN_IDS } from '@/lib/pricing';
+import {
+  CREDITS_BY_PLAN,
+  PLAN_BY_AMOUNT_CENTS,
+  WHOP_PLAN_IDS,
+  type PaidPlanId,
+} from '@/lib/pricing';
 
 /**
  * Whop signe ses webhooks selon la spécification Standard Webhooks :
@@ -160,7 +165,9 @@ export function extractUserRef(payload: unknown): string | null {
   return refs[0] ?? null;
 }
 
-export function planForAmount(cents: number | null): { plan: 'pack' | 'pass'; credits: number } | null {
+export function planForAmount(
+  cents: number | null,
+): { plan: PaidPlanId; credits: number } | null {
   if (cents === null) return null;
   return PLAN_BY_AMOUNT_CENTS[cents] ?? null;
 }
@@ -182,7 +189,9 @@ export function extractPlanId(payload: unknown): string | null {
  * montant dépend de la devise et de l'unité. Le montant ne sert que si aucun
  * identifiant connu n'apparaît dans le message.
  */
-export function planForPayload(payload: unknown): { plan: 'pack' | 'pass'; credits: number } | null {
+export function planForPayload(
+  payload: unknown,
+): { plan: PaidPlanId; credits: number } | null {
   const planId = extractPlanId(payload);
   if (planId) {
     for (const [plan, id] of Object.entries(WHOP_PLAN_IDS)) {

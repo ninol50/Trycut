@@ -34,17 +34,26 @@ export async function loadHistory(userId: string, limit = 12): Promise<HistoryRo
   return (data as HistoryRow[] | null) ?? [];
 }
 
-/** Le catalogue premium est réservé au plan `pass`. */
+/** Offres payantes : tout ce qui n'est pas `free`. */
+function estOffrePayante(plan: Profile['plan']): boolean {
+  return plan === 'pack' || plan === 'pass' || plan === 'trimestre';
+}
+
+/**
+ * Le catalogue premium est réservé aux engagements longs — mois et trimestre.
+ * L'offre à la semaine reste volontairement en deçà : c'est ce qui donne une
+ * raison de passer au mois.
+ */
 export function premiumLocked(profile: Profile): boolean {
-  return !(profile.plan === 'pass' && profile.subscription_status === 'active');
+  return !(
+    (profile.plan === 'pass' || profile.plan === 'trimestre') &&
+    profile.subscription_status === 'active'
+  );
 }
 
 /** Le filigrane disparaît sur les offres payantes actives. */
 export function watermarkFor(profile: Profile): boolean {
-  return !(
-    (profile.plan === 'pack' || profile.plan === 'pass') &&
-    profile.subscription_status === 'active'
-  );
+  return !(estOffrePayante(profile.plan) && profile.subscription_status === 'active');
 }
 
 /**
@@ -62,8 +71,5 @@ export function hasPaidAccess(profile: Profile): boolean {
   // payer. Tous les autres passent par un abonnement actif.
   if (profile.is_admin || profile.access_status === 'granted') return true;
 
-  return (
-    (profile.plan === 'pack' || profile.plan === 'pass') &&
-    profile.subscription_status === 'active'
-  );
+  return estOffrePayante(profile.plan) && profile.subscription_status === 'active';
 }
