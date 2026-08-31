@@ -77,6 +77,12 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('[webhooks/stripe]', event.type, error);
+
+    // La marque anti-doublon a été posée avant le traitement. Si le traitement
+    // échoue, il faut la retirer : sinon le renvoi de Stripe est pris pour un
+    // doublon, ignoré, et le client reste sans ses coupes définitivement.
+    await admin.from('webhook_events').delete().eq('provider', 'stripe').eq('external_id', event.id);
+
     return NextResponse.json({ received: false }, { status: 500 });
   }
 
@@ -199,18 +205,23 @@ async function handleSubscriptionChange(
   const status = STATUS_MAP[subscription.status] ?? 'none';
   const canceled = subscription.status === 'canceled' || status === 'canceled';
 
+  // Une offre que l'on ne reconnaît pas ne doit pas retirer l'accès à quelqu'un
+  // qui paie : un tarif changé chez Stripe rétrograderait sinon tous les
+  // abonnés en offre gratuite au premier message reçu. On ne touche à `plan`
+  // que si l'on sait quoi y écrire, ou si l'abonnement est bel et bien résilié.
+  const champs: Record<string, unknown> = {
+    // L'accès reste actif jusqu'à current_period_end : c'est la date qui tranche,
+    // pas la résiliation elle-même.
+    subscription_status: status,
+    current_period_end: periodEnd(subscription),
+  };
+  if (canceled) champs['plan'] = 'free';
+  else if (mapped) champs['plan'] = mapped.plan;
+  else console.error('[webhooks/stripe] offre inconnue, plan laissé tel quel', price?.id);
+
   await must(
     'mise à jour de l’abonnement',
-    admin
-      .from('profiles')
-      .update({
-        // L'accès reste actif jusqu'à current_period_end : c'est la date qui tranche,
-        // pas la résiliation elle-même.
-        subscription_status: status,
-        plan: canceled ? 'free' : (mapped?.plan ?? 'free'),
-        current_period_end: periodEnd(subscription),
-      })
-      .eq('id', userId),
+    admin.from('profiles').update(champs).eq('id', userId),
   );
 }
 

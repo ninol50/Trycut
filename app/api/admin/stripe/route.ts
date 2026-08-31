@@ -6,7 +6,7 @@ import { loadProfile } from '@/lib/profile';
 import { isSupabaseConfigured, env } from '@/lib/env';
 import { resolveStripeConfig } from '@/lib/stripe-config';
 import { stripeWith } from '@/lib/stripe';
-import { PLAN_BY_AMOUNT_CENTS } from '@/lib/pricing';
+import { PLAN_BY_AMOUNT_CENTS, PRICING } from '@/lib/pricing';
 
 export const runtime = 'nodejs';
 
@@ -171,6 +171,37 @@ async function configurer(): Promise<NextResponse> {
       },
       { status: 502 },
     );
+  }
+
+  // --- Le retour sur le site après paiement --------------------------------
+  // Par défaut, un lien de paiement laisse le client sur une page Stripe : il
+  // a payé, il ne revient jamais, et il croit que rien ne s'est passé.
+  try {
+    const lesNotres = new Set(
+      PRICING.map((plan) => plan.paymentLink).filter((lien): lien is string => Boolean(lien)),
+    );
+    const retour = `${env.siteUrl}/compte?paiement=ok`;
+    const liens = await stripe.paymentLinks.list({ limit: 100 });
+    let corriges = 0;
+
+    for (const lien of liens.data) {
+      if (!lesNotres.has(lien.url)) continue;
+      const dejaBon =
+        lien.after_completion?.type === 'redirect' &&
+        lien.after_completion.redirect?.url === retour;
+      if (dejaBon) continue;
+
+      await stripe.paymentLinks.update(lien.id, {
+        after_completion: { type: 'redirect', redirect: { url: retour } },
+      });
+      corriges += 1;
+    }
+
+    if (corriges > 0) faits.push(`${corriges} lien(s) renvoient désormais sur le site`);
+  } catch {
+    // Un retour mal réglé gêne le client sans empêcher le paiement d'aboutir :
+    // ce n'est pas une raison d'interrompre le reste de la configuration.
+    faits.push('retour après paiement non réglé, à vérifier chez Stripe');
   }
 
   // --- Le webhook ----------------------------------------------------------
