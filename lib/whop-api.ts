@@ -1,7 +1,22 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { WHOP_PLAN_IDS, CREDITS_BY_PLAN } from '@/lib/pricing';
 
-const WHOP_API = 'https://api.whop.com/v5/app/memberships';
+/**
+ * Adresses candidates pour lister les abonnements.
+ *
+ * Whop expose plusieurs familles d'API — « app » pour les applications
+ * installées, « company » et v2 pour une entreprise — et la documentation
+ * n'est pas consultable depuis cet environnement. Une clé d'entreprise sur une
+ * adresse d'application renvoie « API Key is invalid », un message qui ne dit
+ * pas que c'est l'adresse le problème. On les essaie donc dans l'ordre, et on
+ * s'arrête à la première qui répond.
+ */
+const WHOP_ENDPOINTS = [
+  'https://api.whop.com/api/v2/memberships',
+  'https://api.whop.com/v2/memberships',
+  'https://api.whop.com/v5/company/memberships',
+  'https://api.whop.com/v5/app/memberships',
+] as const;
 
 /** Une minute : assez pour ne pas marteler Whop, assez court pour qu'un
  *  paiement se voie presque tout de suite. */
@@ -105,24 +120,33 @@ export async function listValidMemberships(force = false): Promise<WhopMembershi
   const key = await readApiKey();
   if (!key) return null;
 
-  try {
-    const response = await fetch(`${WHOP_API}?valid=true&per=50`, {
-      headers: { authorization: `Bearer ${key}`, accept: 'application/json' },
-      cache: 'no-store',
-    });
+  for (const base of WHOP_ENDPOINTS) {
+    try {
+      const response = await fetch(`${base}?valid=true&per=50`, {
+        headers: { authorization: `Bearer ${key}`, accept: 'application/json' },
+        cache: 'no-store',
+      });
 
-    if (!response.ok) {
-      console.error('[whop-api] réponse', response.status, (await response.text()).slice(0, 200));
-      return null;
+      if (!response.ok) {
+        console.error(
+          '[whop-api]',
+          base,
+          response.status,
+          (await response.text()).slice(0, 200),
+        );
+        continue;
+      }
+
+      const rows = extractMemberships(await response.json());
+      console.log('[whop-api] adresse retenue', base, '·', rows.length, 'abonnement(s)');
+      cache = { at: Date.now(), rows };
+      return rows;
+    } catch (error) {
+      console.error('[whop-api]', base, error);
     }
-
-    const rows = extractMemberships(await response.json());
-    cache = { at: Date.now(), rows };
-    return rows;
-  } catch (error) {
-    console.error('[whop-api] appel', error);
-    return null;
   }
+
+  return null;
 }
 
 /** Offre en cours pour cette adresse, ou null si aucun abonnement valide. */
