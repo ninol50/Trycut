@@ -36,6 +36,50 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const envoyer = async (userId: string, corps: Record<string, string>, apres: () => void) => {
+    setBusyId(userId);
+    setError(null);
+    const precedent = rows;
+    apres();
+
+    try {
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ userId, ...corps }),
+      });
+      if (!response.ok) {
+        setRows(precedent);
+        setError(
+          response.status === 403
+            ? 'Ton compte n’est pas administrateur.'
+            : 'La mise à jour a échoué. Réessaie.',
+        );
+      }
+    } catch {
+      setRows(precedent);
+      setError('La connexion a été interrompue. Réessaie.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  /** Rattache un paiement Whop au compte : l'offre et ses coupes. */
+  const setPlan = (userId: string, plan: 'free' | 'pack' | 'pass') =>
+    envoyer(userId, { plan }, () =>
+      setRows((current) =>
+        current.map((row) =>
+          row.id === userId
+            ? {
+                ...row,
+                plan,
+                subscription_status: plan === 'free' ? 'canceled' : 'active',
+              }
+            : row,
+        ),
+      ),
+    );
+
   const setStatus = async (userId: string, status: Signup['access_status']) => {
     setBusyId(userId);
     setError(null);
@@ -128,7 +172,44 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
               {row.generations_count} générée{row.generations_count > 1 ? 's' : ''}
             </p>
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 rounded-2xl bg-violet-50 p-3">
+              <p className="text-xs font-semibold text-violet-900">
+                A payé sur Whop ?
+              </p>
+              <div className="mt-2 flex gap-2">
+                <motion.button
+                  type="button"
+                  whileTap={tap}
+                  disabled={busyId === row.id}
+                  onClick={() => void setPlan(row.id, 'pack')}
+                  className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
+                >
+                  Semaine · 5
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={tap}
+                  disabled={busyId === row.id}
+                  onClick={() => void setPlan(row.id, 'pass')}
+                  className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
+                >
+                  Mois · 23
+                </motion.button>
+                {row.subscription_status === 'active' ? (
+                  <motion.button
+                    type="button"
+                    whileTap={tap}
+                    disabled={busyId === row.id}
+                    onClick={() => void setPlan(row.id, 'free')}
+                    className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
+                  >
+                    Retirer
+                  </motion.button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-3 flex gap-2">
               {row.access_status === 'granted' ? (
                 <motion.button
                   type="button"
