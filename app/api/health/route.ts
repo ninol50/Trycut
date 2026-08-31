@@ -88,6 +88,35 @@ export async function GET() {
 
   checks['posthog'] = { configured: Boolean(env.posthogKey), host: env.posthogHost };
 
+  // --- Diagnostic de configuration -----------------------------------------
+  // Quand une variable apparaît dans Vercel mais que le site ne la voit pas,
+  // seule la liste des noms réellement reçus par le serveur permet de trancher.
+  // Uniquement les noms : une valeur exposée ici serait publique.
+  const attendues = [
+    'NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL',
+    'NEXT_PUBLIC_STRIPE_LINK_COMPLET',
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'STRIPE_PRICE_PACK',
+    'STRIPE_PRICE_PASS',
+    'RESEND_API_KEY',
+    'EMAIL_FROM',
+    'CRON_SECRET',
+    'FAL_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
+  ] as const;
+
+  checks['variables'] = {
+    recues: attendues.filter((nom) => {
+      const valeur = process.env[nom];
+      return typeof valeur === 'string' && valeur.trim().length > 0;
+    }),
+    videsOuAbsentes: attendues.filter((nom) => {
+      const valeur = process.env[nom];
+      return !(typeof valeur === 'string' && valeur.trim().length > 0);
+    }),
+  };
+
   checks['serviceRole'] = {
     present: Boolean(env.supabaseServiceRoleKey),
     requiredFor: [
