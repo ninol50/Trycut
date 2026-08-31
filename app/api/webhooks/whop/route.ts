@@ -110,10 +110,14 @@ async function findUser(payload: unknown, admin: Admin) {
   const email = extractEmail(payload);
   if (!email) return null;
 
+  // Deux adresses peuvent rattacher un paiement : celle du compte, et celle
+  // confirmée au moment de payer. Sans la seconde, quelqu'un qui paie avec une
+  // autre adresse que celle de son compte n'est jamais crédité.
   const { data } = await admin
     .from('profiles')
-    .select('id, email, first_name')
-    .ilike('email', email)
+    .select('id, email, first_name, billing_email')
+    .or(`email.ilike.${email},billing_email.ilike.${email}`)
+    .limit(1)
     .maybeSingle();
 
   return data;

@@ -12,6 +12,7 @@ import { createHmac } from 'node:crypto';
 import {
   GRANTING_EVENTS,
   REVOKING_EVENTS,
+  eventName,
   verifyWhopSignature,
   extractEmail,
   extractAmountCents,
@@ -859,4 +860,46 @@ test('un secret Whop au format ws_ est accepté comme un whsec_', () => {
     false,
     'un secret étranger reste refusé',
   );
+});
+
+test('un vrai message de paiement Whop est lu correctement de bout en bout', () => {
+  // Message tel que Whop le décrit : enveloppe { action, data }, avec
+  // l'utilisateur, l'offre et l'entreprise développés. C'est le seul endroit
+  // où l'on vérifie la chaîne entière — signature, acheteur, offre — sur une
+  // charge utile réaliste plutôt que sur un objet de test minimal.
+  const corps = {
+    action: 'payment.succeeded',
+    api_version: 'v5',
+    data: {
+      id: 'pay_9x2Kd',
+      final_amount: 3,
+      currency: 'eur',
+      status: 'paid',
+      user: { id: 'user_abc', email: 'Client.Test@Example.COM', username: 'client' },
+      plan: { id: 'plan_TgQeVRautIvVk', plan_type: 'renewal' },
+      company: { id: 'biz_ldn1', support_email: 'support@ldn1.com' },
+      membership: { id: 'mem_77', status: 'active' },
+    },
+  };
+
+  const raw = JSON.stringify(corps);
+  const secret = 'ws_' + 'k'.repeat(65);
+  const id = 'msg_sim';
+  const now = Date.now();
+  const ts = String(Math.floor(now / 1000));
+  const sig =
+    'v1,' + createHmac('sha256', Buffer.from(secret, 'utf8')).update(`${id}.${ts}.${raw}`).digest('base64');
+
+  assert.equal(eventName(corps), 'payment.succeeded');
+  assert.equal(
+    verifyWhopSignature(raw, { id, timestamp: ts, signature: sig }, secret, now),
+    true,
+    'signature refusée sur un message réaliste',
+  );
+
+  // L'email de l'acheteur doit l'emporter sur celui du support de l'entreprise,
+  // sinon tous les paiements seraient attribués au même compte.
+  assert.equal(extractEmail(corps), 'client.test@example.com');
+
+  assert.deepEqual(planForPayload(corps), { plan: 'pack', credits: CREDITS_BY_PLAN.pack });
 });
