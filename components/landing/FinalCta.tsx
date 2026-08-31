@@ -11,7 +11,7 @@ const REASSURANCE = [
   'Résultat en 30 secondes',
 ] as const;
 
-export default function FinalCta() {
+export default function FinalCta({ ctaHref }: { ctaHref: string }) {
   const anim = useInView();
 
   return (
@@ -24,7 +24,7 @@ export default function FinalCta() {
 
         <div className="mt-7">
           <Link
-            href="/tarifs"
+            href={ctaHref}
             onClick={() => track('landing_cta_clicked', { location: 'final' })}
             className="btn-primary w-full"
           >

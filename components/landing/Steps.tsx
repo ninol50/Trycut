@@ -19,7 +19,7 @@ const PATHS: Record<(typeof STEPS)[number]['icon'], string> = {
   check: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Zm-3.5-9 2.5 2.5 5-5',
 };
 
-export default function Steps() {
+export default function Steps({ ctaHref }: { ctaHref: string }) {
   const anim = useInView();
 
   return (
@@ -56,7 +56,7 @@ export default function Steps() {
 
       <div className="mt-8">
         <Link
-          href="/tarifs"
+          href={ctaHref}
           onClick={() => track('landing_cta_clicked', { location: 'steps' })}
           className="btn-primary w-full"
         >

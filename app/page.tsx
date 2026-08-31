@@ -9,6 +9,7 @@ import FinalCta from '@/components/landing/FinalCta';
 import Footer from '@/components/Footer';
 import { resolveExamples, resolveHeroFrames } from '@/lib/demo-assets';
 import { countCutsToday } from '@/lib/stats';
+import { loadProfile, hasPaidAccess } from '@/lib/profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,17 +19,27 @@ export default async function LandingPage() {
   const heroFrames = resolveHeroFrames();
   const cutsToday = await countCutsToday();
 
+  // Où mène chaque bouton de la vitrine. Sans compte, tout ramène à
+  // l'inscription : il n'y a rien à voir ni à essayer avant. Une route sous
+  // forme de chaîne, jamais de fonction qui traverserait vers le client.
+  const session = await loadProfile();
+  const ctaHref = !session
+    ? '/inscription'
+    : hasPaidAccess(session.profile)
+      ? '/app'
+      : '/tarifs';
+
   return (
     <>
-      <Header />
+      <Header ctaHref={ctaHref} />
       <main>
-        <Hero heroFrames={heroFrames} cutsToday={cutsToday} />
-        <Steps />
+        <Hero heroFrames={heroFrames} cutsToday={cutsToday} ctaHref={ctaHref} />
+        <Steps ctaHref={ctaHref} />
         <Examples pairs={pairs} />
         <Testimonials />
-        <PricingSummary />
+        <PricingSummary ctaHref={ctaHref} />
         <Faq />
-        <FinalCta />
+        <FinalCta ctaHref={ctaHref} />
       </main>
       <Footer />
     </>

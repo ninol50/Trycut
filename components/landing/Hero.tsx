@@ -16,9 +16,11 @@ interface HeroProps {
    * ne s'affiche qu'à partir d'un volume crédible — on n'invente pas de chiffre.
    */
   cutsToday: number | null;
+  /** Destination des appels à l'action. Chaîne, pas de fonction. */
+  ctaHref: string;
 }
 
-export default function Hero({ heroFrames, cutsToday }: HeroProps) {
+export default function Hero({ heroFrames, cutsToday, ctaHref }: HeroProps) {
   const pill = useEntrance(0);
   const title = useEntrance(0.06);
   const subtitle = useEntrance(0.14);
@@ -52,7 +54,7 @@ export default function Hero({ heroFrames, cutsToday }: HeroProps) {
 
         <motion.div {...cta} className="mt-7">
           <Link
-            href="/tarifs"
+            href={ctaHref}
             onClick={() => track('landing_cta_clicked', { location: 'hero' })}
             className="btn-primary w-full"
           >

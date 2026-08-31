@@ -903,3 +903,28 @@ test('un vrai message de paiement Whop est lu correctement de bout en bout', () 
 
   assert.deepEqual(planForPayload(corps), { plan: 'pack', credits: CREDITS_BY_PLAN.pack });
 });
+
+test('aucun bouton de la vitrine ne saute l’inscription', () => {
+  // Sans compte, il n'y a rien à essayer ni à acheter : chaque appel à
+  // l'action de la page d'accueil doit passer par la destination calculée
+  // côté serveur, jamais par un lien écrit en dur.
+  for (const fichier of [
+    'components/landing/Header.tsx',
+    'components/landing/Hero.tsx',
+    'components/landing/Steps.tsx',
+    'components/landing/PricingSummary.tsx',
+    'components/landing/FinalCta.tsx',
+  ]) {
+    const source = readFileSync(join(process.cwd(), fichier), 'utf8');
+    assert.ok(
+      !source.includes('href="/tarifs"'),
+      `${fichier} : lien écrit en dur, il court-circuiterait l’inscription`,
+    );
+    assert.ok(source.includes('ctaHref'), `${fichier} : destination non reçue`);
+  }
+
+  // Et la page doit bien la calculer selon la session.
+  const page = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
+  assert.ok(page.includes("'/inscription'"), 'sans compte, on doit aller à l’inscription');
+  assert.ok(page.includes('hasPaidAccess'), 'la destination doit dépendre de l’accès réel');
+});

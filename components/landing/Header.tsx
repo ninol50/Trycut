@@ -13,7 +13,7 @@ const MENU = [
   { href: '/connexion', label: 'Se connecter' },
 ] as const;
 
-export default function Header() {
+export default function Header({ ctaHref }: { ctaHref: string }) {
   const [open, setOpen] = useState(false);
   const tap = useTapScale();
 
@@ -46,7 +46,7 @@ export default function Header() {
             Se connecter
           </Link>
           <Link
-            href="/tarifs"
+            href={ctaHref}
             onClick={() => track('landing_cta_clicked', { location: 'header' })}
             className="btn-primary btn-sm"
           >

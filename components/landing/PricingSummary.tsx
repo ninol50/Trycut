@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { PRICING } from '@/lib/pricing';
 import { useInView } from '@/components/motion';
 
-export default function PricingSummary() {
+export default function PricingSummary({ ctaHref }: { ctaHref: string }) {
   const anim = useInView();
 
   return (
@@ -55,7 +55,7 @@ export default function PricingSummary() {
       </p>
 
       <Link
-        href="/tarifs"
+        href={ctaHref}
         className="mt-4 flex min-h-[48px] items-center justify-center text-center text-sm font-semibold text-violet-600 underline"
       >
         Voir le détail des offres
