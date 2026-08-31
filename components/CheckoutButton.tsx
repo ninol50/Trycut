@@ -36,36 +36,46 @@ export default function CheckoutButton({
   const [error, setError] = useState<string | null>(null);
 
   const start = async () => {
-    // Pas de compte : on passe par l'inscription. C'est là que l'adresse est
-    // fixée, et c'est elle qui rattachera le paiement au compte.
+    // Pas de compte : on passe par l'inscription. Sans identifiant, le webhook
+    // ne saurait pas à qui attribuer les coupes.
     if (!userId) {
       router.push('/inscription?suite=tarifs');
       return;
     }
-    if (!paymentLink) {
-      setError('Le paiement n’est pas disponible pour le moment.');
+
+    track('checkout_completed', { plan, stage: 'redirect' });
+
+    // Lien de paiement Stripe : le plus direct, aucune clé serveur requise.
+    if (paymentLink) {
+      window.location.href = withCheckoutReference(paymentLink, userId, email);
       return;
     }
 
+    // Repli : session créée côté serveur quand STRIPE_SECRET_KEY est posée.
     setBusy(true);
-    const adresse = (email ?? '').trim().toLowerCase();
+    setError(null);
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+      const data: unknown = await response.json().catch(() => null);
+      const url =
+        typeof data === 'object' && data !== null && 'url' in data
+          ? String((data as { url: unknown }).url)
+          : null;
 
-    // On retient l'adresse du compte comme adresse de paiement : au retour, le
-    // webhook saura à qui rattacher l'encaissement.
-    if (adresse) {
-      try {
-        await fetch('/api/billing-email', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ email: adresse }),
-        });
-      } catch {
-        // Le départ vers le paiement ne dépend pas de cet enregistrement.
+      if (!response.ok || !url) {
+        setError('Le paiement n’est pas disponible pour le moment.');
+        return;
       }
+      window.location.href = url;
+    } catch {
+      setError('La connexion a été interrompue. Réessaie.');
+    } finally {
+      setBusy(false);
     }
-
-    track('checkout_completed', { plan, stage: 'redirect' });
-    window.location.href = withCheckoutReference(paymentLink, userId, adresse || null);
   };
 
   return (

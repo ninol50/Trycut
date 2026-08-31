@@ -4,19 +4,14 @@ import HistoryStrip from '@/components/generation/HistoryStrip';
 import OnboardingSync from '@/components/onboarding/OnboardingSync';
 import { loadCatalog } from '@/lib/catalog-server';
 import { loadHistory, loadProfile, premiumLocked, hasPaidAccess } from '@/lib/profile';
-import { syncAccessFromWhop } from '@/lib/whop-sync';
 import PaywallNotice from '@/components/PaywallNotice';
 
 export const metadata = { title: 'Mon espace — Trycut' };
 export const dynamic = 'force-dynamic';
 
 export default async function AppPage() {
-  const premier = await loadProfile();
-  if (!premier) redirect('/connexion');
-
-  // L'état de l'abonnement vient de Whop, pas d'un message reçu autrefois.
-  await syncAccessFromWhop(premier.profile);
-  const session = (await loadProfile()) ?? premier;
+  const session = await loadProfile();
+  if (!session) redirect('/connexion');
 
   if (session.profile.access_status === 'rejected') {
     return (

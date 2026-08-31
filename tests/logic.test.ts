@@ -288,23 +288,9 @@ test('le mensuel reste la meilleure affaire face à l’hebdomadaire', () => {
   );
 });
 
-test('chaque offre payante pointe vers son propre paiement Whop', () => {
-  for (const plan of PRICING) {
-    if (plan.credits === 0) {
-      assert.equal(plan.paymentLink, undefined);
-      continue;
-    }
-    assert.match(plan.paymentLink ?? '', /^https:\/\/whop\.com\/checkout\/plan_/);
-
-    // Le lien et la table de correspondance doivent désigner la même offre,
-    // sinon on crédite l'offre d'à côté.
-    const id = WHOP_PLAN_IDS[plan.id as 'pack' | 'pass'];
-    assert.ok(
-      plan.paymentLink?.endsWith(id),
-      `${plan.name} : le lien ne correspond pas à l’identifiant ${id}`,
-    );
-  }
-
+test('les identifiants d’offre Whop restent distincts', () => {
+  // Conservés pour un retour éventuel chez Whop : deux offres qui partageraient
+  // un identifiant crediteraient l'offre d'à côté.
   const ids = Object.values(WHOP_PLAN_IDS);
   assert.equal(new Set(ids).size, ids.length, 'deux offres partagent le même identifiant');
 });
@@ -384,23 +370,26 @@ test('le repli statique ne contient aucun prompt', () => {
 
 test('le lien de paiement emporte le compte qui clique', () => {
   const link = withCheckoutReference(
-    'https://whop.com/checkout/plan_FqNwkkzr18mMH',
+    'https://buy.stripe.com/abc123',
     '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
     'client@exemple.fr',
   );
   const url = new URL(link);
 
-  // Sans l'email, le webhook ne sait pas qui créditer : le paiement passe et
-  // le compte reste à zéro coupe.
-  assert.equal(url.searchParams.get('email'), 'client@exemple.fr');
-  assert.equal(url.searchParams.get('ref'), '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2');
-  assert.equal(url.origin + url.pathname, 'https://whop.com/checkout/plan_FqNwkkzr18mMH');
+  // Sans cet identifiant, le webhook ne sait pas qui créditer : le paiement
+  // passe et le compte reste à zéro coupe.
+  assert.equal(
+    url.searchParams.get('client_reference_id'),
+    '8f807898-c4ba-4229-a9a9-dce6e5f4a0a2',
+  );
+  assert.equal(url.searchParams.get('prefilled_email'), 'client@exemple.fr');
+  assert.equal(url.origin + url.pathname, 'https://buy.stripe.com/abc123');
 });
 
 test('un email absent ne vide pas le paramètre', () => {
-  const url = new URL(withCheckoutReference('https://whop.com/checkout/plan_FqNwkkzr18mMH', 'user-1', null));
-  assert.equal(url.searchParams.has('email'), false);
-  assert.equal(url.searchParams.get('ref'), 'user-1');
+  const url = new URL(withCheckoutReference('https://buy.stripe.com/abc', 'user-1', null));
+  assert.equal(url.searchParams.has('prefilled_email'), false);
+  assert.equal(url.searchParams.get('client_reference_id'), 'user-1');
 });
 
 // ------------------------------------------------- rappel des fournisseurs IA
@@ -775,13 +764,12 @@ test('les offres affichées correspondent aux montants encaissés', () => {
 
 test('le lien de paiement emporte l’email du compte', () => {
   const link = withCheckoutReference(
-    'https://whop.com/checkout/plan_FqNwkkzr18mMH',
+    'https://buy.stripe.com/abc123',
     '11111111-2222-3333-4444-555555555555',
     'client@example.com',
   );
-  assert.ok(link.includes('email=client%40example.com'), 'email absent du lien');
+  assert.ok(link.includes('prefilled_email=client%40example.com'), 'email absent du lien');
   assert.ok(link.includes('11111111-2222-3333-4444-555555555555'), 'repère de compte absent');
-  assert.ok(link.startsWith('https://whop.com/checkout/plan_'), 'lien de paiement altéré');
 });
 
 test('une résiliation ferme l’accès, quel que soit son nom d’événement', () => {

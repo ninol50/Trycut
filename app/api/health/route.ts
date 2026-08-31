@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { env, isSupabaseConfigured } from '@/lib/env';
-import { resolveWhopSecret } from '@/lib/whop-secret';
+import { env, isStripeConfigured, isSupabaseConfigured } from '@/lib/env';
 import { loadCatalogWithSource } from '@/lib/catalog-server';
 
 export const runtime = 'nodejs';
@@ -65,17 +64,20 @@ export async function GET() {
     error: catalog.error,
   };
 
-  // --- Whop : le webhook est ce qui crédite après paiement ----------------
-  // Le secret peut venir de la variable d'environnement ou de la base, posé
-  // depuis la page admin. Ne regarder que la variable dirait « non configuré »
-  // à une installation qui fonctionne.
-  const whopSecret = await resolveWhopSecret();
-  checks['whop'] = {
-    paymentLinks: true,
-    webhookSecret: whopSecret !== null,
+  // --- Stripe : le webhook est ce qui crédite après paiement ---------------
+  // Créditer un compte se fait avec la clé service_role : la session d'un
+  // client ne peut pas s'octroyer des crédits. Sans elle, le webhook répond
+  // 503 même avec les deux secrets — l'annoncer prêt serait faux.
+  checks['stripe'] = {
+    paymentLinks: Boolean(process.env.NEXT_PUBLIC_STRIPE_LINK_HEBDO || process.env.NEXT_PUBLIC_STRIPE_LINK_MENSUEL),
+    secretKey: isStripeConfigured,
+    webhookSecret: Boolean(env.stripeWebhookSecret),
     serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
-    /** Sans ces deux-là, un paiement encaisse mais ne crédite pas le compte. */
-    creditsOnPurchase: whopSecret !== null && Boolean(env.supabaseServiceRoleKey),
+    /** Sans ces trois-là, un paiement encaisse mais ne crédite pas le compte. */
+    creditsOnPurchase:
+      isStripeConfigured &&
+      Boolean(env.stripeWebhookSecret) &&
+      Boolean(env.supabaseServiceRoleKey),
   };
 
   // --- Emails --------------------------------------------------------------
@@ -89,7 +91,7 @@ export async function GET() {
   checks['serviceRole'] = {
     present: Boolean(env.supabaseServiceRoleKey),
     requiredFor: [
-      'créditer un compte après paiement (webhook Whop)',
+      'créditer un compte après paiement (webhook Stripe)',
       'cron de purge J+30',
       'stockage du rendu avec AI_PROVIDER=fal',
     ],

@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 
 import { isSupabaseConfigured } from '@/lib/env';
 import { loadProfile, hasPaidAccess } from '@/lib/profile';
-import { syncAccessFromWhop } from '@/lib/whop-sync';
 
 /**
  * Porte du produit, à appeler en tête de chaque page qui montre le studio ou
@@ -17,12 +16,5 @@ export async function requirePaidAccess(): Promise<void> {
 
   const session = await loadProfile();
   if (!session) redirect('/connexion?suite=tarifs');
-
-  // On demande à Whop l'état réel de l'abonnement avant de décider. C'est ce
-  // qui ouvre l'accès juste après un paiement, et ce qui le referme dès qu'un
-  // paiement est refusé — sans dépendre d'un message qui peut se perdre.
-  await syncAccessFromWhop(session.profile);
-
-  const frais = await loadProfile();
-  if (!frais || !hasPaidAccess(frais.profile)) redirect('/tarifs');
+  if (!hasPaidAccess(session.profile)) redirect('/tarifs');
 }

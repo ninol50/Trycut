@@ -13,27 +13,24 @@ export interface PricingPlan {
   creditsPeriod: string;
   highlighted: boolean;
   features: readonly string[];
-  /** Page de paiement Whop. Absente sur l'offre gratuite. */
+  /** Lien de paiement Stripe. Absent sur l'offre gratuite. */
   paymentLink?: string;
 }
 
 /**
- * Pages de paiement Whop. Publiques par nature — elles sont dans le HTML —
- * et surchargeables par variable d'environnement pour tester une autre offre.
- * `||` et non `??` : Vercel définit les variables même vides, une valeur vide
- * doit retomber sur le défaut.
+ * Liens de paiement Stripe, à créer pour les deux offres actuelles :
+ * 3 € par semaine et 10 € par mois. Publics par nature — ils sont dans le
+ * HTML — et posés par variable d'environnement.
+ *
+ * `||` et non `??` : Vercel définit les variables même vides, et une valeur
+ * vide doit retomber sur le défaut plutôt que de produire un bouton mort.
  */
-const LINK_HEBDO =
-  process.env.NEXT_PUBLIC_WHOP_LINK_HEBDO || 'https://whop.com/checkout/plan_TgQeVRautIvVk';
-const LINK_MENSUEL =
-  process.env.NEXT_PUBLIC_WHOP_LINK_MENSUEL || 'https://whop.com/checkout/plan_FqNwkkzr18mMH';
+const LINK_HEBDO = process.env.NEXT_PUBLIC_STRIPE_LINK_HEBDO || '';
+const LINK_MENSUEL = process.env.NEXT_PUBLIC_STRIPE_LINK_MENSUEL || '';
 
 /**
- * Identifiants d'offre Whop, lisibles dans les liens de paiement ci-dessus.
- *
- * C'est le rattachement le plus sûr : le webhook porte cet identifiant, alors
- * que le montant dépend de la devise et de l'unité choisies par Whop. On s'en
- * sert d'abord, le montant ne servant que de repli.
+ * Identifiants d'offre Whop, conservés : le jour où le volume justifiera de
+ * repasser chez eux, le rattachement se fera par là.
  */
 export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
   pack: 'plan_TgQeVRautIvVk',
@@ -106,13 +103,12 @@ export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: 'pack' | 'pass'; credi
 };
 
 /**
- * Rattache la page de paiement au compte qui clique.
+ * Rattache le lien de paiement au compte qui clique.
  *
- * Whop ne transmet des métadonnées que sur une session créée par son API ;
- * sur un lien d'offre simple, il ne reste que l'email de l'acheteur pour
- * retrouver le compte. On pré-remplit donc l'email et on le redit à l'écran :
- * payer avec une autre adresse que celle du compte est la seule façon de ne
- * pas être crédité.
+ * Sans `client_reference_id`, le webhook n'a aucun moyen de savoir à qui
+ * attribuer les coupes : les métadonnées sont vides sur un lien de paiement,
+ * et le client Stripe n'existe pas encore au premier achat. Le paiement
+ * passerait sans jamais créditer.
  */
 export function withCheckoutReference(
   link: string,
@@ -121,10 +117,8 @@ export function withCheckoutReference(
 ): string {
   try {
     const url = new URL(link);
-    if (email) url.searchParams.set('email', email);
-    // Repère de secours, lisible dans le tableau de bord Whop si un paiement
-    // doit être rattaché à la main.
-    url.searchParams.set('ref', userId);
+    url.searchParams.set('client_reference_id', userId);
+    if (email) url.searchParams.set('prefilled_email', email);
     return url.toString();
   } catch {
     // Lien mal formé : mieux vaut un rattachement manuel qu'un bouton mort.
