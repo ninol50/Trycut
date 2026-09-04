@@ -100,6 +100,7 @@ export async function GET() {
     'STRIPE_WEBHOOK_SECRET',
     'STRIPE_PRICE_PACK',
     'STRIPE_PRICE_PASS',
+    'STRIPE_PRICE_TRIMESTRE',
     'RESEND_API_KEY',
     'EMAIL_FROM',
     'CRON_SECRET',
