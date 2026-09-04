@@ -14,7 +14,7 @@ const QUESTIONS = [
   },
   {
     q: 'Il me faut un compte pour générer une coupe ?',
-    a: 'Générer une coupe demande un abonnement : 7,99 € par mois pour 15 coupes, ou 9,99 € pour 25 coupes. Sans engagement.',
+    a: 'Générer une coupe demande un abonnement : 8,90 € par mois pour 17 coupes, 17,90 € pour 30 coupes, ou 34,90 € pour 100 coupes. Sans engagement.',
   },
   {
     q: 'Le résultat est-il fidèle à ce que fera mon coiffeur ?',
@@ -35,7 +35,7 @@ export default function Faq() {
 
   return (
     <motion.section {...anim} className="section py-14">
-      <h2 className="text-3xl">Questions fréquentes</h2>
+      <h2 className="text-[32px]">Questions fréquentes</h2>
 
       <div className="mt-8 overflow-hidden rounded-3xl border border-line">
         {QUESTIONS.map(({ q, a }) => (
@@ -45,9 +45,20 @@ export default function Faq() {
           >
             <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 font-semibold text-violet-900 marker:hidden">
               {q}
-              <span className="shrink-0 text-violet-600 transition-transform group-open:rotate-45">
-                +
-              </span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--violet-600)"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="shrink-0 transition-transform group-open:rotate-180"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
             </summary>
             <p className="mt-3 text-sm text-slate-500">{a}</p>
           </details>

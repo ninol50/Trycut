@@ -11,7 +11,7 @@ export default function Testimonials() {
 
   return (
     <motion.section {...anim} className="section py-14">
-      <h2 className="text-3xl">Ils ont sauté le pas</h2>
+      <h2 className="text-[32px]">Ils ont sauté le pas</h2>
 
       <div className="mt-8 space-y-4">
         {TESTIMONIALS.map((item) => (

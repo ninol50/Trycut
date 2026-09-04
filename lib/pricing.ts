@@ -22,33 +22,34 @@ export interface PricingPlan {
 }
 
 /**
- * Liens de paiement Stripe.
+ * Liens de paiement Stripe, facultatifs.
  *
- * Ils sont écrits ici et non posés par variable d'environnement : un lien de
- * paiement est public par nature — il figure en clair dans le HTML de la page
- * tarifs — donc rien ne justifie de le cacher, et une variable en moins est
- * une panne en moins. Les variables restent prioritaires quand elles existent,
- * pour pouvoir changer un lien sans toucher au code.
+ * Vides par défaut : les liens précédents portaient les anciens montants, et
+ * un lien qui encaisse 3,99 € sous une offre affichée à 8,90 € est pire que
+ * pas de lien du tout. Sans eux, la page tarifs ouvre une session de paiement
+ * côté serveur à partir des tarifs reconnus chez Stripe — le montant vient
+ * alors de Stripe, il ne peut plus diverger de l'affichage.
  *
  * `||` et non `??` : une variable définie mais vide doit retomber sur le
  * défaut plutôt que produire un bouton mort.
  */
-const LINK_SEMAINE =
-  process.env.NEXT_PUBLIC_STRIPE_LINK_SEMAINE || 'https://buy.stripe.com/fZubJ07hjfG71hY3wY2wU08';
-const LINK_MOIS =
-  process.env.NEXT_PUBLIC_STRIPE_LINK_MOIS || 'https://buy.stripe.com/4gM3cucBD2Tl8Kq4B22wU09';
-const LINK_TRIMESTRE =
-  process.env.NEXT_PUBLIC_STRIPE_LINK_TRIMESTRE || 'https://buy.stripe.com/aFa8wOgRT51t6Ci3wY2wU0a';
+const LINK_ESSENTIEL = process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || '';
+const LINK_CONFORT = process.env.NEXT_PUBLIC_STRIPE_LINK_CONFORT || '';
+const LINK_INTENSIF = process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF || '';
 
 /**
- * Trois rythmes d'abonnement. Le prix par coupe baisse avec l'engagement :
- * 0,80 € à la semaine, 0,60 € au mois, 0,37 € au trimestre. C'est ce qui
- * justifie les trois offres — sans écart, la plus courte gagnerait toujours.
+ * Trois abonnements mensuels, du plus léger au plus intensif.
  *
- * Les identifiants 'pack' et 'pass' sont conservés pour la semaine et le mois :
- * ce sont les valeurs de l'énumération `plan_tier` en base, et tout le contrôle
- * d'accès s'appuie dessus. Les renommer imposerait une migration d'énumération
- * pour un gain purement cosmétique.
+ * Prix à la coupe : 0,52 € · 0,60 € · 0,35 €. L'offre du milieu revient donc
+ * plus cher à la coupe que la première — c'est un choix du propriétaire,
+ * signalé mais appliqué tel quel. Seule la troisième est mise en avant, parce
+ * qu'elle est réellement la meilleure affaire.
+ *
+ * Les identifiants 'pack', 'pass' et 'trimestre' sont les valeurs de
+ * l'énumération `plan_tier` en base, sur lesquelles s'appuie tout le contrôle
+ * d'accès. Ils ne décrivent plus la durée — les trois offres sont mensuelles —
+ * mais les renommer imposerait une migration d'énumération pour un gain
+ * purement cosmétique.
  */
 export const PRICING: readonly PricingPlan[] = [
   {
@@ -64,58 +65,58 @@ export const PRICING: readonly PricingPlan[] = [
   },
   {
     id: 'pack',
-    name: 'Semaine',
-    cta: 'Prendre la semaine',
-    price: '3,99 €',
-    period: '/semaine',
-    credits: 5,
-    creditsPeriod: 'par semaine',
+    name: 'Essentiel',
+    cta: 'Prendre l’essentiel',
+    price: '8,90 €',
+    period: '/mois',
+    credits: 17,
+    creditsPeriod: 'par mois',
     highlighted: false,
-    features: ['5 coupes par semaine', 'HD sans filigrane', 'Sans engagement'],
-    paymentLink: LINK_SEMAINE,
+    features: ['17 coupes par mois', 'HD sans filigrane', 'Sans engagement'],
+    paymentLink: LINK_ESSENTIEL,
   },
   {
     id: 'pass',
-    name: 'Mois',
-    cta: 'Prendre le mois',
-    price: '11,99 €',
+    name: 'Confort',
+    cta: 'Prendre le confort',
+    price: '17,90 €',
     period: '/mois',
-    credits: 20,
+    credits: 30,
     creditsPeriod: 'par mois',
     highlighted: false,
     features: [
-      '20 coupes par mois',
+      '30 coupes par mois',
       'HD sans filigrane',
       'Catalogue complet',
       'Historique conservé',
     ],
-    paymentLink: LINK_MOIS,
+    paymentLink: LINK_CONFORT,
   },
   {
     id: 'trimestre',
-    name: 'Trimestre',
-    cta: 'Prendre le trimestre',
-    price: '22 €',
-    period: '/3 mois',
-    credits: 60,
-    creditsPeriod: 'par trimestre',
+    name: 'Intensif',
+    cta: 'Prendre l’intensif',
+    price: '34,90 €',
+    period: '/mois',
+    credits: 100,
+    creditsPeriod: 'par mois',
     highlighted: true,
     features: [
-      '60 coupes sur trois mois',
+      '100 coupes par mois',
       'HD sans filigrane',
       'Catalogue complet',
       'Historique conservé',
       'Le meilleur prix à la coupe',
     ],
-    paymentLink: LINK_TRIMESTRE,
+    paymentLink: LINK_INTENSIF,
   },
 ] as const;
 
 export const CREDITS_BY_PLAN: Record<PlanId, number> = {
   free: 0,
-  pack: 5,
-  pass: 20,
-  trimestre: 60,
+  pack: 17,
+  pass: 30,
+  trimestre: 100,
 };
 
 /**
@@ -130,9 +131,9 @@ export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
 
 /** Libellé lisible d'une offre, pour les emails et les journaux. */
 export const PLAN_LABELS: Record<PaidPlanId, string> = {
-  pack: 'abonnement à la semaine',
-  pass: 'abonnement au mois',
-  trimestre: 'abonnement au trimestre',
+  pack: 'Essentiel',
+  pass: 'Confort',
+  trimestre: 'Intensif',
 };
 
 /**
@@ -143,9 +144,9 @@ export const PLAN_LABELS: Record<PaidPlanId, string> = {
  * ne crédite rien plutôt que de créditer au hasard.
  */
 export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: PaidPlanId; credits: number }> = {
-  399: { plan: 'pack', credits: 5 },
-  1199: { plan: 'pass', credits: 20 },
-  2200: { plan: 'trimestre', credits: 60 },
+  890: { plan: 'pack', credits: 17 },
+  1790: { plan: 'pass', credits: 30 },
+  3490: { plan: 'trimestre', credits: 100 },
 };
 
 /**

@@ -24,7 +24,7 @@ export default function Steps({ ctaHref }: { ctaHref: string }) {
 
   return (
     <motion.section {...anim} className="section py-14">
-      <h2 className="text-3xl">Ta prochaine coupe en 4 étapes</h2>
+      <h2 className="text-[32px]">Ta prochaine coupe en 4 étapes</h2>
 
       <ol className="mt-8 overflow-hidden rounded-3xl border border-line">
         {STEPS.map((step, index) => (

@@ -4,6 +4,7 @@ import CheckoutButton from '@/components/CheckoutButton';
 import { PRICING } from '@/lib/pricing';
 import { isSupabaseConfigured } from '@/lib/env';
 import { getSessionUser } from '@/lib/supabase/server';
+import { resolveStripeConfig, peutEncaisser } from '@/lib/stripe-config';
 
 export const metadata = { title: 'Tarifs — Trycut' };
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,10 @@ export default async function PricingPage({
 }) {
   const params = await searchParams;
   const user = isSupabaseConfigured ? await getSessionUser() : null;
+
+  // Sans lien de paiement, la page ouvre une session de paiement côté serveur.
+  // Le montant vient alors de Stripe : il ne peut pas diverger de l'affichage.
+  const paiementServeur = peutEncaisser(await resolveStripeConfig());
 
   return (
     <>
@@ -65,9 +70,13 @@ export default async function PricingPage({
               </ul>
 
               <div className="mt-5">
-                {plan.paymentLink ? (
+                {plan.id === 'free' ? (
+                  <Link href="/inscription" className="btn-outline w-full">
+                    {plan.cta}
+                  </Link>
+                ) : plan.paymentLink || paiementServeur ? (
                   <CheckoutButton
-                    plan={plan.id === 'free' ? 'pack' : plan.id}
+                    plan={plan.id}
                     paymentLink={plan.paymentLink}
                     label={plan.cta}
                     variant={plan.highlighted ? 'primary' : 'secondary'}
@@ -75,9 +84,11 @@ export default async function PricingPage({
                     email={user?.email ?? null}
                   />
                 ) : (
-                  <Link href="/inscription" className="btn-outline w-full">
-                    Créer mon compte
-                  </Link>
+                  // Le paiement n'est pas configuré : on le dit, plutôt que
+                  // d'afficher un bouton qui mènerait à une erreur.
+                  <p className="rounded-2xl bg-violet-50 p-3 text-center text-sm text-violet-900">
+                    Cette offre ouvre bientôt.
+                  </p>
                 )}
               </div>
             </div>

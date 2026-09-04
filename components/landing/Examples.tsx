@@ -64,7 +64,7 @@ export default function Examples({ pairs }: ExamplesProps) {
 
   return (
     <motion.section {...anim} className="section py-14">
-      <h2 className="text-3xl">Le rendu, avant le coup de ciseaux.</h2>
+      <h2 className="text-[32px]">Le rendu, avant le coup de ciseaux.</h2>
       <p className="mt-4 text-lg text-slate-500">
         Teste ton prochain look avant de passer chez le coiffeur.
       </p>

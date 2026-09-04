@@ -17,7 +17,7 @@ export default function FinalCta({ ctaHref }: { ctaHref: string }) {
   return (
     <motion.section {...anim} className="section py-14">
       <div className="rounded-3xl border border-line px-6 py-10 text-center">
-        <h2 className="text-3xl">Prêt à découvrir ton prochain look ?</h2>
+        <h2 className="text-[32px]">Prêt à découvrir ton prochain look ?</h2>
         <p className="mt-4 text-lg text-slate-500">
           Importe ta photo et visualise une nouvelle coupe en quelques instants.
         </p>

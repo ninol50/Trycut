@@ -31,12 +31,20 @@
   }
 
   h1,
-  h2,
+  h2 {
+    @apply font-display text-violet-900;
+    /* La référence tire toute sa présence du poids des titres : 800 sur les
+       deux premiers niveaux, 700 sur le troisième pour garder la hiérarchie. */
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.02;
+  }
+
   h3 {
     @apply font-display text-violet-900;
     font-weight: 700;
-    letter-spacing: -0.035em;
-    line-height: 1.05;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
   }
 
   :focus-visible {
