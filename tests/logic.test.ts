@@ -954,6 +954,20 @@ test('un vrai message de paiement Whop est lu correctement de bout en bout', () 
   assert.deepEqual(planForPayload(corps), { plan: 'pack', credits: CREDITS_BY_PLAN.pack });
 });
 
+test('l’accueil n’affiche aucun prix', () => {
+  // Demande explicite du propriétaire : un visiteur ne doit pas tomber sur le
+  // tarif avant d'avoir vu ce que fait le produit. Le prix reste accessible —
+  // pied de page, FAQ, page tarifs — mais jamais mis en avant sur l'accueil.
+  const page = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
+  assert.ok(
+    !page.includes('PricingSummary'),
+    'la grille de tarifs est de retour sur l’accueil',
+  );
+
+  const hero = readFileSync(join(process.cwd(), 'components/landing/Hero.tsx'), 'utf8');
+  assert.ok(!/\d+[,.]\d+\s*€/.test(hero), 'un prix est affiché dans le hero');
+});
+
 test('aucun bouton de la vitrine ne saute l’inscription', () => {
   // Sans compte, il n'y a rien à essayer ni à acheter : chaque appel à
   // l'action de la page d'accueil doit passer par la destination calculée

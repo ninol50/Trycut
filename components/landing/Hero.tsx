@@ -64,7 +64,7 @@ export default function Hero({ heroFrames, cutsToday, ctaHref }: HeroProps) {
             </svg>
           </Link>
           <p className="mt-4 text-center text-sm text-slate-500">
-            À partir de 8,90 € par mois · Sans engagement
+            Résultat en 30 secondes · Photos privées, supprimées à 30 jours
           </p>
         </motion.div>
 

@@ -3,7 +3,6 @@ import Hero from '@/components/landing/Hero';
 import Steps from '@/components/landing/Steps';
 import Examples from '@/components/landing/Examples';
 import Testimonials from '@/components/landing/Testimonials';
-import PricingSummary from '@/components/landing/PricingSummary';
 import Faq from '@/components/landing/Faq';
 import FinalCta from '@/components/landing/FinalCta';
 import Footer from '@/components/Footer';
@@ -37,7 +36,10 @@ export default async function LandingPage() {
         <Steps ctaHref={ctaHref} />
         <Examples pairs={pairs} />
         <Testimonials />
-        <PricingSummary ctaHref={ctaHref} />
+        {/* Pas de grille de tarifs sur l'accueil : un visiteur qui découvre le
+            prix avant d'avoir vu ce que fait le produit s'en va. Le prix reste
+            à un clic — lien « Tarifs » du pied de page, réponse de la FAQ, et
+            page tarifs atteinte avant le moindre paiement. */}
         <Faq />
         <FinalCta ctaHref={ctaHref} />
       </main>
