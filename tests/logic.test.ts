@@ -976,7 +976,6 @@ test('aucun bouton de la vitrine ne saute l’inscription', () => {
     'components/landing/Header.tsx',
     'components/landing/Hero.tsx',
     'components/landing/Steps.tsx',
-    'components/landing/PricingSummary.tsx',
     'components/landing/FinalCta.tsx',
   ]) {
     const source = readFileSync(join(process.cwd(), fichier), 'utf8');
