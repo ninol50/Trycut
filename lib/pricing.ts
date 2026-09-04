@@ -22,20 +22,31 @@ export interface PricingPlan {
 }
 
 /**
- * Liens de paiement Stripe, facultatifs.
+ * Liens de paiement Stripe, aux montants de septembre 2026 : 8,90 €, 17,90 €
+ * et 34,90 € par mois, dans cet ordre.
  *
- * Vides par défaut : les liens précédents portaient les anciens montants, et
- * un lien qui encaisse 3,99 € sous une offre affichée à 8,90 € est pire que
- * pas de lien du tout. Sans eux, la page tarifs ouvre une session de paiement
- * côté serveur à partir des tarifs reconnus chez Stripe — le montant vient
- * alors de Stripe, il ne peut plus diverger de l'affichage.
+ * Écrits ici plutôt que posés en variable : un lien de paiement est public par
+ * nature — il figure en clair dans le HTML de la page tarifs — donc rien ne
+ * justifie de le cacher, et une variable en moins est une panne en moins.
+ *
+ * Attention en cas de changement de tarif : c'est le montant encaissé qui
+ * décide des coupes créditées (`PLAN_BY_AMOUNT_CENTS`). Un lien dont le
+ * montant ne figure pas dans cette table encaisse sans rien créditer. Changer
+ * un prix, c'est donc changer trois choses ensemble : le lien, l'affichage et
+ * la table des montants.
  *
  * `||` et non `??` : une variable définie mais vide doit retomber sur le
  * défaut plutôt que produire un bouton mort.
  */
-const LINK_ESSENTIEL = process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL || '';
-const LINK_CONFORT = process.env.NEXT_PUBLIC_STRIPE_LINK_CONFORT || '';
-const LINK_INTENSIF = process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF || '';
+const LINK_ESSENTIEL =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL ||
+  'https://buy.stripe.com/8x214m4571PhbWC2sU2wU0d';
+const LINK_CONFORT =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_CONFORT ||
+  'https://buy.stripe.com/cNi14m1WZ0Ld2m2aZq2wU0c';
+const LINK_INTENSIF =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF ||
+  'https://buy.stripe.com/aFa28q9prgKbf8O7Ne2wU0e';
 
 /**
  * Trois abonnements mensuels, du plus léger au plus intensif.
