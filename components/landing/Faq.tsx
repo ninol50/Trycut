@@ -26,7 +26,7 @@ const QUESTIONS = [
   },
   {
     q: 'Comment j’annule mon abonnement ?',
-    a: 'Depuis ton compte, en deux clics, via le portail de paiement. L’accès reste actif jusqu’à la fin de la période déjà payée.',
+    a: 'Écris à trycutsee@hotmail.com et l’abonnement est arrêté. L’accès reste actif jusqu’à la fin de la période déjà payée, et rien n’est prélevé ensuite.',
   },
 ] as const;
 
