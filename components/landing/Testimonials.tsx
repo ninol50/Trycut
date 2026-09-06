@@ -2,7 +2,33 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from '@/components/motion';
-import { TESTIMONIALS } from '@/lib/testimonials';
+import { TESTIMONIALS, type Testimonial } from '@/lib/testimonials';
+
+/** Paire avant/après de la personne, quand elle nous l'a confiée. */
+function AvantApres({ item }: { item: Testimonial }) {
+  if (!item.before || !item.after) return null;
+
+  return (
+    <div className="grid grid-cols-2">
+      {[
+        { src: item.before, label: 'Avant' },
+        { src: item.after, label: 'Après' },
+      ].map((side) => (
+        <div key={side.label} className="relative aspect-[3/4] bg-violet-50">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={side.src} alt={side.label} className="h-full w-full object-cover" />
+          <span
+            className={`badge-dark absolute bottom-3 rounded-lg px-2.5 py-1 text-[11px] font-medium ${
+              side.label === 'Avant' ? 'left-3' : 'right-3'
+            }`}
+          >
+            {side.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** Ne rend rien tant qu'aucun avis réel n'a été enregistré. */
 export default function Testimonials() {
@@ -12,31 +38,20 @@ export default function Testimonials() {
   return (
     <motion.section {...anim} className="section py-14">
       <h2 className="text-[32px]">Ils ont sauté le pas</h2>
+      <p className="mt-4 text-lg text-slate-500">
+        Trois retours reçus sur la version précédente du site.
+      </p>
 
       <div className="mt-8 space-y-4">
         {TESTIMONIALS.map((item) => (
           <article key={item.name} className="overflow-hidden rounded-3xl border border-line">
-            <div className="grid grid-cols-2">
-              {[
-                { src: item.before, label: 'Avant' },
-                { src: item.after, label: 'Après' },
-              ].map((side) => (
-                <div key={side.label} className="relative aspect-[3/4] bg-violet-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={side.src} alt={side.label} className="h-full w-full object-cover" />
-                  <span
-                    className={`badge-dark absolute bottom-3 rounded-lg px-2.5 py-1 text-[11px] font-medium ${
-                      side.label === 'Avant' ? 'left-3' : 'right-3'
-                    }`}
-                  >
-                    {side.label}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <AvantApres item={item} />
 
             <div className="p-5">
-              <p className="text-lg tracking-[0.15em] text-violet-600" aria-label={`${item.rating} sur 5`}>
+              <p
+                className="text-lg tracking-[0.15em] text-violet-600"
+                aria-label={`${item.rating} sur 5`}
+              >
                 {'★'.repeat(item.rating)}
               </p>
               <p className="mt-3 text-base text-ink">« {item.quote} »</p>

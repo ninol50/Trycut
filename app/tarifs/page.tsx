@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function PricingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ paiement?: string }>;
+  searchParams: Promise<{ paiement?: string; raison?: string }>;
 }) {
   const params = await searchParams;
   const user = isSupabaseConfigured ? await getSessionUser() : null;
@@ -25,6 +25,16 @@ export default async function PricingPage({
     <>
       <main className="section py-10">
         <h1 className="text-2xl">Choisis ton rythme.</h1>
+
+        {/* Arrivée depuis le studio : la photo et la coupe sont déjà choisies,
+            elles attendent dans le navigateur. Le dire évite de croire qu'on a
+            tout perdu en cliquant. */}
+        {params.raison === 'generation' ? (
+          <p role="status" className="mt-4 rounded-2xl border border-line p-4 text-sm text-slate-500">
+            Ta photo et ta coupe sont gardées de côté. Choisis une offre, et le rendu
+            part dès le retour.
+          </p>
+        ) : null}
 
         {params.paiement === 'annule' ? (
           <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">

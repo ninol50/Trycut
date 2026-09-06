@@ -12,6 +12,14 @@ import { prepareUpload } from '@/lib/upload-client';
 import { UPLOAD_MESSAGES } from '@/lib/upload';
 import { rankCatalog } from '@/lib/catalog';
 import { readAnswers, answerAsString } from '@/lib/onboarding';
+import { offreEntree } from '@/lib/pricing';
+import {
+  clearDraft,
+  dataUrlToFile,
+  fileToDataUrl,
+  readDraft,
+  saveDraft,
+} from '@/lib/studio-draft';
 import { track } from '@/lib/analytics';
 import type { PublicCatalogItem } from '@/types/db';
 
@@ -19,19 +27,28 @@ interface PhotoStudioProps {
   items: readonly PublicCatalogItem[];
   /** Route de suivi. L'id est ajouté en query string. */
   nextBasePath: string;
+  /** Route des offres. Une chaîne, jamais une fonction qui traverserait la frontière. */
+  pricingPath?: string;
   lockedPremium: boolean;
   creditsRemaining: number | null;
   /** Sans compte, on laisse parcourir le catalogue mais pas envoyer de photo. */
   authenticated: boolean;
+  /**
+   * Compte sans abonnement actif. Le studio s'utilise entièrement — photo,
+   * styles — mais rien ne part au serveur : le bouton mène aux offres.
+   */
+  paywalled: boolean;
 }
 
 /** État « vide » : import + consignes + catalogue filtré visible dessous. */
 export default function PhotoStudio({
   items,
   nextBasePath,
+  pricingPath = '/tarifs',
   lockedPremium,
   creditsRemaining,
   authenticated,
+  paywalled,
 }: PhotoStudioProps) {
   const router = useRouter();
   const tap = useTapScale();
@@ -39,10 +56,13 @@ export default function PhotoStudio({
 
   const [consented, setConsented] = useState<boolean | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  /** Photo mémorisée, pour la retrouver au retour du paiement. */
+  const [photoData, setPhotoData] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
   // Un style par famille : demander deux coupes à la fois n'a pas de sens, et
   // le modèle rendrait un mélange des deux.
   const [selected, setSelected] = useState<readonly PublicCatalogItem[]>([]);
+  const [restored, setRestored] = useState(false);
 
   const toggleStyle = useCallback((item: PublicCatalogItem) => {
     setSelected((current) => {
@@ -55,33 +75,14 @@ export default function PhotoStudio({
   const [busy, setBusy] = useState(false);
   const [answers, setAnswers] = useState(() => ({}) as ReturnType<typeof readAnswers>);
 
-  useEffect(() => {
-    setConsented(hasStoredConsent());
-    setAnswers(readAnswers());
-  }, []);
+  const entree = offreEntree();
 
-  // Le catalogue est réellement réordonné par les réponses d'onboarding.
-  const ranked = useMemo(
-    () => rankCatalog(items, answers).map((scored) => scored.item),
-    [items, answers],
-  );
-
-  const onFile = useCallback(async (file: File) => {
-    setError(null);
+  /** Dépôt effectif de la photo. Réservé aux comptes qui ont un abonnement. */
+  const sendToServer = useCallback(async (file: File) => {
     setBusy(true);
-
-    const prepared = await prepareUpload(file);
-    if (!prepared.ok) {
-      setBusy(false);
-      setError({ kind: 'file', message: UPLOAD_MESSAGES[prepared.code] });
-      return;
-    }
-
-    setPreview(prepared.previewUrl);
-
     try {
       const form = new FormData();
-      form.append('file', prepared.file);
+      form.append('file', file);
       const response = await fetch('/api/uploads', { method: 'POST', body: form });
       const data: unknown = await response.json().catch(() => null);
 
@@ -105,7 +106,7 @@ export default function PhotoStudio({
       }
 
       setImagePath(path);
-      track('photo_uploaded', { size: prepared.file.size });
+      track('photo_uploaded', { size: file.size });
     } catch {
       setError({ kind: 'network' });
     } finally {
@@ -113,8 +114,92 @@ export default function PhotoStudio({
     }
   }, []);
 
+  useEffect(() => {
+    setConsented(hasStoredConsent());
+    setAnswers(readAnswers());
+  }, []);
+
+  // Reprise du brouillon : la personne qui revient de la page de paiement
+  // retrouve sa photo et sa coupe, et n'a plus qu'à appuyer sur générer.
+  useEffect(() => {
+    const draft = readDraft();
+
+    if (draft) {
+      if (draft.styleIds.length > 0) {
+        const retrouves = draft.styleIds
+          .map((id) => items.find((item) => item.id === id))
+          .filter((item): item is PublicCatalogItem => item !== undefined);
+        if (retrouves.length > 0) setSelected(retrouves);
+      }
+
+      if (draft.photo) {
+        setPhotoData(draft.photo);
+        setPreview(draft.photo);
+        // L'abonnement vient d'être pris : la photo peut enfin partir.
+        const file = paywalled ? null : dataUrlToFile(draft.photo);
+        if (file) void sendToServer(file);
+      }
+    }
+
+    setRestored(true);
+  }, [items, paywalled, sendToServer]);
+
+  // Mémorisation continue : un aller-retour par les offres ne doit rien effacer.
+  useEffect(() => {
+    if (!restored) return;
+    if (!photoData && selected.length === 0) return;
+    saveDraft({ photo: photoData, styleIds: selected.map((item) => item.id) });
+  }, [restored, photoData, selected]);
+
+  // Le catalogue est réellement réordonné par les réponses d'onboarding.
+  const ranked = useMemo(
+    () => rankCatalog(items, answers).map((scored) => scored.item),
+    [items, answers],
+  );
+
+  const onFile = useCallback(
+    async (file: File) => {
+      setError(null);
+      setBusy(true);
+
+      const prepared = await prepareUpload(file);
+      if (!prepared.ok) {
+        setBusy(false);
+        setError({ kind: 'file', message: UPLOAD_MESSAGES[prepared.code] });
+        return;
+      }
+
+      setPreview(prepared.previewUrl);
+      setImagePath(null);
+      void fileToDataUrl(prepared.file).then(setPhotoData);
+
+      // Sans abonnement, la photo ne quitte pas le téléphone : elle sert
+      // d'aperçu, rien de plus. Rien à stocker, rien à payer, et la porte du
+      // dépôt reste fermée côté serveur.
+      if (paywalled) {
+        setBusy(false);
+        track('photo_selected', { size: prepared.file.size });
+        return;
+      }
+
+      await sendToServer(prepared.file);
+    },
+    [paywalled, sendToServer],
+  );
+
   const launch = useCallback(async () => {
-    if (!imagePath || selected.length === 0 || !consented || busy) return;
+    if (selected.length === 0 || !consented || busy) return;
+
+    // C'est ici que l'abonnement se demande : la photo est choisie, la coupe
+    // aussi, la personne sait exactement ce qu'elle achète.
+    if (paywalled) {
+      if (!preview) return;
+      track('paywall_hit', { location: 'studio' });
+      router.push(`${pricingPath}?raison=generation`);
+      return;
+    }
+
+    if (!imagePath) return;
     setBusy(true);
     setError(null);
 
@@ -159,15 +244,32 @@ export default function PhotoStudio({
         return;
       }
 
+      // Le rendu est lancé : le brouillon n'a plus lieu d'être.
+      clearDraft();
       router.push(`${nextBasePath}?id=${generationId}`);
     } catch {
       setError({ kind: 'network' });
     } finally {
       setBusy(false);
     }
-  }, [imagePath, selected, consented, busy, answers, router, nextBasePath]);
+  }, [
+    imagePath,
+    preview,
+    selected,
+    consented,
+    busy,
+    answers,
+    router,
+    nextBasePath,
+    paywalled,
+    pricingPath,
+  ]);
 
   if (consented === null) return <div className="section py-16" aria-hidden="true" />;
+
+  // Sans abonnement, l'aperçu local suffit à débloquer le bouton : c'est lui
+  // qui mène aux offres, pas au modèle.
+  const photoPrete = paywalled ? preview !== null : imagePath !== null;
 
   return (
     <div className="section py-8">
@@ -183,21 +285,14 @@ export default function PhotoStudio({
         </p>
       ) : null}
 
-      {/* Le compte existe mais n'a aucune coupe : on le dit ici plutôt que de
-          le laisser choisir un style puis buter sur un refus. */}
-      {authenticated && creditsRemaining === 0 ? (
-        <div className="mt-5 rounded-3xl border border-line p-6">
-          <p className="font-display text-lg font-bold text-violet-900">
-            Il te faut un abonnement pour générer.
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Ton compte est actif. L’offre Essentiel donne 15 coupes par mois pour
-            7,99 €, l’offre Complet 25 coupes pour 9,99 €. Sans engagement.
-          </p>
-          <Link href="/tarifs" className="btn-primary mt-5 w-full">
-            Voir les offres
-          </Link>
-        </div>
+      {/* Le compte existe mais n'a pas d'abonnement. On ne ferme pas la porte :
+          on laisse préparer la coupe, et on annonce où se prend l'abonnement.
+          Une ligne, pas un mur — le mur, c'est ce qui faisait partir. */}
+      {authenticated && paywalled ? (
+        <p className="mt-3 rounded-2xl border border-line p-4 text-sm text-slate-500">
+          Choisis ta photo et ta coupe. L’abonnement se prend à l’étape suivante
+          {entree ? `, à partir de ${entree.price} par mois` : ''}.
+        </p>
       ) : null}
 
       <input
@@ -308,7 +403,7 @@ export default function PhotoStudio({
         <motion.button
           type="button"
           whileTap={tap}
-          disabled={!imagePath || selected.length === 0 || !consented || busy}
+          disabled={!photoPrete || selected.length === 0 || !consented || busy}
           onClick={() => void launch()}
           className="btn-primary w-full disabled:opacity-50"
         >

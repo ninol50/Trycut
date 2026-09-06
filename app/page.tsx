@@ -8,7 +8,7 @@ import FinalCta from '@/components/landing/FinalCta';
 import Footer from '@/components/Footer';
 import { resolveExamples, resolveHeroFrames } from '@/lib/demo-assets';
 import { countCutsToday } from '@/lib/stats';
-import { loadProfile, hasPaidAccess } from '@/lib/profile';
+import { loadProfile } from '@/lib/profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,14 +19,12 @@ export default async function LandingPage() {
   const cutsToday = await countCutsToday();
 
   // Où mène chaque bouton de la vitrine. Sans compte, tout ramène à
-  // l'inscription : il n'y a rien à voir ni à essayer avant. Une route sous
-  // forme de chaîne, jamais de fonction qui traverserait vers le client.
+  // l'inscription ; avec un compte, au studio — abonnement ou non, puisque la
+  // photo et la coupe se choisissent avant de payer. Personne n'atterrit sur
+  // une grille de tarifs sans avoir vu ce qu'elle achète. Une route sous forme
+  // de chaîne, jamais de fonction qui traverserait vers le client.
   const session = await loadProfile();
-  const ctaHref = !session
-    ? '/inscription'
-    : hasPaidAccess(session.profile)
-      ? '/app'
-      : '/tarifs';
+  const ctaHref = session ? '/app' : '/inscription';
 
   return (
     <>

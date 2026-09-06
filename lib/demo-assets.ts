@@ -115,6 +115,17 @@ export const HERO_PEOPLE: readonly HeroPersonAsset[] = [
   { id: 'personne-4', baseSlug: 'cut-middle-part', looks: [BOUCLES, LOCKS, BUZZ] },
 ] as const;
 
+/**
+ * Paires que le hero montre en premier, de la plus démonstrative à la moins.
+ * Une paire absente de cette liste passe après, sans être écartée.
+ */
+const HERO_PRIORITE: readonly string[] = ['cut-afro-court', 'cut-locks'];
+
+function rangHero(slug: string): number {
+  const rang = HERO_PRIORITE.indexOf(slug);
+  return rang === -1 ? HERO_PRIORITE.length : rang;
+}
+
 export interface HeroFrame {
   id: string;
   label: string;
@@ -136,7 +147,15 @@ export function resolveHeroFrames(): readonly HeroFrame[] {
   const photos = resolveExamples();
 
   if (photos.length > 0) {
-    return photos.map((pair) => ({
+    // Le hero joue un fondu entre les deux états d'un même visage : ce sont les
+    // portraits de face, cadrage identique des deux côtés, qui le rendent
+    // lisible — sur un selfie pris au miroir, l'œil doute d'avoir vu la même
+    // photo. Les autres paires suivent, dans leur ordre d'origine.
+    const ordonnees = [...photos].sort(
+      (a, b) => rangHero(a.slug) - rangHero(b.slug),
+    );
+
+    return ordonnees.map((pair) => ({
       id: pair.slug,
       label: pair.label,
       before: { src: pair.before, slug: pair.slug },

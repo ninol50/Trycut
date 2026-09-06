@@ -23,6 +23,7 @@ import {
 import { CREDITS_BY_PLAN, WHOP_PLAN_IDS } from '@/lib/pricing';
 import { extractMemberships } from '@/lib/whop-api';
 import { hasPaidAccess } from '@/lib/profile';
+import { TESTIMONIALS } from '@/lib/testimonials';
 import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
 import { readFileSync } from 'node:fs';
@@ -687,15 +688,63 @@ test('aucune route ne laisse un non-payeur consommer quoi que ce soit', () => {
   const paywall = readFileSync(join(process.cwd(), 'lib/paywall.ts'), 'utf8');
   assert.ok(paywall.includes('hasPaidAccess'), 'requirePaidAccess ne vérifie plus le paiement');
 
+  // Tout ce qui consomme réellement — un rendu lancé, un résultat affiché —
+  // reste fermé sans abonnement.
   for (const page of [
     'app/(app)/app/generation/page.tsx',
     'app/(app)/app/resultat/page.tsx',
-    'app/onboarding/photo/page.tsx',
     'app/onboarding/generation/page.tsx',
     'app/onboarding/resultat/page.tsx',
   ]) {
     const source = readFileSync(join(process.cwd(), page), 'utf8');
     assert.ok(source.includes('requirePaidAccess'), `${page} : page ouverte sans abonnement`);
+  }
+});
+
+test('le studio s’ouvre sans abonnement, mais rien n’en sort', () => {
+  // Nouveau parcours : on importe sa photo et on choisit sa coupe avant de
+  // payer, et c'est le bouton « générer » qui mène aux offres. Ce qui doit
+  // rester vrai : la page demande un compte, elle passe `paywalled` au studio,
+  // et aucune photo ne part au serveur tant que l'abonnement n'est pas pris.
+  for (const page of ['app/(app)/app/page.tsx', 'app/onboarding/photo/page.tsx']) {
+    const source = readFileSync(join(process.cwd(), page), 'utf8');
+    assert.ok(source.includes('paywalled'), `${page} : le studio ignore l’état d’abonnement`);
+    assert.ok(
+      source.includes('hasPaidAccess'),
+      `${page} : l’état d’abonnement n’est pas lu côté serveur`,
+    );
+  }
+
+  const studio = readFileSync(join(process.cwd(), 'components/generation/PhotoStudio.tsx'), 'utf8');
+  assert.ok(
+    studio.includes('if (paywalled)'),
+    'PhotoStudio : le dépôt de la photo n’est plus conditionné à l’abonnement',
+  );
+  assert.ok(
+    studio.includes('pricingPath'),
+    'PhotoStudio : plus de renvoi vers les offres au moment de générer',
+  );
+  // Une fonction qui traverserait la frontière serveur → client : interdit.
+  assert.ok(
+    !studio.includes('onPaywall'),
+    'PhotoStudio : la destination doit être une chaîne, pas un callback',
+  );
+});
+
+test('aucun avis n’est affiché sans nom, sans note et sans texte', () => {
+  // La liste ne contient que des avis réellement reçus. On ne vérifie pas leur
+  // véracité en test — on vérifie qu'aucune entrée n'est un gabarit vide qui
+  // finirait affiché tel quel.
+  for (const avis of TESTIMONIALS) {
+    assert.ok(avis.name.trim().length > 0, 'avis sans nom');
+    assert.ok(avis.quote.trim().length > 10, `${avis.name} : citation vide`);
+    assert.ok(avis.rating >= 1 && avis.rating <= 5, `${avis.name} : note hors échelle`);
+    // Une demi-paire d'images ne s'affiche pas : les deux, ou aucune.
+    assert.equal(
+      Boolean(avis.before),
+      Boolean(avis.after),
+      `${avis.name} : paire avant/après incomplète`,
+    );
   }
 });
 
@@ -989,5 +1038,5 @@ test('aucun bouton de la vitrine ne saute l’inscription', () => {
   // Et la page doit bien la calculer selon la session.
   const page = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
   assert.ok(page.includes("'/inscription'"), 'sans compte, on doit aller à l’inscription');
-  assert.ok(page.includes('hasPaidAccess'), 'la destination doit dépendre de l’accès réel');
+  assert.ok(page.includes("'/app'"), 'avec un compte, on doit aller au studio');
 });

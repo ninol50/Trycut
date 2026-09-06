@@ -1,29 +1,28 @@
-import { requirePaidAccess } from '@/lib/paywall';
+import { requireAccount } from '@/lib/paywall';
 import PhotoStudio from '@/components/generation/PhotoStudio';
 import { loadCatalog } from '@/lib/catalog-server';
-import { getSessionUser } from '@/lib/supabase/server';
+import { loadProfile, hasPaidAccess } from '@/lib/profile';
 
 export const metadata = { title: 'Ta photo — Trycut' };
 
 export const dynamic = 'force-dynamic';
 
 export default async function OnboardingPhotoPage() {
-  await requirePaidAccess();
+  await requireAccount();
 
-  const [catalog, user] = await Promise.all([
-    loadCatalog(),
-    getSessionUser(),
-  ]);
+  const [catalog, session] = await Promise.all([loadCatalog(), loadProfile()]);
+  const paye = session ? hasPaidAccess(session.profile) : false;
 
   return (
     <main>
       <PhotoStudio
         items={catalog}
         nextBasePath="/onboarding/generation"
-        /* L'essai gratuit n'ouvre pas le catalogue premium. */
+        /* Le catalogue premium reste fermé tant que l'offre longue n'est pas prise. */
         lockedPremium
         creditsRemaining={null}
-        authenticated={Boolean(user)}
+        authenticated={Boolean(session)}
+        paywalled={!paye}
       />
     </main>
   );

@@ -3,13 +3,25 @@
 import posthog from 'posthog-js';
 import { publicEnv } from '@/lib/public-env';
 
-/** Les 9 events obligatoires (section 12). Aucun autre nom n'est accepté. */
+/**
+ * Les 9 events obligatoires (section 12), plus les deux que le nouveau
+ * parcours rend indispensables. Aucun autre nom n'est accepté.
+ *
+ * Depuis que le studio s'ouvre avant paiement, l'entonnoir a deux marches de
+ * plus : la photo choisie (elle ne quitte pas le navigateur, donc
+ * `photo_uploaded` ne se déclenche pas) et le mur du paiement atteint. Sans
+ * ces deux-là, impossible de savoir si les gens abandonnent avant de choisir
+ * une coupe ou devant le prix — c'est-à-dire impossible d'arbitrer entre
+ * retoucher le studio et retoucher les offres.
+ */
 export type AnalyticsEvent =
   | 'landing_cta_clicked'
   | 'demo_video_viewed'
   | 'onboarding_step_completed'
   | 'onboarding_finished'
+  | 'photo_selected'
   | 'photo_uploaded'
+  | 'paywall_hit'
   | 'first_generation_succeeded'
   | 'signup_completed'
   | 'share_clicked'

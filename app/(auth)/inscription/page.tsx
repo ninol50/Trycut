@@ -11,8 +11,8 @@ export default function SignUpPage() {
       <main className="section py-10">
         <h1 className="text-2xl">Garde tes résultats.</h1>
         <p className="mt-3 text-base text-slate-500">
-          Crée ton compte, confirme ton email, et le catalogue s’ouvre. Générer une coupe
-          demande un abonnement — à la semaine ou au mois, sans engagement.
+          Crée ton compte et le studio s’ouvre : ta photo, ta coupe, l’aperçu de ce que
+          ça donne. L’abonnement se prend au moment de lancer le rendu, sans engagement.
         </p>
 
         <div className="mt-8">

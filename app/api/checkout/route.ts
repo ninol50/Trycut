@@ -71,7 +71,9 @@ export async function POST(request: NextRequest) {
     line_items: [{ price: priceId, quantity: 1 }],
     client_reference_id: session.user.id,
     metadata: { user_id: session.user.id, plan },
-    success_url: `${env.siteUrl}/compte?paiement=ok`,
+    // Retour dans le studio, pas dans les réglages du compte : la photo et la
+    // coupe y attendent déjà, il ne reste qu'à lancer le rendu.
+    success_url: `${env.siteUrl}/app?paiement=ok`,
     cancel_url: `${env.siteUrl}/tarifs?paiement=annule`,
     allow_promotion_codes: true,
   });

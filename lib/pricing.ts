@@ -123,6 +123,15 @@ export const PRICING: readonly PricingPlan[] = [
   },
 ] as const;
 
+/**
+ * Offre payante la moins chère : celle qu'on cite partout où l'on annonce un
+ * prix d'entrée. Elle se lit dans `PRICING`, jamais réécrite à la main — un
+ * prix recopié dans un texte est un prix qui finit par mentir.
+ */
+export function offreEntree(): PricingPlan | null {
+  return PRICING.find((plan) => plan.id !== 'free') ?? null;
+}
+
 export const CREDITS_BY_PLAN: Record<PlanId, number> = {
   free: 0,
   pack: 17,
