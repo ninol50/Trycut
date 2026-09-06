@@ -18,15 +18,17 @@ export default async function LandingPage() {
   const heroFrames = resolveHeroFrames();
   const cutsToday = await countCutsToday();
 
-  // Où mène chaque bouton de la vitrine. Sans compte, tout ramène à
-  // l'inscription : il n'y a rien à voir ni à essayer avant. Une route sous
-  // forme de chaîne, jamais de fonction qui traverserait vers le client.
+  // Où mène chaque bouton de la vitrine. Sans compte, il mène au studio :
+  // choisir sa photo et parcourir les styles ne coûte rien, et c'est en voyant
+  // le produit qu'on a envie de le payer. Le verrou est sur le rendu, pas sur
+  // la porte d'entrée. Une route sous forme de chaîne, jamais de fonction qui
+  // traverserait vers le client.
   const session = await loadProfile();
   const ctaHref = !session
-    ? '/inscription'
+    ? '/onboarding/photo'
     : hasPaidAccess(session.profile)
       ? '/app'
-      : '/tarifs';
+      : '/onboarding/photo';
 
   return (
     <>

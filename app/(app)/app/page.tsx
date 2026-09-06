@@ -46,6 +46,7 @@ export default async function AppPage() {
         lockedPremium={premiumLocked(session.profile)}
         creditsRemaining={session.profile.credits_remaining}
         authenticated
+        paid
       />
       <HistoryStrip items={history} />
     </>

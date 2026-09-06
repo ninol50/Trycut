@@ -5,10 +5,15 @@ import { motion } from 'framer-motion';
 import { useInView } from '@/components/motion';
 import { track } from '@/lib/analytics';
 
+/**
+ * Aucune mention de paiement sur l'accueil : le visiteur découvre le produit
+ * d'abord, et le prix au moment du rendu, verrou à l'appui. Ces trois lignes
+ * ne parlent donc que de ce qu'on obtient.
+ */
 const REASSURANCE = [
-  'Paiement sécurisé par Stripe',
-  'Résiliable à tout moment',
   'Résultat en 30 secondes',
+  'Photos privées, visibles de toi seul',
+  'Supprimées automatiquement au bout de 30 jours',
 ] as const;
 
 export default function FinalCta({ ctaHref }: { ctaHref: string }) {

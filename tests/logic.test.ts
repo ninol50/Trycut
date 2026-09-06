@@ -687,10 +687,12 @@ test('aucune route ne laisse un non-payeur consommer quoi que ce soit', () => {
   const paywall = readFileSync(join(process.cwd(), 'lib/paywall.ts'), 'utf8');
   assert.ok(paywall.includes('hasPaidAccess'), 'requirePaidAccess ne vérifie plus le paiement');
 
+  // Le studio est volontairement ouvert : on y choisit sa photo et ses styles
+  // sans rien dépenser. Toutes les pages qui suivent le rendu restent fermées,
+  // et la porte des routes qui coûtent de l'argent ne bouge pas.
   for (const page of [
     'app/(app)/app/generation/page.tsx',
     'app/(app)/app/resultat/page.tsx',
-    'app/onboarding/photo/page.tsx',
     'app/onboarding/generation/page.tsx',
     'app/onboarding/resultat/page.tsx',
   ]) {
@@ -988,6 +990,28 @@ test('aucun bouton de la vitrine ne saute l’inscription', () => {
 
   // Et la page doit bien la calculer selon la session.
   const page = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
-  assert.ok(page.includes("'/inscription'"), 'sans compte, on doit aller à l’inscription');
+  assert.ok(
+    page.includes("'/onboarding/photo'"),
+    'sans abonnement, on doit arriver au studio, où le verrou est sur le rendu',
+  );
   assert.ok(page.includes('hasPaidAccess'), 'la destination doit dépendre de l’accès réel');
+});
+
+test('le rendu reste la seule étape payante du studio', () => {
+  // Le studio s'ouvre à tout le monde, mais générer coûte de l'argent : le
+  // bouton doit dépendre de `paid`, et la photo ne doit pas partir au serveur
+  // tant que l'abonnement n'est pas actif.
+  const studio = readFileSync(
+    join(process.cwd(), 'components/generation/PhotoStudio.tsx'),
+    'utf8',
+  );
+  assert.ok(studio.includes('paid ? ('), 'le bouton de rendu ne dépend pas de l’abonnement');
+  assert.ok(
+    studio.includes('if (!paid) {'),
+    'la photo d’un visiteur sans abonnement ne doit pas être envoyée au serveur',
+  );
+
+  // Et la porte serveur reste en place sur le suivi du rendu.
+  const suivi = readFileSync(join(process.cwd(), 'app/onboarding/generation/page.tsx'), 'utf8');
+  assert.ok(suivi.includes('requirePaidAccess'), 'le suivi du rendu doit rester fermé');
 });

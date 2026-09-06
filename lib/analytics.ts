@@ -13,6 +13,7 @@ export type AnalyticsEvent =
   | 'first_generation_succeeded'
   | 'signup_completed'
   | 'share_clicked'
+  | 'paywall_hit'
   | 'checkout_completed';
 
 type Props = Record<string, string | number | boolean | null | undefined | string[]>;

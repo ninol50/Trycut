@@ -14,7 +14,7 @@ const QUESTIONS = [
   },
   {
     q: 'Il me faut un compte pour générer une coupe ?',
-    a: 'Générer une coupe demande un abonnement : 8,90 € par mois pour 17 coupes, 17,90 € pour 30 coupes, ou 34,90 € pour 100 coupes. Sans engagement.',
+    a: 'Oui, et tu peux déjà choisir ta photo et tes styles sans compte. C’est au moment de lancer le rendu que tu crées ton compte et que tu choisis ton offre — les tarifs s’affichent à cet instant, avant tout paiement.',
   },
   {
     q: 'Le résultat est-il fidèle à ce que fera mon coiffeur ?',

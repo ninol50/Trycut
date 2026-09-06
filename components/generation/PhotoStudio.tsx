@@ -13,6 +13,7 @@ import { UPLOAD_MESSAGES } from '@/lib/upload';
 import { rankCatalog } from '@/lib/catalog';
 import { readAnswers, answerAsString } from '@/lib/onboarding';
 import { track } from '@/lib/analytics';
+import { PRICING } from '@/lib/pricing';
 import type { PublicCatalogItem } from '@/types/db';
 
 interface PhotoStudioProps {
@@ -23,6 +24,13 @@ interface PhotoStudioProps {
   creditsRemaining: number | null;
   /** Sans compte, on laisse parcourir le catalogue mais pas envoyer de photo. */
   authenticated: boolean;
+  /**
+   * Abonnement actif. Sans lui, tout le studio reste utilisable — photo,
+   * styles, aperçu — et c'est le bouton « générer » qui se verrouille. Le
+   * rendu est la seule étape qui coûte de l'argent : c'est là que la porte
+   * doit se trouver, pas avant.
+   */
+  paid: boolean;
 }
 
 /** État « vide » : import + consignes + catalogue filtré visible dessous. */
@@ -32,6 +40,7 @@ export default function PhotoStudio({
   lockedPremium,
   creditsRemaining,
   authenticated,
+  paid,
 }: PhotoStudioProps) {
   const router = useRouter();
   const tap = useTapScale();
@@ -53,6 +62,7 @@ export default function PhotoStudio({
   }, []);
   const [error, setError] = useState<{ kind: ErrorKind; message?: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [offresVisibles, setOffresVisibles] = useState(false);
   const [answers, setAnswers] = useState(() => ({}) as ReturnType<typeof readAnswers>);
 
   useEffect(() => {
@@ -78,6 +88,14 @@ export default function PhotoStudio({
     }
 
     setPreview(prepared.previewUrl);
+
+    // Sans abonnement, la photo ne quitte pas le téléphone : l'aperçu suffit à
+    // préparer son essai, et on ne stocke pas le visage de quelqu'un qui n'a
+    // rien demandé de plus.
+    if (!paid) {
+      setBusy(false);
+      return;
+    }
 
     try {
       const form = new FormData();
@@ -111,7 +129,7 @@ export default function PhotoStudio({
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [paid]);
 
   const launch = useCallback(async () => {
     if (!imagePath || selected.length === 0 || !consented || busy) return;
@@ -211,26 +229,6 @@ export default function PhotoStudio({
         }}
       />
 
-      {!authenticated ? (
-        <div className="mt-5 rounded-3xl border border-line p-6 text-center">
-          <p className="font-display text-lg font-bold text-violet-900">
-            Crée ton compte pour envoyer ta photo.
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Ta photo n’est visible que par toi. Le catalogue ci-dessous reste consultable
-            librement.
-          </p>
-          <Link href="/inscription" className="btn-primary mt-5 w-full">
-            Créer mon compte
-          </Link>
-          <Link
-            href="/connexion"
-            className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center text-sm font-semibold text-violet-600 underline"
-          >
-            J’ai déjà un compte
-          </Link>
-        </div>
-      ) : (
       <motion.button
         type="button"
         whileTap={tap}
@@ -263,9 +261,8 @@ export default function PhotoStudio({
           {preview ? 'Changer de photo' : 'Choisir une photo'}
         </span>
       </motion.button>
-      )}
 
-      {authenticated ? (
+      {paid ? (
       <div className="mt-4">
         <ConsentNotice
           checked={consented}
@@ -303,19 +300,77 @@ export default function PhotoStudio({
         </div>
       </div>
 
-      {authenticated ? (
+      {/* Le rendu est la seule étape qui coûte de l'argent : c'est la seule
+          qui se verrouille. Tout ce qui précède reste ouvert. */}
       <div className="sticky bottom-4 mt-8">
-        <motion.button
-          type="button"
-          whileTap={tap}
-          disabled={!imagePath || selected.length === 0 || !consented || busy}
-          onClick={() => void launch()}
-          className="btn-primary w-full disabled:opacity-50"
-        >
-          {busy ? 'Un instant…' : 'Générer ma coupe'}
-        </motion.button>
+        {paid ? (
+          <motion.button
+            type="button"
+            whileTap={tap}
+            disabled={!imagePath || selected.length === 0 || !consented || busy}
+            onClick={() => void launch()}
+            className="btn-primary w-full disabled:opacity-50"
+          >
+            {busy ? 'Un instant…' : 'Générer ma coupe'}
+          </motion.button>
+        ) : (
+          <>
+            {offresVisibles ? (
+              <div className="mb-3 rounded-3xl border border-line bg-white p-5">
+                <p className="font-display text-lg font-bold text-violet-900">
+                  Choisis ton offre pour lancer le rendu.
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {PRICING.filter((offre) => offre.id !== 'free').map((offre) => (
+                    <li
+                      key={offre.id}
+                      className="flex items-baseline justify-between border-b border-line pb-2 last:border-b-0 last:pb-0"
+                    >
+                      <span className="text-base font-semibold text-violet-900">
+                        {offre.name}
+                      </span>
+                      <span className="text-sm text-slate-500">
+                        {offre.price}
+                        {offre.period} · {offre.credits} coupes
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/tarifs" className="btn-primary mt-5 w-full">
+                  {authenticated ? 'Choisir mon offre' : 'Créer mon compte et m’abonner'}
+                </Link>
+              </div>
+            ) : null}
+
+            <motion.button
+              type="button"
+              whileTap={tap}
+              aria-expanded={offresVisibles}
+              onClick={() => {
+                setOffresVisibles((valeur) => !valeur);
+                track('paywall_hit', { location: 'studio' });
+              }}
+              className="btn-primary w-full"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="4" y="10" width="16" height="10" rx="2.5" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+              </svg>
+              Générer ma coupe
+            </motion.button>
+          </>
+        )}
       </div>
-      ) : null}
     </div>
   );
 }

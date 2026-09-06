@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTapScale } from '@/components/motion';
+import { PRICING } from '@/lib/pricing';
 
 export interface Signup {
   id: string;
@@ -177,33 +178,20 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
                 Accorder une offre à la main
               </p>
               <div className="mt-2 flex gap-2">
-                <motion.button
-                  type="button"
-                  whileTap={tap}
-                  disabled={busyId === row.id}
-                  onClick={() => void setPlan(row.id, 'pack')}
-                  className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
-                >
-                  Semaine · 5
-                </motion.button>
-                <motion.button
-                  type="button"
-                  whileTap={tap}
-                  disabled={busyId === row.id}
-                  onClick={() => void setPlan(row.id, 'pass')}
-                  className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
-                >
-                  Mois · 20
-                </motion.button>
-                <motion.button
-                  type="button"
-                  whileTap={tap}
-                  disabled={busyId === row.id}
-                  onClick={() => void setPlan(row.id, 'trimestre')}
-                  className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
-                >
-                  Trim. · 60
-                </motion.button>
+                {/* Libellés tirés des offres : recopiés à la main, ils ont
+                    déjà annoncé un nombre de coupes qui n'existait plus. */}
+                {PRICING.filter((offre) => offre.id !== 'free').map((offre) => (
+                  <motion.button
+                    key={offre.id}
+                    type="button"
+                    whileTap={tap}
+                    disabled={busyId === row.id}
+                    onClick={() => void setPlan(row.id, offre.id as 'pack' | 'pass' | 'trimestre')}
+                    className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
+                  >
+                    {offre.name} · {offre.credits}
+                  </motion.button>
+                ))}
                 {row.subscription_status === 'active' ? (
                   <motion.button
                     type="button"
