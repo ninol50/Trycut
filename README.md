@@ -136,11 +136,18 @@ piloté par `AI_PROVIDER` dans `app/confidentialite/page.tsx`.
 Sans garde-fou, une journée de trafic TikTok consomme le budget d'inférence du mois.
 Trois variables, vérifiées **avant tout débit de crédit** :
 
-| Variable | Défaut | Effet |
-|---|---|---|
-| `MONTHLY_SPEND_CAP_CENTS` | `1800` (18 €) | Vérifié **en premier** |
-| `DAILY_GENERATION_CAP` | `15` | Générations par jour, toutes personnes confondues |
-| `COST_PER_GENERATION_CENTS` | `4` | Coût estimé, sert au calcul mensuel |
+| Variable | Effet |
+|---|---|
+| `MONTHLY_SPEND_CAP_CENTS` | Vérifié **en premier** |
+| `DAILY_GENERATION_CAP` | Générations par jour, toutes personnes confondues |
+| `COST_PER_GENERATION_CENTS` | Coût unitaire, sert au calcul mensuel |
+
+**Les valeurs en base sont volontairement hors d'atteinte** (100 000 générations par jour,
+10 000 € par mois) : le propriétaire a demandé le retrait des plafonds. Le seul plafond
+réel est donc **le solde fal prépayé**, avec la recharge automatique désactivée — à zéro,
+toutes les générations échouent d'un coup. `COST_PER_GENERATION_CENTS` vaut `4`, valeur
+vérifiée sur la facturation réelle : 0,28 $ pour 7 rendus, soit 0,04 $ pièce. Un rendu
+**raté est facturé aussi** — recoupement du solde fal avec le nombre de générations.
 
 Au-delà d'un plafond, `POST /api/generations` répond **503** avec « Beaucoup de monde en
 ce moment… » et **aucun crédit n'est débité**. La réservation est atomique
@@ -154,22 +161,35 @@ compte, **3 essais gratuits / 24 h** par IP, **1 essai anonyme** par jeton.
 
 ## Offres et paiement
 
-| Offre | Prix | Coupes / mois |
-|---|---|---|
-| Découverte | 0 € | 0 |
-| Essentiel | 7,99 €/mois | 15 |
-| **Complet** | **9,99 €/mois** | 25 |
+| Offre | Prix | Coupes / mois | Prix à la coupe |
+|---|---|---|---|
+| Découverte | 0 € | 0 | — |
+| Essentiel | 8,90 €/mois | 17 | 0,52 € |
+| Confort | 17,90 €/mois | 30 | 0,60 € |
+| **Intensif** | **34,90 €/mois** | 100 | **0,35 €** |
 
-Deux offres mensuelles, et la seconde est la meilleure affaire : deux euros de plus
-donnent dix coupes de plus, donc elle revient moins cher à la coupe. Un test refuse
-l'inverse.
+Trois offres mensuelles. L'offre du milieu revient **plus cher à la coupe** que la
+première : choix assumé du propriétaire, signalé et appliqué tel quel. Seule la troisième
+est mise en avant, parce qu'elle est réellement la meilleure affaire — un test refuse de
+mettre en avant une offre qui ne l'est pas.
 
-Les boutons pointent sur des **liens de paiement Stripe**, posés par
-`NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL` / `NEXT_PUBLIC_STRIPE_LINK_COMPLET`. Aucune clé
-serveur n'est nécessaire pour encaisser — elle ne sert qu'à créditer ensuite.
+Les boutons pointent sur des **liens de paiement Stripe**, écrits dans `lib/pricing.ts`
+et surchargeables par `NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL` / `_CONFORT` / `_INTENSIF`. Un
+lien de paiement est public par nature — il figure en clair dans le HTML — donc rien ne
+justifie de le cacher dans une variable. Aucune clé serveur n'est nécessaire pour
+encaisser ; elle ne sert qu'à créditer ensuite.
 
-Les identifiants internes restent `pack` et `pass` : ce sont les valeurs de
-l'énumération `plan_tier` en base, et tout le contrôle d'accès s'appuie dessus.
+Les identifiants internes restent `pack`, `pass` et `trimestre` : ce sont les valeurs de
+l'énumération `plan_tier` en base, et tout le contrôle d'accès s'appuie dessus. Ils ne
+décrivent plus la durée — les trois offres sont mensuelles.
+
+### Où le paiement est demandé
+
+Le studio est **ouvert à tout le monde**, sans compte : on choisit sa photo, on parcourt
+les styles. Sans abonnement, la photo **ne quitte pas le téléphone** — aperçu local,
+aucun envoi. C'est le bouton **« générer ma coupe » qui porte un cadenas** et déplie les
+trois offres : le rendu est la seule étape facturée, donc la seule verrouillée. L'accueil
+n'affiche ni prix ni mention de paiement.
 
 Pour que le paiement **crédite réellement le compte**, il reste à brancher le webhook :
 
@@ -182,8 +202,15 @@ Pour que le paiement **crédite réellement le compte**, il reste à brancher le
 3. En local : `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
 
 Les liens de paiement ne transmettent pas d'identifiant de prix connu à l'avance : l'offre
-est retrouvée par le **montant facturé** (999 → Pack, 1790 → Pass), avec les
-`STRIPE_PRICE_*` en priorité s'ils sont renseignés.
+est retrouvée par le **montant facturé** (890 → Essentiel, 1790 → Confort,
+3490 → Intensif), avec les `STRIPE_PRICE_*` en priorité s'ils sont renseignés. Changer un
+prix demande donc de changer trois choses ensemble : le lien, l'affichage et la table des
+montants — un montant absent de la table encaisse sans rien créditer.
+
+La clé secrète et le secret de webhook se posent aussi **depuis la page `/admin`**, qui
+les range dans `app_config`. Motif : le tableau de bord de l'hébergeur est inutilisable
+depuis un téléphone, et une variable qui n'atteint pas le serveur ne le signale nulle
+part. Les variables d'environnement restent prioritaires.
 
 Le webhook est **idempotent** (contrainte unique sur `webhook_events.external_id`) : les
 webhooks arrivent en double, systématiquement.
