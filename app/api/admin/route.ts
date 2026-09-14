@@ -53,12 +53,16 @@ async function estAdministrateur(userId: string): Promise<boolean> {
  * Il écrit ce que la fonction aurait écrit — le statut et la date de revue —
  * et rien d'autre : ni offre, ni crédits.
  */
-async function ecrireStatutSansFonction(
-  userId: string,
-  status: Statut,
-): Promise<'ok' | 'introuvable' | 'impossible'> {
+type Repli =
+  | { etat: 'ok' }
+  | { etat: 'introuvable' }
+  | { etat: 'impossible'; message: string };
+
+async function ecrireStatutSansFonction(userId: string, status: Statut): Promise<Repli> {
   const admin = createAdminSupabase();
-  if (!admin) return 'impossible';
+  if (!admin) {
+    return { etat: 'impossible', message: 'La clé de service est absente de l’hébergeur.' };
+  }
 
   const { data, error } = await admin
     .from('profiles')
@@ -66,8 +70,14 @@ async function ecrireStatutSansFonction(
     .eq('id', userId)
     .select('id');
 
-  if (error) return 'impossible';
-  return ((data as { id: string }[] | null) ?? []).length > 0 ? 'ok' : 'introuvable';
+  // Le message de la base est renvoyé tel quel : la page est réservée aux
+  // administrateurs, et sans lui un échec ici resterait aussi muet que celui
+  // qu'on vient de corriger.
+  if (error) return { etat: 'impossible', message: error.message };
+
+  return ((data as { id: string }[] | null) ?? []).length > 0
+    ? { etat: 'ok' }
+    : { etat: 'introuvable' };
 }
 
 export async function POST(request: NextRequest) {
@@ -102,20 +112,25 @@ export async function POST(request: NextRequest) {
     p_status: parsed.data.status,
   });
 
-  if (!error) return NextResponse.json({ ok: data === true });
+  if (!error && data === true) return NextResponse.json({ ok: true });
 
-  if (error.code === '42501' || error.message.includes('administrateur')) {
-    return NextResponse.json({ ok: false }, { status: 403 });
+  if (error && (error.code === '42501' || error.message.includes('administrateur'))) {
+    return NextResponse.json({ ok: false, raison: 'droits' }, { status: 403 });
   }
 
-  // La fonction a échoué pour autre chose que les droits : statut qu'elle ne
-  // connaît pas, ou fonction absente. On revérifie nous-mêmes, puis on écrit.
+  // La fonction n'a pas confirmé l'écriture. Elle a levé une erreur, ou elle a
+  // répondu autre chose que `true` : une version antérieure à l'accès offert ne
+  // met à jour que les comptes restés « en attente » et rend `false` pour tous
+  // les autres, sans rien signaler. C'est ce silence qui donnait un bouton mort.
+  // On revérifie donc les droits nous-mêmes, puis on écrit.
   if (!(await estAdministrateur(user.id))) {
-    return NextResponse.json({ ok: false }, { status: 403 });
+    return NextResponse.json({ ok: false, raison: 'droits' }, { status: 403 });
   }
 
   const repli = await ecrireStatutSansFonction(parsed.data.userId, parsed.data.status);
-  if (repli === 'ok') return NextResponse.json({ ok: true });
+  if (repli.etat === 'ok') return NextResponse.json({ ok: true });
 
-  return NextResponse.json({ ok: false }, { status: repli === 'introuvable' ? 404 : 500 });
+  return repli.etat === 'introuvable'
+    ? NextResponse.json({ ok: false, raison: 'introuvable' }, { status: 404 })
+    : NextResponse.json({ ok: false, raison: 'ecriture', message: repli.message }, { status: 500 });
 }

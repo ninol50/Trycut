@@ -59,7 +59,9 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ userId, ...corps }),
       });
-      const data = (await response.json().catch(() => null)) as { ok?: boolean } | null;
+      const data = (await response.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
 
       if (!response.ok || data?.ok !== true) {
         setRows(precedent);
@@ -68,7 +70,11 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
             ? 'Ton compte n’est pas administrateur.'
             : response.status === 401
               ? 'Ta session a expiré. Reconnecte-toi puis réessaie.'
-              : 'La mise à jour a échoué. Réessaie.',
+              : response.status === 404
+                ? 'Ce compte n’existe plus.'
+                : // Le message vient de la base. Le montrer évite de rester
+                  // devant un échec muet, comme ça a été le cas ici.
+                  (data?.message ?? 'La mise à jour a échoué. Réessaie.'),
         );
       }
     } catch {
