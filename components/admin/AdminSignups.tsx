@@ -177,13 +177,13 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
               <div className="mt-2 flex gap-2">
                 {/* Libellés tirés des offres : recopiés à la main, ils ont
                     déjà annoncé un nombre de coupes qui n'existait plus. */}
-                {PRICING.filter((offre) => offre.id !== 'free').map((offre) => (
+                {PRICING.map((offre) => (
                   <motion.button
                     key={offre.id}
                     type="button"
                     whileTap={tap}
                     disabled={busyId === row.id}
-                    onClick={() => void setPlan(row.id, offre.id as 'pack' | 'pass' | 'trimestre')}
+                    onClick={() => void setPlan(row.id, offre.id)}
                     className="btn-outline flex-1 !min-h-[44px] !px-2 text-xs disabled:opacity-40"
                   >
                     {offre.name} · {offre.credits}

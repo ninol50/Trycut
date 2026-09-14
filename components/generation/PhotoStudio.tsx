@@ -321,7 +321,7 @@ export default function PhotoStudio({
                   Choisis ton offre pour lancer le rendu.
                 </p>
                 <ul className="mt-4 space-y-2">
-                  {PRICING.filter((offre) => offre.id !== 'free').map((offre) => (
+                  {PRICING.map((offre) => (
                     <li
                       key={offre.id}
                       className="flex items-baseline justify-between border-b border-line pb-2 last:border-b-0 last:pb-0"

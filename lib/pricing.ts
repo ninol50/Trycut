@@ -3,7 +3,8 @@ export type PlanId = 'free' | 'pack' | 'pass' | 'trimestre';
 export type PaidPlanId = Exclude<PlanId, 'free'>;
 
 export interface PricingPlan {
-  id: PlanId;
+  /** Seules les offres payantes figurent dans la grille. */
+  id: PaidPlanId;
   name: string;
   price: string;
   /** Prix barré, affiché avant le prix courant. Absent s'il n'y a pas de remise. */
@@ -51,6 +52,12 @@ const LINK_INTENSIF =
 /**
  * Trois abonnements mensuels, du plus léger au plus intensif.
  *
+ * L'offre à 0 € a été retirée : une carte « Découverte » qui n'inclut aucune
+ * coupe occupait le haut de la grille pour annoncer qu'elle ne sert à rien.
+ * Créer un compte reste gratuit, et se fait au moment du rendu ; ce n'est pas
+ * une offre, donc ça n'a pas à figurer parmi les offres. `free` reste une
+ * valeur de `plan_tier` en base : c'est l'état d'un compte, pas un produit.
+ *
  * Prix à la coupe : 0,52 € · 0,60 € · 0,35 €. L'offre du milieu revient donc
  * plus cher à la coupe que la première — c'est un choix du propriétaire,
  * signalé mais appliqué tel quel. Seule la troisième est mise en avant, parce
@@ -63,17 +70,6 @@ const LINK_INTENSIF =
  * purement cosmétique.
  */
 export const PRICING: readonly PricingPlan[] = [
-  {
-    id: 'free',
-    name: 'Découverte',
-    cta: 'Créer mon compte',
-    price: '0 €',
-    period: '',
-    credits: 0,
-    creditsPeriod: '',
-    highlighted: false,
-    features: ['Compte créé, prêt à s’abonner', 'Aucune coupe incluse'],
-  },
   {
     id: 'pack',
     name: 'Essentiel',

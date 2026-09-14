@@ -255,8 +255,13 @@ test('le parcours court conserve les écrans qui filtrent le catalogue', () => {
 test('les offres et le nombre de coupes sont ceux demandés', () => {
   const byId = Object.fromEntries(PRICING.map((plan) => [plan.id, plan]));
 
-  assert.equal(byId['free']?.price, '0 €');
-  assert.equal(byId['free']?.credits, 0);
+  // L'offre à 0 € a quitté la grille : une carte qui n'inclut aucune coupe ne
+  // fait qu'occuper le haut de la page pour dire qu'elle ne sert à rien.
+  assert.equal(PRICING.length, 3, 'la grille ne contient que les offres payantes');
+  assert.ok(
+    PRICING.every((plan) => plan.credits > 0 && Boolean(plan.paymentLink)),
+    'une offre sans coupe ou sans lien de paiement n’a rien à faire dans la grille',
+  );
 
   assert.equal(byId['pack']?.price, '8,90 €');
   assert.equal(byId['pack']?.period, '/mois');
@@ -295,13 +300,12 @@ test('l’offre mise en avant est bien la meilleure affaire', () => {
   const prix = (value: string) => Number(value.replace(/[^0-9,]/g, '').replace(',', '.'));
   const parCoupe = (plan: (typeof PRICING)[number]) => prix(plan.price) / plan.credits;
 
-  const payantes = PRICING.filter((plan) => plan.id !== 'free');
-  const enAvant = payantes.filter((plan) => plan.highlighted);
+  const enAvant = PRICING.filter((plan) => plan.highlighted);
   assert.equal(enAvant.length, 1, 'une seule offre peut être mise en avant');
 
   const meilleure = enAvant[0];
   assert.ok(meilleure);
-  for (const plan of payantes) {
+  for (const plan of PRICING) {
     assert.ok(
       parCoupe(meilleure) <= parCoupe(plan),
       `${plan.name} revient moins cher à la coupe que l’offre mise en avant`,
@@ -318,7 +322,6 @@ test('le montant facturé suffit à retrouver l’offre', () => {
 
 test('les offres affichées correspondent aux montants encaissés', () => {
   for (const plan of PRICING) {
-    if (plan.id === 'free') continue;
     const cents = Math.round(
       Number(plan.price.replace(/[^0-9,]/g, '').replace(',', '.')) * 100,
     );
@@ -1077,10 +1080,10 @@ test('après connexion, personne n’atterrit sur un écran d’abonnement', () 
   );
 });
 
-test('les notifications d’activité ne contiennent aucun prénom écrit en dur', () => {
+test('les notifications d’activité ne sont jamais fabriquées', () => {
   // La demande d'origine était un défilement de prénoms inventés. Annoncer
-  // « Lucas vient de visualiser sa coupe » quand personne n'a rien généré est
-  // une pratique commerciale trompeuse : les prénoms viennent de la base, ou
+  // qu'un client vient de faire quelque chose quand personne n'a rien fait est
+  // une pratique commerciale trompeuse : les annonces viennent de la base, ou
   // la bande ne s'affiche pas.
   const composant = readFileSync(
     join(process.cwd(), 'components/landing/ActivityToasts.tsx'),
@@ -1098,13 +1101,10 @@ test('les notifications d’activité ne contiennent aucun prénom écrit en dur
   assert.ok(source.includes("'generations'"), 'les notifications doivent lire les vrais rendus');
   assert.ok(
     source.includes("eq('status', 'succeeded')"),
-    'seul un rendu abouti compte comme une coupe visualisée',
+    'seul un rendu abouti compte comme une coupe générée',
   );
-
-  // Et la page de confidentialité doit annoncer cet affichage public.
-  const vieprivee = readFileSync(join(process.cwd(), 'app/confidentialite/page.tsx'), 'utf8');
   assert.ok(
-    vieprivee.includes('vient de visualiser sa coupe'),
-    'afficher un prénom en public sans le dire n’est pas acceptable',
+    !source.includes('first_name'),
+    'personne n’a à être nommé pour que l’activité du site se voie',
   );
 });

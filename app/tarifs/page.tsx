@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Footer from '@/components/Footer';
 import CheckoutButton from '@/components/CheckoutButton';
 import { PRICING } from '@/lib/pricing';
@@ -58,9 +57,7 @@ export default async function PricingPage({
               </div>
 
               <p className="mt-2 text-sm font-semibold text-marine-600">
-                {plan.credits === 0
-                  ? 'Aucune coupe incluse'
-                  : `${plan.credits} coupes ${plan.creditsPeriod}`}
+                {plan.credits} coupes {plan.creditsPeriod}
               </p>
 
               <ul className="mt-3 space-y-1 text-sm text-slate-500">
@@ -70,11 +67,7 @@ export default async function PricingPage({
               </ul>
 
               <div className="mt-5">
-                {plan.id === 'free' ? (
-                  <Link href="/inscription" className="btn-outline w-full">
-                    {plan.cta}
-                  </Link>
-                ) : plan.paymentLink || paiementServeur ? (
+                {plan.paymentLink || paiementServeur ? (
                   <CheckoutButton
                     plan={plan.id}
                     paymentLink={plan.paymentLink}

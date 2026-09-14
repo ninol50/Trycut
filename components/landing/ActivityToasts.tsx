@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { EASE } from '@/components/motion';
-import type { RecentCut } from '@/lib/recent-activity';
 
-/** Temps d'affichage d'une notification, puis silence avant la suivante. */
-const AFFICHAGE_MS = 4500;
-const SILENCE_MS = 6000;
+/** Une notification toutes les deux minutes environ, visible cinq secondes. */
+const AFFICHAGE_MS = 5000;
+const INTERVALLE_MS = 120_000;
+const PREMIERE_MS = 9000;
 
 /** « il y a 3 min », « il y a 2 h », « hier ». Rien d'autre. */
 function ilYA(iso: string): string {
@@ -22,13 +22,13 @@ function ilYA(iso: string): string {
 /**
  * Notifications d'activité réelle, en bas de l'écran.
  *
- * Chaque ligne vient d'une génération qui a eu lieu : le prénom est celui du
- * compte, l'heure est celle du rendu. La liste arrive du serveur ; ce composant
- * ne fabrique rien, il fait défiler. Sans activité, il ne rend rien plutôt que
- * d'inventer un prénom — une preuve sociale fausse est un mensonge au visiteur,
- * et une pratique commerciale trompeuse.
+ * Chaque passage correspond à une coupe qui a vraiment été générée, et n'en
+ * dit que l'heure : personne n'est nommé. La liste arrive du serveur ; ce
+ * composant ne fabrique rien, il fait défiler. Sans activité, il ne rend rien
+ * plutôt que d'annoncer une coupe qui n'a pas eu lieu — une preuve sociale
+ * fausse est un mensonge au visiteur, et une pratique commerciale trompeuse.
  */
-export default function ActivityToasts({ cuts }: { cuts: readonly RecentCut[] }) {
+export default function ActivityToasts({ cuts }: { cuts: readonly string[] }) {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -38,7 +38,7 @@ export default function ActivityToasts({ cuts }: { cuts: readonly RecentCut[] })
 
     // Première apparition différée : personne n'a envie d'une notification
     // avant même d'avoir lu le titre de la page.
-    const depart = setTimeout(() => setVisible(true), 2500);
+    const depart = setTimeout(() => setVisible(true), PREMIERE_MS);
     return () => clearTimeout(depart);
   }, [cuts.length]);
 
@@ -55,14 +55,14 @@ export default function ActivityToasts({ cuts }: { cuts: readonly RecentCut[] })
     const suivante = setTimeout(() => {
       setIndex((actuel) => (actuel + 1) % cuts.length);
       setVisible(true);
-    }, SILENCE_MS);
+    }, INTERVALLE_MS);
     return () => clearTimeout(suivante);
   }, [cuts.length, visible]);
 
   if (cuts.length === 0) return null;
 
-  const cut = cuts[index];
-  if (!cut) return null;
+  const at = cuts[index];
+  if (!at) return null;
 
   return (
     <div
@@ -73,7 +73,7 @@ export default function ActivityToasts({ cuts }: { cuts: readonly RecentCut[] })
       <AnimatePresence mode="wait">
         {visible ? (
           <motion.p
-            key={`${cut.firstName}-${cut.at}-${index}`}
+            key={`${at}-${index}`}
             initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
             animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
@@ -81,10 +81,8 @@ export default function ActivityToasts({ cuts }: { cuts: readonly RecentCut[] })
             className="flex max-w-[520px] items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-marine-900"
           >
             <span className="h-2 w-2 shrink-0 rounded-full bg-marine-600" aria-hidden="true" />
-            <span className="truncate">
-              <b className="font-semibold">{cut.firstName}</b> vient de visualiser sa coupe
-            </span>
-            <span className="shrink-0 text-slate-500">{ilYA(cut.at)}</span>
+            <span className="truncate">Une coupe vient d’être générée</span>
+            <span className="shrink-0 text-slate-500">{ilYA(at)}</span>
           </motion.p>
         ) : null}
       </AnimatePresence>

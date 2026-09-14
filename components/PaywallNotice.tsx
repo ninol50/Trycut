@@ -19,7 +19,7 @@ export default function PaywallNotice({ reason = 'none' }: { reason?: 'none' | '
       <p className="mt-4 text-base text-slate-500">
         {pastDue
           ? 'L’accès reprend dès que la facture est réglée. Tes coupes restantes sont conservées.'
-          : `L’essai virtuel est réservé aux abonnés. ${PRICING.filter((offre) => offre.id !== 'free')
+          : `L’essai virtuel est réservé aux abonnés. ${PRICING
               .map((offre) => `${offre.price}${offre.period} pour ${offre.credits} coupes`)
               .join(', ')}.`}
       </p>
