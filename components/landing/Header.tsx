@@ -7,15 +7,32 @@ import Logo from '@/components/Logo';
 import { track } from '@/lib/analytics';
 import { useTapScale } from '@/components/motion';
 
-const MENU = [
-  { href: '/tarifs', label: 'Tarifs' },
-  { href: '/confidentialite', label: 'Confidentialité' },
-  { href: '/connexion', label: 'Se connecter' },
-] as const;
+/**
+ * Un booléen, pas une fonction ni un profil : le header n'a besoin que de
+ * savoir si quelqu'un est connecté, et rien de plus ne doit traverser la
+ * frontière serveur → client.
+ */
+interface HeaderProps {
+  ctaHref: string;
+  authenticated: boolean;
+}
 
-export default function Header({ ctaHref }: { ctaHref: string }) {
+export default function Header({ ctaHref, authenticated }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const tap = useTapScale();
+
+  // Proposer « se connecter » à quelqu'un qui l'est déjà donne l'impression
+  // que le site a perdu sa session. Il retrouve son compte, son offre et ses
+  // coupes restantes au même endroit.
+  const compte = authenticated
+    ? { href: '/compte', label: 'Mon compte' }
+    : { href: '/connexion', label: 'Se connecter' };
+
+  const menu = [
+    { href: '/tarifs', label: 'Tarifs' },
+    { href: '/confidentialite', label: 'Confidentialité' },
+    compte,
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-line bg-white">
@@ -42,8 +59,8 @@ export default function Header({ ctaHref }: { ctaHref: string }) {
         </Link>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <Link href="/connexion" className="btn-outline btn-sm">
-            Se connecter
+          <Link href={compte.href} className="btn-outline btn-sm">
+            {compte.label}
           </Link>
           <Link
             href={ctaHref}
@@ -65,7 +82,7 @@ export default function Header({ ctaHref }: { ctaHref: string }) {
             className="overflow-hidden border-t border-line"
           >
             <ul className="section py-2">
-              {MENU.map((item) => (
+              {menu.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}

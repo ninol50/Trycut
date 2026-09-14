@@ -32,7 +32,7 @@ export default async function LandingPage() {
 
   return (
     <>
-      <Header ctaHref={ctaHref} />
+      <Header ctaHref={ctaHref} authenticated={Boolean(session)} />
       <main>
         <Hero heroFrames={heroFrames} cutsToday={cutsToday} ctaHref={ctaHref} />
         <Steps ctaHref={ctaHref} />
