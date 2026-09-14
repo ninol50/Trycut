@@ -1076,3 +1076,35 @@ test('après connexion, personne n’atterrit sur un écran d’abonnement', () 
     'l’écran d’abonnement ne doit plus servir qu’au paiement refusé',
   );
 });
+
+test('les notifications d’activité ne contiennent aucun prénom écrit en dur', () => {
+  // La demande d'origine était un défilement de prénoms inventés. Annoncer
+  // « Lucas vient de visualiser sa coupe » quand personne n'a rien généré est
+  // une pratique commerciale trompeuse : les prénoms viennent de la base, ou
+  // la bande ne s'affiche pas.
+  const composant = readFileSync(
+    join(process.cwd(), 'components/landing/ActivityToasts.tsx'),
+    'utf8',
+  );
+  for (const prenom of ['Lucas', 'Ethan', 'Hugo', 'Léo', 'Nathan', 'Gabriel', 'Jules']) {
+    assert.ok(!composant.includes(prenom), `${prenom} est écrit en dur dans les notifications`);
+  }
+  assert.ok(
+    composant.includes('cuts.length === 0') && composant.includes('return null'),
+    'sans activité réelle, la bande doit disparaître',
+  );
+
+  const source = readFileSync(join(process.cwd(), 'lib/recent-activity.ts'), 'utf8');
+  assert.ok(source.includes("'generations'"), 'les notifications doivent lire les vrais rendus');
+  assert.ok(
+    source.includes("eq('status', 'succeeded')"),
+    'seul un rendu abouti compte comme une coupe visualisée',
+  );
+
+  // Et la page de confidentialité doit annoncer cet affichage public.
+  const vieprivee = readFileSync(join(process.cwd(), 'app/confidentialite/page.tsx'), 'utf8');
+  assert.ok(
+    vieprivee.includes('vient de visualiser sa coupe'),
+    'afficher un prénom en public sans le dire n’est pas acceptable',
+  );
+});

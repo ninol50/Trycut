@@ -5,8 +5,10 @@ import Testimonials from '@/components/landing/Testimonials';
 import Faq from '@/components/landing/Faq';
 import FinalCta from '@/components/landing/FinalCta';
 import Footer from '@/components/Footer';
+import ActivityToasts from '@/components/landing/ActivityToasts';
 import { resolveHeroFrames } from '@/lib/demo-assets';
 import { countCutsToday } from '@/lib/stats';
+import { loadRecentCuts } from '@/lib/recent-activity';
 import { loadProfile, hasPaidAccess } from '@/lib/profile';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +16,7 @@ export const dynamic = 'force-dynamic';
 export default async function LandingPage() {
   // Présence des visuels vérifiée côté serveur : jamais d'image cassée.
   const heroFrames = resolveHeroFrames();
-  const cutsToday = await countCutsToday();
+  const [cutsToday, recentCuts] = await Promise.all([countCutsToday(), loadRecentCuts()]);
 
   // Où mène chaque bouton de la vitrine. Sans compte, il mène au studio :
   // choisir sa photo et parcourir les styles ne coûte rien, et c'est en voyant
@@ -46,6 +48,8 @@ export default async function LandingPage() {
         <FinalCta ctaHref={ctaHref} />
       </main>
       <Footer />
+      {/* Activité réelle, ou rien du tout. */}
+      <ActivityToasts cuts={recentCuts} />
     </>
   );
 }

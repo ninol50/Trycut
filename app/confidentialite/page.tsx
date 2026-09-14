@@ -39,6 +39,16 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mt-8">
+          <h2 className="text-xl">Ton prénom sur la page d’accueil</h2>
+          <p className="mt-3 text-base text-slate-500">
+            Quand une coupe est générée, la page d’accueil peut l’annoncer sous la forme
+            « Prénom vient de visualiser sa coupe ». Seuls ton prénom et l’heure
+            apparaissent — jamais ton email, jamais ta photo, jamais ton résultat.
+            Écris-nous si tu ne veux pas y figurer : ton prénom en est retiré.
+          </p>
+        </section>
+
+        <section className="mt-8">
           <h2 className="text-xl">Le sous-traitant IA</h2>
           <p className="mt-3 text-base text-slate-500">
             La génération d’image est confiée à un prestataire : <strong>{provider.name}</strong>.
