@@ -68,6 +68,14 @@ const LINK_INTENSIF =
  * d'accès. Ils ne décrivent plus la durée — les trois offres sont mensuelles —
  * mais les renommer imposerait une migration d'énumération pour un gain
  * purement cosmétique.
+ *
+ * Les listes s'allongent avec le prix, et chaque ligne est vérifiable. Le seul
+ * palier de fonctionnalité qui existe réellement est le catalogue : cinq
+ * styles — une couleur et quatre accessoires — sont marqués `is_premium` et
+ * restent fermés à l'Essentiel. Le reste du ladder tient au nombre de coupes
+ * et au prix unitaire. Aucune ligne n'est répétée sur une seule offre pour la
+ * faire paraître plus riche : ce qui est vrai pour les trois est écrit sur les
+ * trois, sinon le client qui compare se sent floué, et il a raison.
  */
 export const PRICING: readonly PricingPlan[] = [
   {
@@ -79,7 +87,13 @@ export const PRICING: readonly PricingPlan[] = [
     credits: 17,
     creditsPeriod: 'par mois',
     highlighted: false,
-    features: ['17 coupes par mois', 'HD sans filigrane', 'Sans engagement'],
+    features: [
+      '17 coupes par mois',
+      '38 styles : coupes, barbes, couleurs, accessoires',
+      'Rendu HD, sans filigrane',
+      'Toutes les textures : lisses, bouclés, crépus',
+      'Sans engagement, résiliable à tout moment',
+    ],
     paymentLink: LINK_ESSENTIEL,
   },
   {
@@ -93,9 +107,11 @@ export const PRICING: readonly PricingPlan[] = [
     highlighted: false,
     features: [
       '30 coupes par mois',
-      'HD sans filigrane',
-      'Catalogue complet',
-      'Historique conservé',
+      'Les 43 styles, exclusifs compris',
+      'Couleurs et accessoires réservés aux abonnés Confort et Intensif',
+      'Rendu HD, sans filigrane',
+      'Toutes les textures : lisses, bouclés, crépus',
+      'Sans engagement, résiliable à tout moment',
     ],
     paymentLink: LINK_CONFORT,
   },
@@ -109,11 +125,13 @@ export const PRICING: readonly PricingPlan[] = [
     creditsPeriod: 'par mois',
     highlighted: true,
     features: [
-      '100 coupes par mois',
-      'HD sans filigrane',
-      'Catalogue complet',
-      'Historique conservé',
-      'Le meilleur prix à la coupe',
+      '100 coupes par mois, soit trois par jour',
+      '0,35 € la coupe : le meilleur prix des trois offres',
+      'Les 43 styles, exclusifs compris',
+      'Couleurs et accessoires réservés aux abonnés Confort et Intensif',
+      'Rendu HD, sans filigrane',
+      'Toutes les textures : lisses, bouclés, crépus',
+      'Sans engagement, résiliable à tout moment',
     ],
     paymentLink: LINK_INTENSIF,
   },

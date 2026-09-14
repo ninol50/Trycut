@@ -1108,3 +1108,41 @@ test('les notifications d’activité ne sont jamais fabriquées', () => {
     'personne n’a à être nommé pour que l’activité du site se voie',
   );
 });
+
+test('les offres promettent plus à mesure qu’elles coûtent plus cher', () => {
+  // Le but est qu'un client hésitant choisisse l'offre du haut. Ça ne marche
+  // que si la liste s'allonge vraiment : une ligne ajoutée pour faire nombre
+  // se remarque, et c'est la crédibilité des trois cartes qui tombe avec.
+  for (let i = 1; i < PRICING.length; i += 1) {
+    const precedente = PRICING[i - 1];
+    const courante = PRICING[i];
+    assert.ok(precedente && courante);
+    assert.ok(
+      courante.features.length > precedente.features.length,
+      `${courante.name} n’annonce pas plus que ${precedente.name}`,
+    );
+  }
+});
+
+test('le nombre de styles annoncé est celui du catalogue', () => {
+  // Annoncer « 43 styles » alors que le catalogue en compte 40 est un
+  // mensonge mesurable en dix secondes par n'importe quel client.
+  const total = CATALOG_SEED.length;
+  const ouverts = CATALOG_SEED.filter((item) => !item.is_premium).length;
+
+  const essentiel = PRICING.find((plan) => plan.id === 'pack');
+  assert.ok(essentiel);
+  assert.ok(
+    essentiel.features.some((ligne) => ligne.includes(String(ouverts))),
+    `l’Essentiel doit annoncer ${ouverts} styles, pas un autre nombre`,
+  );
+
+  for (const id of ['pass', 'trimestre'] as const) {
+    const plan = PRICING.find((offre) => offre.id === id);
+    assert.ok(plan);
+    assert.ok(
+      plan.features.some((ligne) => ligne.includes(String(total))),
+      `${plan.name} doit annoncer les ${total} styles du catalogue`,
+    );
+  }
+});

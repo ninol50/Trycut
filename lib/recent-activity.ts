@@ -1,8 +1,13 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 
-/** Au-delà, ce n'est plus de l'activité mais une archive. */
-const FENETRE_HEURES = 48;
+/**
+ * Sept jours. Deux jours vidaient la bande dès qu'une journée était calme, ce
+ * qui la rendait invisible la plupart du temps. Au-delà d'une semaine, ce n'est
+ * plus de l'activité mais une archive — et la formulation change avec l'âge :
+ * « vient d'être générée » ne se dit pas d'une coupe de mardi dernier.
+ */
+const FENETRE_HEURES = 168;
 const MAX = 12;
 
 /**

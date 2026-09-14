@@ -9,9 +9,16 @@ const AFFICHAGE_MS = 5000;
 const INTERVALLE_MS = 120_000;
 const PREMIERE_MS = 9000;
 
+/** Deux heures : au-delà, une coupe ne « vient » plus d'être générée. */
+const RECENT_MIN = 120;
+
+function minutesEcoulees(iso: string): number {
+  return Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+}
+
 /** « il y a 3 min », « il y a 2 h », « hier ». Rien d'autre. */
 function ilYA(iso: string): string {
-  const minutes = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  const minutes = minutesEcoulees(iso);
   if (minutes < 60) return `il y a ${minutes} min`;
 
   const heures = Math.round(minutes / 60);
@@ -81,7 +88,11 @@ export default function ActivityToasts({ cuts }: { cuts: readonly string[] }) {
             className="flex max-w-[520px] items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-marine-900"
           >
             <span className="h-2 w-2 shrink-0 rounded-full bg-marine-600" aria-hidden="true" />
-            <span className="truncate">Une coupe vient d’être générée</span>
+            <span className="truncate">
+              {minutesEcoulees(at) < RECENT_MIN
+                ? 'Une coupe vient d’être générée'
+                : 'Une coupe a été générée'}
+            </span>
             <span className="shrink-0 text-slate-500">{ilYA(at)}</span>
           </motion.p>
         ) : null}
