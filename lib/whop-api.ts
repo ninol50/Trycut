@@ -1,4 +1,5 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
+import { env } from '@/lib/env';
 import { WHOP_PLAN_IDS, CREDITS_BY_PLAN } from '@/lib/pricing';
 
 /**
@@ -29,7 +30,14 @@ export interface WhopMembership {
 
 let cache: { at: number; rows: WhopMembership[] } | null = null;
 
+/**
+ * Deux sources, dans le même ordre que le secret de signature : la variable
+ * d'environnement d'abord, la base ensuite. Sans le premier chemin, poser la
+ * clé chez l'hébergeur restait sans effet — et rien ne le disait.
+ */
 async function readApiKey(): Promise<string | null> {
+  if (env.whopApiKey) return env.whopApiKey;
+
   const admin = createAdminSupabase();
   if (!admin) return null;
 

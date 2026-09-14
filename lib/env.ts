@@ -58,8 +58,10 @@ export const env = {
   stripeWebhookSecret: optional('STRIPE_WEBHOOK_SECRET'),
   stripePricePack: optional('STRIPE_PRICE_PACK'),
   stripePricePass: optional('STRIPE_PRICE_PASS'),
-  /** Secret de signature du webhook Whop, gardé pour un retour ultérieur. */
+  /** Secret de signature du webhook Whop : c'est lui qui valide les paiements. */
   whopWebhookSecret: optional('WHOP_WEBHOOK_SECRET'),
+  /** Clé API Whop, pour relire les abonnements depuis la page admin. */
+  whopApiKey: optional('WHOP_API_KEY'),
 
   resendApiKey: optional('RESEND_API_KEY'),
   /**

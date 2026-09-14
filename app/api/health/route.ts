@@ -101,6 +101,8 @@ export async function GET() {
     'STRIPE_PRICE_PACK',
     'STRIPE_PRICE_PASS',
     'STRIPE_PRICE_TRIMESTRE',
+    'WHOP_WEBHOOK_SECRET',
+    'WHOP_API_KEY',
     'RESEND_API_KEY',
     'EMAIL_FROM',
     'CRON_SECRET',
