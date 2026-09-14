@@ -24,12 +24,17 @@ export default async function AppPage() {
     );
   }
 
-  // Sans abonnement actif, on ne charge même pas le catalogue : il n'y a rien
-  // à montrer avant le paiement.
   if (!hasPaidAccess(session.profile)) {
-    return (
-      <PaywallNotice reason={session.profile.subscription_status === 'past_due' ? 'past_due' : 'none'} />
-    );
+    // Un paiement refusé doit être dit : le compte a payé, quelque chose s'est
+    // cassé, et seul cet écran explique quoi faire.
+    if (session.profile.subscription_status === 'past_due') {
+      return <PaywallNotice reason="past_due" />;
+    }
+
+    // Personne n'arrive plus ici sur un « il te faut un abonnement ». On repart
+    // au studio : la photo, les styles et le catalogue sont ouverts, et le
+    // cadenas du bouton de rendu présente les offres le moment venu.
+    redirect('/onboarding/photo');
   }
 
   const [catalog, history] = await Promise.all([

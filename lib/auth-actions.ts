@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured, env } from '@/lib/env';
 import { sendWelcomeEmail } from '@/lib/email';
+import { hasPaidAccess, loadProfile } from '@/lib/profile';
 
 export interface AuthFormState {
   error: string | null;
@@ -12,6 +13,22 @@ export interface AuthFormState {
 }
 
 const GENERIC_ERROR = 'Impossible de continuer pour le moment. Réessaie dans un instant.';
+
+/**
+ * Où l'on arrive une fois connecté.
+ *
+ * Sans abonnement : l'accueil. Ouvrir un écran « il te faut un abonnement » à
+ * la seconde où quelqu'un se connecte, c'est réclamer l'argent avant d'avoir
+ * montré quoi que ce soit. Il retrouve le site, entre dans le studio, choisit
+ * sa photo et ses styles ; c'est le bouton de rendu qui porte le cadenas et
+ * présente les offres, au moment où elles se comprennent.
+ *
+ * Avec abonnement : son espace, qu'il vient chercher.
+ */
+async function destinationApresConnexion(): Promise<string> {
+  const session = await loadProfile();
+  return session && hasPaidAccess(session.profile) ? '/app' : '/';
+}
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -47,7 +64,7 @@ export async function signUpAction(
     password,
     options: {
       data: { first_name: firstName || null, age_confirmed: true },
-      emailRedirectTo: `${env.siteUrl}/api/auth/callback?next=/app`,
+      emailRedirectTo: `${env.siteUrl}/api/auth/callback?next=/`,
     },
   });
 
@@ -62,7 +79,7 @@ export async function signUpAction(
       void sendWelcomeEmail(data.user.email, firstName || null).catch(() => undefined);
     }
     revalidatePath('/', 'layout');
-    redirect('/app');
+    redirect(await destinationApresConnexion());
   }
 
   // Confirmation encore active côté Supabase : on le dit clairement.
@@ -95,7 +112,7 @@ export async function signInAction(
   }
 
   revalidatePath('/', 'layout');
-  redirect('/app');
+  redirect(await destinationApresConnexion());
 }
 
 export async function signOutAction(): Promise<void> {

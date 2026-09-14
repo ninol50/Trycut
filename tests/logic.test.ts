@@ -1051,3 +1051,28 @@ test('l’accueil ne montre aucune personnalité publique', () => {
     assert.ok(!sources.includes(nom), `${nom} n’a rien à faire dans la vitrine`);
   }
 });
+
+test('après connexion, personne n’atterrit sur un écran d’abonnement', () => {
+  // Réclamer l'argent à la seconde où quelqu'un se connecte, avant qu'il ait
+  // rien vu du produit, est le meilleur moyen de le perdre. Il revient à
+  // l'accueil ; c'est le bouton de rendu qui porte le cadenas.
+  const actions = readFileSync(join(process.cwd(), 'lib/auth-actions.ts'), 'utf8');
+  assert.ok(
+    !actions.includes("redirect('/app')"),
+    'la connexion ne doit plus envoyer tout le monde dans l’espace payant',
+  );
+  assert.ok(
+    actions.includes('destinationApresConnexion'),
+    'la destination doit dépendre de l’abonnement',
+  );
+
+  const espace = readFileSync(join(process.cwd(), 'app/(app)/app/page.tsx'), 'utf8');
+  assert.ok(
+    espace.includes("redirect('/onboarding/photo')"),
+    'un compte sans abonnement doit repartir au studio, pas vers les offres',
+  );
+  assert.ok(
+    !espace.includes("reason={"),
+    'l’écran d’abonnement ne doit plus servir qu’au paiement refusé',
+  );
+});
