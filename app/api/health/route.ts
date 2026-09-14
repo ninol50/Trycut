@@ -4,6 +4,7 @@ import { env, isSupabaseConfigured } from '@/lib/env';
 import { resolveStripeConfig, crediteApresPaiement } from '@/lib/stripe-config';
 import { loadCatalogWithSource } from '@/lib/catalog-server';
 import { PRICING } from '@/lib/pricing';
+import { resolveWhopSecret } from '@/lib/whop-secret';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,21 @@ export async function GET() {
     serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
     /** Sans ces trois-là, un paiement encaisse mais ne crédite pas le compte. */
     creditsOnPurchase: crediteApresPaiement(stripe),
+  };
+
+  // --- Whop : c'est désormais lui qui encaisse -----------------------------
+  // Les trois offres mènent à des liens Whop. Sans le secret de signature, le
+  // webhook refuse tout : l'argent rentre et le compte reste vide. La clé API
+  // ne sert qu'au bouton de vérification de la page admin, elle ne crédite
+  // rien — d'où deux lignes distinctes plutôt qu'un seul voyant.
+  const whopSecret = await resolveWhopSecret();
+  checks['whop'] = {
+    paymentLinks: PRICING.filter((plan) => plan.paymentLink?.includes('whop.com')).length,
+    webhookSecret: Boolean(whopSecret),
+    apiKey: Boolean(env.whopApiKey),
+    serviceRoleKey: Boolean(env.supabaseServiceRoleKey),
+    /** Sans ces deux-là, un paiement encaisse mais ne crédite pas le compte. */
+    creditsOnPurchase: Boolean(whopSecret) && Boolean(env.supabaseServiceRoleKey),
   };
 
   // --- Emails --------------------------------------------------------------
