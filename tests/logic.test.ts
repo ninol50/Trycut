@@ -270,11 +270,11 @@ test('les offres et le nombre de coupes sont ceux demandés', () => {
     'il ne peut pas manquer plus d’un lien de paiement',
   );
 
-  assert.equal(byId['pack']?.price, '8,90 €');
+  assert.equal(byId['pack']?.price, '9 €');
   assert.equal(byId['pack']?.period, '/mois');
   assert.equal(byId['pack']?.credits, 17);
 
-  assert.equal(byId['pass']?.price, '17,90 €');
+  assert.equal(byId['pass']?.price, '17 €');
   assert.equal(byId['pass']?.period, '/mois');
   assert.equal(byId['pass']?.credits, 30);
 
@@ -286,18 +286,33 @@ test('les offres et le nombre de coupes sont ceux demandés', () => {
   assert.equal(byId['trimestre']?.highlighted, true);
 });
 
-test('un lien de paiement présent est un vrai lien Stripe, et jamais partagé', () => {
+test('un lien de paiement présent mène à un encaisseur connu, et jamais partagé', () => {
   // Les liens sont facultatifs : sans eux, la page tarifs ouvre une session de
-  // paiement côté serveur. Mais un lien renseigné doit être valide et propre à
-  // son offre — deux offres qui partagent un lien encaissent le mauvais montant.
+  // paiement côté serveur. Mais un lien renseigné doit mener à un encaisseur
+  // que le site sait écouter — Stripe ou Whop, les deux dont le webhook est
+  // écrit — et être propre à son offre : deux offres qui partagent un lien
+  // encaissent le mauvais montant.
   const liens = PRICING.map((plan) => plan.paymentLink).filter(
     (lien): lien is string => Boolean(lien),
   );
 
   for (const lien of liens) {
-    assert.ok(lien.startsWith('https://buy.stripe.com/'), `lien invalide : ${lien}`);
+    assert.ok(
+      lien.startsWith('https://buy.stripe.com/') || lien.startsWith('https://whop.com/checkout/'),
+      `lien invalide : ${lien}`,
+    );
   }
   assert.equal(new Set(liens).size, liens.length, 'deux offres partagent le même lien');
+
+  // Chaque lien Whop doit correspondre au plan déclaré pour cette offre,
+  // sinon le webhook crédite les coupes d'une autre offre.
+  for (const plan of PRICING) {
+    if (!plan.paymentLink?.includes('whop.com')) continue;
+    assert.ok(
+      plan.paymentLink.endsWith(WHOP_PLAN_IDS[plan.id]),
+      `${plan.name} : le lien ne pointe pas vers son plan Whop`,
+    );
+  }
 });
 
 test('l’offre mise en avant est bien la meilleure affaire', () => {
@@ -941,7 +956,7 @@ test('un vrai message de paiement Whop est lu correctement de bout en bout', () 
       currency: 'eur',
       status: 'paid',
       user: { id: 'user_abc', email: 'Client.Test@Example.COM', username: 'client' },
-      plan: { id: 'plan_TgQeVRautIvVk', plan_type: 'renewal' },
+      plan: { id: WHOP_PLAN_IDS.pack, plan_type: 'renewal' },
       company: { id: 'biz_ldn1', support_email: 'support@ldn1.com' },
       membership: { id: 'mem_77', status: 'active' },
     },

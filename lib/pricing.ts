@@ -41,17 +41,14 @@ export interface PricingPlan {
  */
 const LINK_ESSENTIEL =
   process.env.NEXT_PUBLIC_STRIPE_LINK_ESSENTIEL ||
-  'https://buy.stripe.com/8x214m4571PhbWC2sU2wU0d';
+  'https://whop.com/checkout/plan_vYAxBgf8Db98T';
 const LINK_CONFORT =
   process.env.NEXT_PUBLIC_STRIPE_LINK_CONFORT ||
-  'https://buy.stripe.com/cNi14m1WZ0Ld2m2aZq2wU0c';
-/**
- * L'offre annuelle n'a pas encore son lien : l'ancien lien Stripe prélevait
- * 34,90 € par mois, il ne peut pas encaisser 64 € une fois par an. Tant que le
- * nouveau n'est pas posé, la carte annonce « cette offre ouvre bientôt »
- * plutôt que d'ouvrir une page qui facturerait autre chose que l'affiché.
- */
-const LIEN_ANNUEL = process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF || '';
+  'https://whop.com/checkout/plan_y8tglSLopO5Ws';
+/** Offre annuelle : un paiement unique de 64 €, chez Whop comme les deux autres. */
+const LIEN_ANNUEL =
+  process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF ||
+  'https://whop.com/checkout/plan_yKHEvw3cvR9KA';
 
 /**
  * Deux abonnements mensuels et une offre annuelle, du plus léger au plus
@@ -87,7 +84,7 @@ export const PRICING: readonly PricingPlan[] = [
     id: 'pack',
     name: 'Essentiel',
     cta: 'Prendre l’essentiel',
-    price: '8,90 €',
+    price: '9 €',
     period: '/mois',
     credits: 17,
     creditsPeriod: 'par mois',
@@ -105,7 +102,7 @@ export const PRICING: readonly PricingPlan[] = [
     id: 'pass',
     name: 'Confort',
     cta: 'Prendre le confort',
-    price: '17,90 €',
+    price: '17 €',
     period: '/mois',
     credits: 30,
     creditsPeriod: 'par mois',
@@ -150,13 +147,17 @@ export const CREDITS_BY_PLAN: Record<PlanId, number> = {
 };
 
 /**
- * Identifiants d'offre Whop, conservés en sommeil : le jour où le volume
- * justifiera d'y repasser, le rattachement se fera par là. Ils ne couvrent que
- * les deux offres qui existaient chez eux.
+ * Identifiants des plans Whop, extraits des liens de paiement.
+ *
+ * C'est par là que le webhook reconnaît l'offre, avant de retomber sur le
+ * montant : un produit à 9,00 € vendu là où le site affiche 8,90 € encaisserait
+ * sans rien créditer si seul le montant comptait. L'identifiant, lui, ne bouge
+ * pas quand le prix change.
  */
-export const WHOP_PLAN_IDS: Record<'pack' | 'pass', string> = {
-  pack: 'plan_TgQeVRautIvVk',
-  pass: 'plan_FqNwkkzr18mMH',
+export const WHOP_PLAN_IDS: Record<PaidPlanId, string> = {
+  pack: 'plan_vYAxBgf8Db98T',
+  pass: 'plan_y8tglSLopO5Ws',
+  trimestre: 'plan_yKHEvw3cvR9KA',
 };
 
 /** Libellé lisible d'une offre, pour les emails et les journaux. */
@@ -174,9 +175,13 @@ export const PLAN_LABELS: Record<PaidPlanId, string> = {
  * ne crédite rien plutôt que de créditer au hasard.
  */
 export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: PaidPlanId; credits: number }> = {
+  900: { plan: 'pack', credits: 17 },
+  1700: { plan: 'pass', credits: 30 },
+  6400: { plan: 'trimestre', credits: 500 },
+  // Anciens montants Stripe, gardés pour les paiements en cours de route : un
+  // client débité à 8,90 € doit être crédité même après le passage à 9 €.
   890: { plan: 'pack', credits: 17 },
   1790: { plan: 'pass', credits: 30 },
-  6400: { plan: 'trimestre', credits: 500 },
 };
 
 /**
@@ -195,6 +200,13 @@ export function withCheckoutReference(
   try {
     const url = new URL(link);
     url.searchParams.set('client_reference_id', userId);
+    // Whop ne renvoie au webhook que ce qui passe par `metadata`. Sans cette
+    // seconde écriture, le rattachement retomberait sur l'email, et un client
+    // qui paie avec une autre adresse que celle de son compte ne serait jamais
+    // crédité automatiquement.
+    if (url.hostname.endsWith('whop.com')) {
+      url.searchParams.set('metadata[client_reference_id]', userId);
+    }
     if (email) url.searchParams.set('prefilled_email', email);
     return url.toString();
   } catch {

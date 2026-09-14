@@ -198,7 +198,7 @@ export function planForPayload(
       if (id === planId) {
         // Le nombre de coupes vient des offres, jamais recopié ici : sinon
         // l'affichage et le crédit finissent par diverger en silence.
-        const key = plan as 'pack' | 'pass';
+        const key = plan as PaidPlanId;
         return { plan: key, credits: CREDITS_BY_PLAN[key] };
       }
     }
