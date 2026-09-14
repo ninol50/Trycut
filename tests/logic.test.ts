@@ -259,8 +259,15 @@ test('les offres et le nombre de coupes sont ceux demandés', () => {
   // fait qu'occuper le haut de la page pour dire qu'elle ne sert à rien.
   assert.equal(PRICING.length, 3, 'la grille ne contient que les offres payantes');
   assert.ok(
-    PRICING.every((plan) => plan.credits > 0 && Boolean(plan.paymentLink)),
-    'une offre sans coupe ou sans lien de paiement n’a rien à faire dans la grille',
+    PRICING.every((plan) => plan.credits > 0),
+    'une offre sans coupe n’a rien à faire dans la grille',
+  );
+  // Une offre peut attendre son lien de paiement — la page annonce alors
+  // « cette offre ouvre bientôt ». Deux sur trois qui l'attendent, en revanche,
+  // c'est une grille qui n'encaisse plus.
+  assert.ok(
+    PRICING.filter((plan) => plan.paymentLink).length >= 2,
+    'il ne peut pas manquer plus d’un lien de paiement',
   );
 
   assert.equal(byId['pack']?.price, '8,90 €');
@@ -271,9 +278,11 @@ test('les offres et le nombre de coupes sont ceux demandés', () => {
   assert.equal(byId['pass']?.period, '/mois');
   assert.equal(byId['pass']?.credits, 30);
 
-  assert.equal(byId['trimestre']?.price, '34,90 €');
-  assert.equal(byId['trimestre']?.period, '/mois');
-  assert.equal(byId['trimestre']?.credits, 100);
+  // L'offre du haut est passée à l'année : un seul paiement, des coupes
+  // comptées sur douze mois.
+  assert.equal(byId['trimestre']?.price, '64 €');
+  assert.equal(byId['trimestre']?.period, '/an');
+  assert.equal(byId['trimestre']?.credits, 500);
   assert.equal(byId['trimestre']?.highlighted, true);
 });
 
@@ -316,7 +325,7 @@ test('l’offre mise en avant est bien la meilleure affaire', () => {
 test('le montant facturé suffit à retrouver l’offre', () => {
   assert.deepEqual(PLAN_BY_AMOUNT_CENTS[890], { plan: 'pack', credits: 17 });
   assert.deepEqual(PLAN_BY_AMOUNT_CENTS[1790], { plan: 'pass', credits: 30 });
-  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[3490], { plan: 'trimestre', credits: 100 });
+  assert.deepEqual(PLAN_BY_AMOUNT_CENTS[6400], { plan: 'trimestre', credits: 500 });
   assert.equal(PLAN_BY_AMOUNT_CENTS[1234], undefined);
 });
 

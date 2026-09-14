@@ -18,7 +18,7 @@ export interface PricingPlan {
   features: readonly string[];
   /** Texte du bouton. Le genre change d'une offre à l'autre. */
   cta: string;
-  /** Lien de paiement Stripe. Absent sur l'offre gratuite. */
+  /** Lien de paiement. Absent tant que l'offre n'a pas le sien. */
   paymentLink?: string;
 }
 
@@ -45,12 +45,17 @@ const LINK_ESSENTIEL =
 const LINK_CONFORT =
   process.env.NEXT_PUBLIC_STRIPE_LINK_CONFORT ||
   'https://buy.stripe.com/cNi14m1WZ0Ld2m2aZq2wU0c';
-const LINK_INTENSIF =
-  process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF ||
-  'https://buy.stripe.com/aFa28q9prgKbf8O7Ne2wU0e';
+/**
+ * L'offre annuelle n'a pas encore son lien : l'ancien lien Stripe prélevait
+ * 34,90 € par mois, il ne peut pas encaisser 64 € une fois par an. Tant que le
+ * nouveau n'est pas posé, la carte annonce « cette offre ouvre bientôt »
+ * plutôt que d'ouvrir une page qui facturerait autre chose que l'affiché.
+ */
+const LIEN_ANNUEL = process.env.NEXT_PUBLIC_STRIPE_LINK_INTENSIF || '';
 
 /**
- * Trois abonnements mensuels, du plus léger au plus intensif.
+ * Deux abonnements mensuels et une offre annuelle, du plus léger au plus
+ * intensif.
  *
  * L'offre à 0 € a été retirée : une carte « Découverte » qui n'inclut aucune
  * coupe occupait le haut de la grille pour annoncer qu'elle ne sert à rien.
@@ -118,22 +123,22 @@ export const PRICING: readonly PricingPlan[] = [
   {
     id: 'trimestre',
     name: 'Intensif',
-    cta: 'Prendre l’intensif',
-    price: '34,90 €',
-    period: '/mois',
-    credits: 100,
-    creditsPeriod: 'par mois',
+    cta: 'Prendre l’année',
+    price: '64 €',
+    period: '/an',
+    credits: 500,
+    creditsPeriod: 'par an',
     highlighted: true,
     features: [
-      '100 coupes par mois, soit trois par jour',
-      '0,35 € la coupe : le meilleur prix des trois offres',
+      '500 coupes pour l’année',
+      'Un seul paiement pour l’année, rien à renouveler',
+      '0,13 € la coupe : le meilleur prix des trois offres',
       'Les 43 styles, exclusifs compris',
       'Couleurs et accessoires réservés aux abonnés Confort et Intensif',
       'Rendu HD, sans filigrane',
       'Toutes les textures : lisses, bouclés, crépus',
-      'Sans engagement, résiliable à tout moment',
     ],
-    paymentLink: LINK_INTENSIF,
+    paymentLink: LIEN_ANNUEL || undefined,
   },
 ] as const;
 
@@ -141,7 +146,7 @@ export const CREDITS_BY_PLAN: Record<PlanId, number> = {
   free: 0,
   pack: 17,
   pass: 30,
-  trimestre: 100,
+  trimestre: 500,
 };
 
 /**
@@ -171,7 +176,7 @@ export const PLAN_LABELS: Record<PaidPlanId, string> = {
 export const PLAN_BY_AMOUNT_CENTS: Record<number, { plan: PaidPlanId; credits: number }> = {
   890: { plan: 'pack', credits: 17 },
   1790: { plan: 'pass', credits: 30 },
-  3490: { plan: 'trimestre', credits: 100 },
+  6400: { plan: 'trimestre', credits: 500 },
 };
 
 /**
