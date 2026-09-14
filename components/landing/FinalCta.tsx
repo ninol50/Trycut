@@ -43,7 +43,7 @@ export default function FinalCta({ ctaHref }: { ctaHref: string }) {
         <ul className="mt-6 space-y-2 text-sm text-slate-500">
           {REASSURANCE.map((item) => (
             <li key={item} className="flex items-center justify-center gap-2">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--violet-600)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--marine-600)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="m5 13 4 4L19 7" />
               </svg>
               {item}

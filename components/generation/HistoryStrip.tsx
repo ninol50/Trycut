@@ -21,7 +21,7 @@ export default function HistoryStrip({ items }: { items: readonly HistoryRow[] }
           <li key={item.id}>
             <Link
               href={`/app/resultat?id=${item.id}`}
-              className="flex items-center justify-between rounded-2xl border border-violet-50 bg-white p-4 shadow-violet"
+              className="flex items-center justify-between rounded-2xl border border-marine-50 bg-white p-4 shadow-marine"
             >
               <span className="text-sm text-slate-500">
                 {new Date(item.created_at).toLocaleDateString('fr-FR', {
@@ -33,7 +33,7 @@ export default function HistoryStrip({ items }: { items: readonly HistoryRow[] }
               </span>
               <span
                 className={`text-sm font-semibold ${
-                  item.status === 'succeeded' ? 'text-violet-600' : 'text-slate-500'
+                  item.status === 'succeeded' ? 'text-marine-600' : 'text-slate-500'
                 }`}
               >
                 {STATUS_LABELS[item.status]}

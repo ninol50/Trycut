@@ -24,7 +24,7 @@ export default function Steps({ ctaHref }: { ctaHref: string }) {
 
   return (
     <motion.section {...anim} className="section py-14">
-      <h2 className="text-[32px]">Ta prochaine coupe en 4 étapes</h2>
+      <h2 className="text-[32px]">Trouve ta prochaine coupe en 4 étapes</h2>
 
       <ol className="mt-8 overflow-hidden rounded-3xl border border-line">
         {STEPS.map((step, index) => (
@@ -37,7 +37,7 @@ export default function Steps({ ctaHref }: { ctaHref: string }) {
               height="24"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="var(--violet-600)"
+              stroke="var(--marine-600)"
               strokeWidth="1.7"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -48,7 +48,7 @@ export default function Steps({ ctaHref }: { ctaHref: string }) {
             </svg>
             <span className="text-base text-slate-500">
               Étape {index + 1}.{' '}
-              <span className="font-semibold text-violet-900">{step.label}</span>
+              <span className="font-semibold text-marine-900">{step.label}</span>
             </span>
           </li>
         ))}

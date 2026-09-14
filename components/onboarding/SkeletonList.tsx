@@ -5,7 +5,7 @@ export default function SkeletonList() {
       {Array.from({ length: 6 }, (_, index) => (
         <div
           key={index}
-          className="aspect-square animate-pulse rounded-2xl bg-violet-50"
+          className="aspect-square animate-pulse rounded-2xl bg-marine-50"
           style={{ animationDelay: `${index * 90}ms` }}
         />
       ))}

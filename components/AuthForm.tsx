@@ -57,19 +57,19 @@ export default function AuthForm({ mode, action, defaultFirstName }: AuthFormPro
     <form action={formAction} className="space-y-4">
       {isSignup ? (
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-violet-900">Prénom</span>
+          <span className="mb-1 block text-sm font-medium text-marine-900">Prénom</span>
           <input
             name="first_name"
             type="text"
             autoComplete="given-name"
             defaultValue={defaultFirstName}
-            className="w-full rounded-2xl border border-violet-200 px-4 py-3 text-base"
+            className="w-full rounded-2xl border border-marine-200 px-4 py-3 text-base"
           />
         </label>
       ) : null}
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-violet-900">Email</span>
+        <span className="mb-1 block text-sm font-medium text-marine-900">Email</span>
         <input
           name="email"
           type="email"
@@ -85,19 +85,19 @@ export default function AuthForm({ mode, action, defaultFirstName }: AuthFormPro
               // navigation privee
             }
           }}
-          className="w-full rounded-2xl border border-violet-200 px-4 py-3 text-base"
+          className="w-full rounded-2xl border border-marine-200 px-4 py-3 text-base"
         />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-violet-900">Mot de passe</span>
+        <span className="mb-1 block text-sm font-medium text-marine-900">Mot de passe</span>
         <input
           name="password"
           type="password"
           required
           minLength={8}
           autoComplete={isSignup ? 'new-password' : 'current-password'}
-          className="w-full rounded-2xl border border-violet-200 px-4 py-3 text-base"
+          className="w-full rounded-2xl border border-marine-200 px-4 py-3 text-base"
         />
         {isSignup ? (
           <span className="mt-1 block text-xs text-slate-500">8 caractères minimum.</span>
@@ -105,16 +105,16 @@ export default function AuthForm({ mode, action, defaultFirstName }: AuthFormPro
       </label>
 
       {isSignup ? (
-        <label className="flex items-start gap-3 rounded-2xl bg-violet-50 p-4">
+        <label className="flex items-start gap-3 rounded-2xl bg-marine-50 p-4">
           {/* Case jamais pré-cochée. */}
           <input
             name="age_confirmed"
             type="checkbox"
-            className="mt-0.5 h-6 w-6 shrink-0 accent-violet-600"
+            className="mt-0.5 h-6 w-6 shrink-0 accent-marine-600"
           />
           <span className="text-sm text-slate-500">
             Je déclare avoir 15 ans ou plus et j’accepte la{' '}
-            <Link href="/confidentialite" className="text-violet-600 underline">
+            <Link href="/confidentialite" className="text-marine-600 underline">
               politique de confidentialité
             </Link>
             .
@@ -123,13 +123,13 @@ export default function AuthForm({ mode, action, defaultFirstName }: AuthFormPro
       ) : null}
 
       {state.error ? (
-        <p role="alert" className="rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="alert" className="rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {state.error}
         </p>
       ) : null}
 
       {state.notice ? (
-        <p role="status" className="rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="status" className="rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {state.notice}
         </p>
       ) : null}

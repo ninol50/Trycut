@@ -24,7 +24,7 @@ export default function CatalogTeaser({ labels, totalCount }: CatalogTeaserProps
           {visible.map((label) => (
             <div
               key={label}
-              className="grid aspect-square place-items-center rounded-2xl bg-violet-50 px-1 text-center text-[10px] leading-tight text-violet-400 blur-[2px]"
+              className="grid aspect-square place-items-center rounded-2xl bg-marine-50 px-1 text-center text-[10px] leading-tight text-marine-400 blur-[2px]"
             >
               {label}
             </div>
@@ -32,7 +32,7 @@ export default function CatalogTeaser({ labels, totalCount }: CatalogTeaserProps
         </div>
 
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="rounded-full bg-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-violet">
+          <span className="rounded-full bg-marine-600 px-5 py-2 text-sm font-semibold text-white shadow-marine">
             +{remaining} styles
           </span>
         </div>

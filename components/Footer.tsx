@@ -13,7 +13,7 @@ export default function Footer() {
       <div className="section py-10">
         <div className="flex items-center gap-3">
           <Logo size={36} />
-          <span className="font-display text-lg font-bold text-violet-900">trycut</span>
+          <span className="font-display text-lg font-bold text-marine-900">trycut</span>
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-6">
@@ -24,7 +24,7 @@ export default function Footer() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="inline-flex min-h-[48px] min-w-[48px] items-center text-base text-violet-900"
+                    className="inline-flex min-h-[48px] min-w-[48px] items-center text-base text-marine-900"
                   >
                     {item.label}
                   </Link>
@@ -35,7 +35,7 @@ export default function Footer() {
 
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Contact</p>
-            <p className="mt-2 break-all text-base text-violet-900">trycutsee@hotmail.com</p>
+            <p className="mt-2 break-all text-base text-marine-900">trycutsee@hotmail.com</p>
           </div>
         </div>
 

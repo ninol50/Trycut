@@ -31,7 +31,7 @@ export default async function AdminPage() {
       </p>
 
       {error ? (
-        <p role="alert" className="mt-6 rounded-2xl bg-violet-50 p-4 text-sm text-violet-900">
+        <p role="alert" className="mt-6 rounded-2xl bg-marine-50 p-4 text-sm text-marine-900">
           La liste n’a pas pu être chargée. {error.message}
         </p>
       ) : (

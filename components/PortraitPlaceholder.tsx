@@ -7,14 +7,14 @@ export default function PortraitPlaceholder({ className }: { className?: string 
   return (
     <div
       aria-hidden="true"
-      className={`grid h-full w-full place-items-center bg-violet-50 ${className ?? ''}`}
+      className={`grid h-full w-full place-items-center bg-marine-50 ${className ?? ''}`}
     >
       <svg
         width="72"
         height="72"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="var(--violet-400)"
+        stroke="var(--marine-400)"
         strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"

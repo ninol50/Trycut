@@ -75,7 +75,7 @@ export default function HeroTransform({ frames }: HeroTransformProps) {
 
   return (
     <div
-      className="relative mx-auto overflow-hidden rounded-3xl border border-violet-200 bg-violet-50"
+      className="relative mx-auto overflow-hidden rounded-3xl border border-marine-200 bg-marine-50"
       style={{ width: '100%', maxWidth: 320, aspectRatio: '3 / 4' }}
     >
       {/* Avant */}
@@ -108,7 +108,7 @@ export default function HeroTransform({ frames }: HeroTransformProps) {
 
       <motion.span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 w-[2px] bg-violet-600"
+        className="pointer-events-none absolute inset-y-0 w-[2px] bg-marine-600"
         style={reduced ? { left: '50%' } : { left: dividerLeft }}
       />
 
@@ -124,7 +124,7 @@ export default function HeroTransform({ frames }: HeroTransformProps) {
         <span
           key={corner}
           aria-hidden="true"
-          className={`pointer-events-none absolute h-7 w-7 border-violet-400 ${corner}`}
+          className={`pointer-events-none absolute h-7 w-7 border-marine-400 ${corner}`}
         />
       ))}
 
@@ -135,7 +135,7 @@ export default function HeroTransform({ frames }: HeroTransformProps) {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="badge-dark absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-medium"
       >
-        <span className="h-2 w-2 rounded-full bg-violet-400" aria-hidden="true" />
+        <span className="h-2 w-2 rounded-full bg-marine-400" aria-hidden="true" />
         {frame.label}
       </motion.span>
     </div>

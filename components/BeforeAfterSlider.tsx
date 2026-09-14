@@ -14,7 +14,7 @@ interface BeforeAfterSliderProps {
 }
 
 /**
- * Comparateur avant/après. Poignée draggable violette, autoplay lent
+ * Comparateur avant/après. Poignée draggable marine, autoplay lent
  * 20% → 80% au premier passage dans le viewport, puis contrôle au doigt.
  */
 export default function BeforeAfterSlider({
@@ -111,7 +111,7 @@ export default function BeforeAfterSlider({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onKeyDown={onKeyDown}
-        className="relative mx-auto touch-none select-none overflow-hidden rounded-2xl bg-violet-50 shadow-violet"
+        className="relative mx-auto touch-none select-none overflow-hidden rounded-2xl bg-marine-50 shadow-marine"
         style={{ width: '100%', maxWidth: 320, aspectRatio: `${width} / ${height}` }}
       >
         {missing ? (
@@ -143,7 +143,7 @@ export default function BeforeAfterSlider({
               style={{ left: `${position}%` }}
             />
             <div
-              className="pointer-events-none absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-violet-600 shadow-violet"
+              className="pointer-events-none absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-marine-600 shadow-marine"
               style={{ left: `${position}%`, top: '50%' }}
             >
               <svg

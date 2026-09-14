@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from '@/components/motion';
-import { TESTIMONIALS } from '@/lib/testimonials';
+import { TESTIMONIALS, VISUALISATIONS_CUMULEES } from '@/lib/testimonials';
 
 /** Ne rend rien tant qu'aucun avis réel n'a été enregistré. */
 export default function Testimonials() {
@@ -11,7 +11,13 @@ export default function Testimonials() {
 
   return (
     <motion.section {...anim} className="section py-14">
-      <h2 className="text-[32px]">Ils ont sauté le pas</h2>
+      <h2 className="text-[32px]">
+        Plus de {VISUALISATIONS_CUMULEES.toLocaleString('fr-FR')} personnes ont déjà
+        visualisé leur prochaine coupe
+      </h2>
+      <p className="mt-4 text-lg text-slate-500">
+        Teste ton prochain look avant de passer chez le coiffeur.
+      </p>
 
       <div className="mt-8 space-y-4">
         {TESTIMONIALS.map((item) => (
@@ -21,7 +27,7 @@ export default function Testimonials() {
                 { src: item.before, label: 'Avant' },
                 { src: item.after, label: 'Après' },
               ].map((side) => (
-                <div key={side.label} className="relative aspect-[3/4] bg-violet-50">
+                <div key={side.label} className="relative aspect-square bg-marine-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={side.src} alt={side.label} className="h-full w-full object-cover" />
                   <span
@@ -36,18 +42,39 @@ export default function Testimonials() {
             </div>
 
             <div className="p-5">
-              <p className="text-lg tracking-[0.15em] text-violet-600" aria-label={`${item.rating} sur 5`}>
+              <p
+                className="text-lg tracking-[0.15em] text-marine-900"
+                aria-label={`${item.rating} sur 5`}
+              >
                 {'★'.repeat(item.rating)}
               </p>
               <p className="mt-3 text-base text-ink">« {item.quote} »</p>
 
               <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-violet-600 text-sm font-semibold text-white">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-marine-900 text-sm font-semibold text-white">
                   {item.name.slice(0, 1)}
                 </span>
-                <span className="font-semibold text-violet-900">{item.name}</span>
+                <span className="font-semibold text-marine-900">{item.name}</span>
+                {/* « Achat vérifié » n'est pas une décoration : il ne s'affiche
+                    que sur les avis dont l'achat a été retrouvé. */}
                 {item.verified ? (
-                  <span className="text-sm text-slate-500">· Achat vérifié</span>
+                  <span className="flex items-center gap-1.5 text-sm text-slate-500">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="m8.5 12 2.5 2.5 4.5-4.5" />
+                    </svg>
+                    Achat vérifié
+                  </span>
                 ) : null}
               </div>
             </div>

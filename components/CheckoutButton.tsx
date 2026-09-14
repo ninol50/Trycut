@@ -90,7 +90,7 @@ export default function CheckoutButton({
         {busy ? 'Redirection…' : label}
       </motion.button>
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-violet-900">
+        <p role="alert" className="mt-2 text-sm text-marine-900">
           {error}
         </p>
       ) : null}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 
-/** Compteur violet animé de l'écran de transition n°1. */
+/** Compteur marine animé de l'écran de transition n°1. */
 export default function AnimatedCounter({ to, suffix }: { to: number; suffix: string }) {
   const reduced = useReducedMotion();
   const [value, setValue] = useState(reduced ? to : 0);
@@ -27,7 +27,7 @@ export default function AnimatedCounter({ to, suffix }: { to: number; suffix: st
   }, [to, reduced]);
 
   return (
-    <span className="font-display text-3xl text-violet-600">
+    <span className="font-display text-3xl text-marine-600">
       {value}
       {suffix}
     </span>

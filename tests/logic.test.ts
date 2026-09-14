@@ -23,9 +23,10 @@ import {
 import { CREDITS_BY_PLAN, WHOP_PLAN_IDS } from '@/lib/pricing';
 import { extractMemberships } from '@/lib/whop-api';
 import { hasPaidAccess } from '@/lib/profile';
+import { TESTIMONIALS } from '@/lib/testimonials';
 import type { Profile } from '@/types/db';
 import { isFailureCallback, extractResultImageUrl, buildFalEndpoint } from '@/lib/ai/callback';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXAMPLE_PAIRS, HERO_PEOPLE, resolveExamples, resolveHeroFrames } from '@/lib/demo-assets';
 
@@ -1014,4 +1015,39 @@ test('le rendu reste la seule étape payante du studio', () => {
   // Et la porte serveur reste en place sur le suivi du rendu.
   const suivi = readFileSync(join(process.cwd(), 'app/onboarding/generation/page.tsx'), 'utf8');
   assert.ok(suivi.includes('requirePaidAccess'), 'le suivi du rendu doit rester fermé');
+});
+
+test('chaque avis a ses deux photos et une note réelle', () => {
+  // Un avis dont la photo manque rend une case vide sur la page d'accueil, à
+  // l'endroit précis censé prouver que le produit marche.
+  for (const avis of TESTIMONIALS) {
+    for (const chemin of [avis.before, avis.after]) {
+      assert.ok(chemin.startsWith('/'), `${avis.name} : chemin d’image relatif`);
+      assert.ok(
+        existsSync(join(process.cwd(), 'public', chemin)),
+        `${avis.name} : ${chemin} est absent de public/`,
+      );
+    }
+
+    assert.ok(avis.quote.length > 20, `${avis.name} : citation trop courte pour être réelle`);
+    assert.ok(avis.rating >= 1 && avis.rating <= 5, `${avis.name} : note hors échelle`);
+  }
+});
+
+test('l’accueil ne montre aucune personnalité publique', () => {
+  // Une photo librement accessible n'est pas un accord : afficher une
+  // célébrité avec une coupe générée lui fait dire qu'elle utilise le produit.
+  const interdits = ['ronaldo', 'messi', 'mbappe', 'mbappé', 'neymar', 'zidane', 'benzema'];
+  const sources = [
+    'lib/testimonials.ts',
+    'lib/demo-assets.ts',
+    'components/landing/Hero.tsx',
+    'components/landing/Testimonials.tsx',
+  ]
+    .map((fichier) => readFileSync(join(process.cwd(), fichier), 'utf8').toLowerCase())
+    .join('\n');
+
+  for (const nom of interdits) {
+    assert.ok(!sources.includes(nom), `${nom} n’a rien à faire dans la vitrine`);
+  }
 });

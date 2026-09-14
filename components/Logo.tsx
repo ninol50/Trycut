@@ -1,8 +1,8 @@
-/** Marque : enseigne de barbier stylisée, carré violet plein. */
+/** Marque : enseigne de barbier stylisée, carré marine plein. */
 export default function Logo({ size = 40 }: { size?: number }) {
   return (
     <span
-      className="inline-grid place-items-center rounded-xl bg-violet-600"
+      className="inline-grid place-items-center rounded-xl bg-marine-600"
       style={{ width: size, height: size }}
       aria-hidden="true"
     >

@@ -43,14 +43,14 @@ export default function Faq() {
             key={q}
             className="group border-b border-line px-5 py-4 last:border-b-0"
           >
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 font-semibold text-violet-900 marker:hidden">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 font-semibold text-marine-900 marker:hidden">
               {q}
               <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="var(--violet-600)"
+                stroke="var(--marine-600)"
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"

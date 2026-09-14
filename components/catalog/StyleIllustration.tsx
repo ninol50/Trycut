@@ -3,15 +3,15 @@
  *
  * Pas de photos : elles montreraient des personnes réelles, poseraient une
  * question de droits sur un site marchand, et vieilliraient mal. Un trait
- * violet sur fond clair reste lisible en 96 px, cohérent avec le reste de
+ * marine sur fond clair reste lisible en 96 px, cohérent avec le reste de
  * l'interface, et n'appartient à personne.
  *
  * Les photos de référence ne sont jamais affichées : elles ne servent qu'à
  * montrer la coupe au modèle au moment du rendu.
  */
 
-const STROKE = 'var(--violet-600)';
-const FILL = 'var(--violet-200)';
+const STROKE = 'var(--marine-600)';
+const FILL = 'var(--marine-200)';
 
 /** Tête et épaules, identiques partout : seule la matière ajoutée change. */
 function Head() {

@@ -31,17 +31,17 @@ interface ConsentNoticeProps {
  */
 export default function ConsentNotice({ checked, onChange }: ConsentNoticeProps) {
   return (
-    <label className="flex items-start gap-3 rounded-2xl bg-violet-50 p-4">
+    <label className="flex items-start gap-3 rounded-2xl bg-marine-50 p-4">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 h-6 w-6 shrink-0 accent-violet-600"
+        className="mt-0.5 h-6 w-6 shrink-0 accent-marine-600"
       />
       <span className="text-sm text-slate-500">
         J’accepte que ma photo soit envoyée à un prestataire d’IA pour générer le rendu.
         Elle est stockée dans un espace privé et supprimée sous 30 jours.{' '}
-        <a href="/confidentialite" className="text-violet-600 underline">
+        <a href="/confidentialite" className="text-marine-600 underline">
           En savoir plus
         </a>
       </span>

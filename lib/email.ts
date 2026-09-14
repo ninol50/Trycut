@@ -47,16 +47,16 @@ export async function sendEmail(payload: EmailPayload): Promise<{ sent: boolean 
 
 function layout(title: string, body: string, cta?: { href: string; label: string }): string {
   return `<!doctype html>
-<html lang="fr"><body style="margin:0;padding:24px;background:#f5f3ff;font-family:Inter,Helvetica,Arial,sans-serif;color:#12101a">
+<html lang="fr"><body style="margin:0;padding:24px;background:#f2f6fc;font-family:Inter,Helvetica,Arial,sans-serif;color:#0c1521">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
     <table role="presentation" width="100%" style="max-width:480px;background:#fff;border-radius:20px;padding:32px">
       <tr><td>
-        <p style="margin:0 0 24px;font-size:18px;font-weight:700;color:#7c3aed">trycut</p>
-        <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;color:#2e1065">${title}</h1>
+        <p style="margin:0 0 24px;font-size:18px;font-weight:700;color:#14386e">trycut</p>
+        <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;color:#0a1a33">${title}</h1>
         <div style="font-size:15px;line-height:1.6;color:#4b5563">${body}</div>
         ${
           cta
-            ? `<p style="margin:28px 0 0"><a href="${cta.href}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:14px 24px;border-radius:14px;font-weight:600;font-size:15px">${cta.label}</a></p>`
+            ? `<p style="margin:28px 0 0"><a href="${cta.href}" style="display:inline-block;background:#14386e;color:#fff;text-decoration:none;padding:14px 24px;border-radius:14px;font-weight:600;font-size:15px">${cta.label}</a></p>`
             : ''
         }
         <p style="margin:32px 0 0;font-size:12px;color:#6b7280">

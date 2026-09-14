@@ -39,7 +39,7 @@ export default async function AccountPage({
       </h1>
 
       {params.paiement === 'ok' ? (
-        <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="status" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           Paiement confirmé. Tes coupes arrivent dans quelques secondes.
         </p>
       ) : null}
@@ -63,7 +63,7 @@ export default async function AccountPage({
         </Link>
       </div>
 
-      <div className="mt-10 border-t border-violet-50 pt-6">
+      <div className="mt-10 border-t border-marine-50 pt-6">
         <h2 className="text-xl">Tes données</h2>
         <p className="mt-2 text-sm text-slate-500">
           Photos et résultats sont supprimés automatiquement au bout de 30 jours. Tu peux
@@ -71,7 +71,7 @@ export default async function AccountPage({
         </p>
         <p className="mt-2 text-sm text-slate-500">
           Détail du traitement sur la{' '}
-          <Link href="/confidentialite" className="text-violet-600 underline">
+          <Link href="/confidentialite" className="text-marine-600 underline">
             page confidentialité
           </Link>
           .
@@ -86,9 +86,9 @@ export default async function AccountPage({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-violet-50 px-4 py-3">
+    <div className="flex items-center justify-between rounded-2xl bg-marine-50 px-4 py-3">
       <dt className="text-sm text-slate-500">{label}</dt>
-      <dd className="text-sm font-semibold text-violet-900">{value}</dd>
+      <dd className="text-sm font-semibold text-marine-900">{value}</dd>
     </div>
   );
 }

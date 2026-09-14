@@ -101,7 +101,7 @@ export default function ResultView({
           type="button"
           whileTap={tap}
           onClick={onRetry}
-          className="min-h-[48px] w-full py-3 text-center text-sm font-semibold text-violet-600 underline"
+          className="min-h-[48px] w-full py-3 text-center text-sm font-semibold text-marine-600 underline"
         >
           Essayer une autre coupe
         </motion.button>
@@ -114,7 +114,7 @@ export default function ResultView({
       ) : null}
 
       {signupPrompt ? (
-        <div className="mt-8 rounded-2xl bg-violet-600 p-5 text-center">
+        <div className="mt-8 rounded-2xl bg-marine-600 p-5 text-center">
           <p className="font-display text-lg font-bold text-white">
             Garde ce résultat, sans filigrane.
           </p>
@@ -123,7 +123,7 @@ export default function ResultView({
           </p>
           <Link
             href="/inscription"
-            className="mt-4 inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-white px-6 text-base font-semibold text-violet-600"
+            className="mt-4 inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-white px-6 text-base font-semibold text-marine-600"
           >
             Créer mon compte
           </Link>

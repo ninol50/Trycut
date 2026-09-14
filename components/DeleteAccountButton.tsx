@@ -42,14 +42,14 @@ export default function DeleteAccountButton() {
   }
 
   return (
-    <div className="rounded-2xl border border-violet-200 p-4">
-      <p className="text-sm text-violet-900">
+    <div className="rounded-2xl border border-marine-200 p-4">
+      <p className="text-sm text-marine-900">
         Cette action supprime définitivement ton compte, tes essais et toutes tes photos.
         Elle est irréversible.
       </p>
 
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-violet-900">
+        <p role="alert" className="mt-2 text-sm text-marine-900">
           {error}
         </p>
       ) : null}
@@ -60,7 +60,7 @@ export default function DeleteAccountButton() {
           whileTap={tap}
           disabled={busy}
           onClick={() => void remove()}
-          className="w-full rounded-full bg-violet-900 px-6 py-4 text-base font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-full bg-marine-900 px-6 py-4 text-base font-semibold text-white disabled:opacity-60"
         >
           {busy ? 'Suppression…' : 'Oui, tout supprimer'}
         </motion.button>

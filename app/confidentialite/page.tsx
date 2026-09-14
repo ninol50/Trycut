@@ -82,7 +82,7 @@ export default function PrivacyPage() {
           <p className="mt-3 text-base text-slate-500">
             Accès, rectification, effacement, portabilité, opposition. Le bouton de suppression
             sur la page{' '}
-            <Link href="/compte" className="text-violet-600 underline">
+            <Link href="/compte" className="text-marine-600 underline">
               compte
             </Link>{' '}
             exécute l’effacement immédiatement. Pour toute autre demande, écris-nous.

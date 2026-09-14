@@ -10,7 +10,7 @@ const LABELS = [
   'Harmonisation de la lumière…',
 ] as const;
 
-/** État « chargement » : progression circulaire violette, libellés rotatifs,
+/** État « chargement » : progression circulaire marine, libellés rotatifs,
  *  selfie source flouté en fond. Jamais de spinner nu. */
 export default function GenerationProgress({ sourceUrl }: { sourceUrl: string | null }) {
   const reduced = useReducedMotion();
@@ -49,13 +49,13 @@ export default function GenerationProgress({ sourceUrl }: { sourceUrl: string | 
 
       <div className="relative">
         <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
-          <circle cx="66" cy="66" r={radius} fill="none" stroke="var(--violet-50)" strokeWidth="8" />
+          <circle cx="66" cy="66" r={radius} fill="none" stroke="var(--marine-50)" strokeWidth="8" />
           <motion.circle
             cx="66"
             cy="66"
             r={radius}
             fill="none"
-            stroke="var(--violet-600)"
+            stroke="var(--marine-600)"
             strokeWidth="8"
             strokeLinecap="round"
             transform="rotate(-90 66 66)"
@@ -65,7 +65,7 @@ export default function GenerationProgress({ sourceUrl }: { sourceUrl: string | 
             transition={{ duration: reduced ? 0.1 : 0.5, ease: 'easeOut' }}
           />
         </svg>
-        <span className="absolute inset-0 grid place-items-center font-display text-xl text-violet-900">
+        <span className="absolute inset-0 grid place-items-center font-display text-xl text-marine-900">
           {Math.round(progress * 100)}%
         </span>
       </div>
@@ -78,7 +78,7 @@ export default function GenerationProgress({ sourceUrl }: { sourceUrl: string | 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduced ? 0 : -8 }}
             transition={{ duration: 0.25 }}
-            className="text-base text-violet-900"
+            className="text-base text-marine-900"
           >
             {LABELS[labelIndex]}
           </motion.p>

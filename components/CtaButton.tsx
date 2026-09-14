@@ -31,7 +31,7 @@ export default function CtaButton({
 
   const className =
     variant === 'inverse'
-      ? 'inline-flex min-h-[52px] items-center justify-center rounded-full bg-white px-6 py-4 text-base font-semibold text-violet-600'
+      ? 'inline-flex min-h-[52px] items-center justify-center rounded-full bg-white px-6 py-4 text-base font-semibold text-marine-600'
       : variant === 'secondary'
         ? 'btn-outline'
         : 'btn-primary';

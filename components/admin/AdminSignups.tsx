@@ -122,13 +122,13 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
   return (
     <>
       {granted > 0 ? (
-        <p className="mt-6 inline-flex rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600">
+        <p className="mt-6 inline-flex rounded-full bg-marine-50 px-4 py-2 text-sm font-semibold text-marine-600">
           {granted} accès offert{granted > 1 ? 's' : ''}
         </p>
       ) : null}
 
       {error ? (
-        <p role="alert" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="alert" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {error}
         </p>
       ) : null}
@@ -138,7 +138,7 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
           <li key={row.id} className="rounded-3xl border border-line p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-semibold text-violet-900">
+                <p className="truncate font-semibold text-marine-900">
                   {row.first_name ? `${row.first_name} — ` : ''}
                   {row.email}
                 </p>
@@ -154,10 +154,10 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
               <span
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
                   row.access_status === 'granted'
-                    ? 'bg-violet-600 text-white'
+                    ? 'bg-marine-600 text-white'
                     : row.access_status === 'rejected'
-                      ? 'bg-violet-50 text-slate-500'
-                      : 'bg-violet-50 text-violet-600'
+                      ? 'bg-marine-50 text-slate-500'
+                      : 'bg-marine-50 text-marine-600'
                 }`}
               >
                 {STATUS_LABEL[row.access_status]}
@@ -170,8 +170,8 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
               {row.generations_count} générée{row.generations_count > 1 ? 's' : ''}
             </p>
 
-            <div className="mt-4 rounded-2xl bg-violet-50 p-3">
-              <p className="text-xs font-semibold text-violet-900">
+            <div className="mt-4 rounded-2xl bg-marine-50 p-3">
+              <p className="text-xs font-semibold text-marine-900">
                 Accorder une offre à la main
               </p>
               <div className="mt-2 flex gap-2">

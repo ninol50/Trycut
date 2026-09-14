@@ -17,12 +17,12 @@ export default function HowItWorks() {
       <h2 className="text-xl">Comment ça marche</h2>
       <ol className="mt-5 space-y-3">
         {STEPS.map((step, index) => (
-          <li key={step.title} className="flex items-start gap-4 rounded-2xl bg-violet-50 p-4">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-violet-600 text-sm font-semibold text-white">
+          <li key={step.title} className="flex items-start gap-4 rounded-2xl bg-marine-50 p-4">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-marine-600 text-sm font-semibold text-white">
               {index + 1}
             </span>
             <span>
-              <span className="block font-semibold text-violet-900">{step.title}</span>
+              <span className="block font-semibold text-marine-900">{step.title}</span>
               <span className="block text-sm text-slate-500">{step.detail}</span>
             </span>
           </li>

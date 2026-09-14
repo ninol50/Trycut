@@ -39,8 +39,8 @@ export default function ErrorState({ kind, message, onRetry }: ErrorStateProps) 
 
   return (
     <div className="section py-10" role="alert">
-      <div className="rounded-2xl bg-violet-50 p-5">
-        <p className="font-display text-lg font-bold text-violet-900">
+      <div className="rounded-2xl bg-marine-50 p-5">
+        <p className="font-display text-lg font-bold text-marine-900">
           {message ?? ERROR_MESSAGES[kind]}
         </p>
       </div>

@@ -33,9 +33,9 @@ export default function Hero({ heroFrames, cutsToday, ctaHref }: HeroProps) {
         {cutsToday !== null && cutsToday >= 50 ? (
           <motion.p
             {...pill}
-            className="mx-auto mb-7 flex w-fit items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm text-violet-900"
+            className="mx-auto mb-7 flex w-fit items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm text-marine-900"
           >
-            <span className="h-2 w-2 rounded-full bg-violet-600" aria-hidden="true" />
+            <span className="h-2 w-2 rounded-full bg-marine-600" aria-hidden="true" />
             {cutsToday.toLocaleString('fr-FR')} coupes visualisées aujourd’hui
           </motion.p>
         ) : null}
@@ -45,11 +45,11 @@ export default function Hero({ heroFrames, cutsToday, ctaHref }: HeroProps) {
         </motion.div>
 
         <motion.h1 {...title} className="text-[48px] leading-[0.98] tracking-[-0.045em]">
-          Scan ta tête.
+          Trouve enfin la coupe qui te va.
         </motion.h1>
 
         <motion.p {...subtitle} className="mt-5 text-lg leading-snug text-slate-500">
-          Pour découvrir les différentes coupes de cheveux qui te vont ou non.
+          Teste plusieurs styles sur ta propre photo et compare-les avant de choisir.
         </motion.p>
 
         <motion.div {...cta} className="mt-7">
@@ -73,10 +73,10 @@ export default function Hero({ heroFrames, cutsToday, ctaHref }: HeroProps) {
         <motion.div {...visual} className="relative mt-10">
           <HeroTransform frames={heroFrames} />
           <span aria-hidden="true" className="pointer-events-none absolute -inset-2">
-            <span className="absolute left-0 top-0 h-7 w-7 rounded-tl-2xl border-l-2 border-t-2 border-violet-600" />
-            <span className="absolute right-0 top-0 h-7 w-7 rounded-tr-2xl border-r-2 border-t-2 border-violet-600" />
-            <span className="absolute bottom-0 left-0 h-7 w-7 rounded-bl-2xl border-b-2 border-l-2 border-violet-600" />
-            <span className="absolute bottom-0 right-0 h-7 w-7 rounded-br-2xl border-b-2 border-r-2 border-violet-600" />
+            <span className="absolute left-0 top-0 h-7 w-7 rounded-tl-2xl border-l-2 border-t-2 border-marine-600" />
+            <span className="absolute right-0 top-0 h-7 w-7 rounded-tr-2xl border-r-2 border-t-2 border-marine-600" />
+            <span className="absolute bottom-0 left-0 h-7 w-7 rounded-bl-2xl border-b-2 border-l-2 border-marine-600" />
+            <span className="absolute bottom-0 right-0 h-7 w-7 rounded-br-2xl border-b-2 border-r-2 border-marine-600" />
           </span>
         </motion.div>
       </div>

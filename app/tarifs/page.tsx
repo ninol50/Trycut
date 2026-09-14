@@ -27,7 +27,7 @@ export default async function PricingPage({
         <h1 className="text-2xl">Choisis ton rythme.</h1>
 
         {params.paiement === 'annule' ? (
-          <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+          <p role="status" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
             Paiement annulé. Rien n’a été débité.
           </p>
         ) : null}
@@ -36,17 +36,17 @@ export default async function PricingPage({
           {PRICING.map((plan) => (
             <div
               key={plan.id}
-              className={`card relative ${plan.highlighted ? 'border-2 border-violet-600' : ''}`}
+              className={`card relative ${plan.highlighted ? 'border-2 border-marine-600' : ''}`}
             >
               {plan.highlighted ? (
-                <span className="absolute -top-3 left-5 rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white">
+                <span className="absolute -top-3 left-5 rounded-full bg-marine-600 px-3 py-1 text-xs font-semibold text-white">
                   Le plus choisi
                 </span>
               ) : null}
 
               <div className="flex items-baseline justify-between">
-                <span className="font-display text-lg font-bold text-violet-900">{plan.name}</span>
-                <span className="font-display text-xl text-violet-900">
+                <span className="font-display text-lg font-bold text-marine-900">{plan.name}</span>
+                <span className="font-display text-xl text-marine-900">
                   {plan.strikePrice ? (
                     <span className="mr-2 text-sm font-normal text-slate-500 line-through">
                       {plan.strikePrice}
@@ -57,7 +57,7 @@ export default async function PricingPage({
                 </span>
               </div>
 
-              <p className="mt-2 text-sm font-semibold text-violet-600">
+              <p className="mt-2 text-sm font-semibold text-marine-600">
                 {plan.credits === 0
                   ? 'Aucune coupe incluse'
                   : `${plan.credits} coupes ${plan.creditsPeriod}`}
@@ -86,7 +86,7 @@ export default async function PricingPage({
                 ) : (
                   // Le paiement n'est pas configuré : on le dit, plutôt que
                   // d'afficher un bouton qui mènerait à une erreur.
-                  <p className="rounded-2xl bg-violet-50 p-3 text-center text-sm text-violet-900">
+                  <p className="rounded-2xl bg-marine-50 p-3 text-center text-sm text-marine-900">
                     Cette offre ouvre bientôt.
                   </p>
                 )}
@@ -95,8 +95,8 @@ export default async function PricingPage({
           ))}
         </div>
 
-        <div className="mt-8 rounded-2xl bg-violet-50 p-5 text-sm text-slate-500">
-          <p className="font-semibold text-violet-900">Bon à savoir</p>
+        <div className="mt-8 rounded-2xl bg-marine-50 p-5 text-sm text-slate-500">
+          <p className="font-semibold text-marine-900">Bon à savoir</p>
           <p className="mt-2">Les coupes ne sont pas reportables d’une période à l’autre.</p>
           <p className="mt-2">
             Tu peux résilier à tout moment en écrivant à trycutsee@hotmail.com. L’accès reste

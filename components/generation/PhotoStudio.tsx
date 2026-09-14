@@ -195,7 +195,7 @@ export default function PhotoStudio({
       </p>
 
       {creditsRemaining !== null && creditsRemaining > 0 ? (
-        <p className="mt-3 inline-flex rounded-full bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-600">
+        <p className="mt-3 inline-flex rounded-full bg-marine-50 px-3 py-1 text-sm font-semibold text-marine-600">
           {creditsRemaining} coupe{creditsRemaining > 1 ? 's' : ''} restante
           {creditsRemaining > 1 ? 's' : ''}
         </p>
@@ -205,7 +205,7 @@ export default function PhotoStudio({
           le laisser choisir un style puis buter sur un refus. */}
       {authenticated && creditsRemaining === 0 ? (
         <div className="mt-5 rounded-3xl border border-line p-6">
-          <p className="font-display text-lg font-bold text-violet-900">
+          <p className="font-display text-lg font-bold text-marine-900">
             Il te faut un abonnement pour générer.
           </p>
           <p className="mt-2 text-sm text-slate-500">
@@ -233,7 +233,7 @@ export default function PhotoStudio({
         type="button"
         whileTap={tap}
         onClick={() => inputRef.current?.click()}
-        className="mt-5 flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50 p-8"
+        className="mt-5 flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-marine-200 bg-marine-50 p-8"
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -248,7 +248,7 @@ export default function PhotoStudio({
             height="36"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="var(--violet-600)"
+            stroke="var(--marine-600)"
             strokeWidth="1.6"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -257,7 +257,7 @@ export default function PhotoStudio({
             <path d="M12 5v14M5 12h14" />
           </svg>
         )}
-        <span className="text-base font-semibold text-violet-600">
+        <span className="text-base font-semibold text-marine-600">
           {preview ? 'Changer de photo' : 'Choisir une photo'}
         </span>
       </motion.button>
@@ -317,7 +317,7 @@ export default function PhotoStudio({
           <>
             {offresVisibles ? (
               <div className="mb-3 rounded-3xl border border-line bg-white p-5">
-                <p className="font-display text-lg font-bold text-violet-900">
+                <p className="font-display text-lg font-bold text-marine-900">
                   Choisis ton offre pour lancer le rendu.
                 </p>
                 <ul className="mt-4 space-y-2">
@@ -326,7 +326,7 @@ export default function PhotoStudio({
                       key={offre.id}
                       className="flex items-baseline justify-between border-b border-line pb-2 last:border-b-0 last:pb-0"
                     >
-                      <span className="text-base font-semibold text-violet-900">
+                      <span className="text-base font-semibold text-marine-900">
                         {offre.name}
                       </span>
                       <span className="text-sm text-slate-500">

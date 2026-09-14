@@ -96,7 +96,7 @@ export default function StripeSetup() {
       </p>
 
       <div className="mt-4 rounded-2xl border border-line p-4 text-sm">
-        <p className="font-semibold text-violet-900">
+        <p className="font-semibold text-marine-900">
           {pret ? 'Stripe est branché.' : 'Stripe n’est pas encore branché.'}
         </p>
         <ul className="mt-2 space-y-1 text-slate-500">
@@ -105,14 +105,14 @@ export default function StripeSetup() {
           <li>· Tarifs reconnus : {etat?.prix ?? 0} sur 3</li>
         </ul>
         {etat?.modeTest ? (
-          <p className="mt-2 font-semibold text-violet-900">
+          <p className="mt-2 font-semibold text-marine-900">
             Attention : c’est une clé de test. Aucun vrai paiement ne passera.
           </p>
         ) : null}
       </div>
 
       <div className="mt-5">
-        <p className="text-sm font-semibold text-violet-900">Clé secrète Stripe</p>
+        <p className="text-sm font-semibold text-marine-900">Clé secrète Stripe</p>
         <p className="mt-1 text-xs text-slate-500">
           Chez Stripe : Développeurs → Clés d’API → <b>Secret key</b> → Reveal,
           puis copie la clé entière. Elle commence par « sk_ » et fait une
@@ -124,7 +124,7 @@ export default function StripeSetup() {
           type="password"
           autoComplete="off"
           spellCheck={false}
-          className="mt-2 w-full rounded-2xl border border-violet-200 px-4 py-3 text-base"
+          className="mt-2 w-full rounded-2xl border border-marine-200 px-4 py-3 text-base"
         />
         <motion.button
           type="button"
@@ -138,13 +138,13 @@ export default function StripeSetup() {
       </div>
 
       {error ? (
-        <p role="alert" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="alert" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="status" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {message}
         </p>
       ) : null}

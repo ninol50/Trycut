@@ -18,7 +18,7 @@ export default async function SignInPage({
         <h1 className="text-2xl">Content de te revoir.</h1>
 
         {params.erreur === 'lien' ? (
-          <p role="alert" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+          <p role="alert" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
             Ce lien de confirmation a expiré. Demande-en un nouveau en te connectant.
           </p>
         ) : null}
@@ -29,7 +29,7 @@ export default async function SignInPage({
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Pas encore de compte ?{' '}
-          <Link href="/inscription" className="inline-flex min-h-[48px] items-center font-semibold text-violet-600 underline">
+          <Link href="/inscription" className="inline-flex min-h-[48px] items-center font-semibold text-marine-600 underline">
             Créer un compte
           </Link>
         </p>

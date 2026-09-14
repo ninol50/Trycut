@@ -9,13 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        violet: {
-          50: 'var(--violet-50)',
-          100: '#EDE9FE',
-          200: 'var(--violet-200)',
-          400: 'var(--violet-400)',
-          600: 'var(--violet-600)',
-          900: 'var(--violet-900)',
+        marine: {
+          50: 'var(--marine-50)',
+          100: '#dbe6f5',
+          200: 'var(--marine-200)',
+          400: 'var(--marine-400)',
+          600: 'var(--marine-600)',
+          900: 'var(--marine-900)',
         },
         ink: 'var(--ink)',
         line: 'var(--line)',
@@ -41,11 +41,8 @@ const config: Config = {
         '3xl': '24px',
       },
       boxShadow: {
-        violet: '0 8px 30px rgba(124,58,237,0.12)',
-        'violet-lg': '0 16px 50px rgba(124,58,237,0.18)',
-      },
-      backgroundImage: {
-        'cta-gradient': 'linear-gradient(135deg, #7C3AED, #A78BFA)',
+        marine: '0 8px 30px rgba(20,56,110,0.12)',
+        'marine-lg': '0 16px 50px rgba(20,56,110,0.18)',
       },
     },
   },

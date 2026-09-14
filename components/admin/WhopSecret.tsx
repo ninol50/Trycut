@@ -94,7 +94,7 @@ export default function WhopSecret() {
     pose: boolean,
   ) => (
     <div className="mt-5">
-      <p className="text-sm font-semibold text-violet-900">
+      <p className="text-sm font-semibold text-marine-900">
         {titre} {pose ? '· enregistrée' : '· absente'}
       </p>
       <p className="mt-1 text-xs text-slate-500">{aide}</p>
@@ -104,7 +104,7 @@ export default function WhopSecret() {
         type="password"
         autoComplete="off"
         spellCheck={false}
-        className="mt-2 w-full rounded-2xl border border-violet-200 px-4 py-3 text-base"
+        className="mt-2 w-full rounded-2xl border border-marine-200 px-4 py-3 text-base"
       />
       <motion.button
         type="button"
@@ -145,13 +145,13 @@ export default function WhopSecret() {
       )}
 
       {error ? (
-        <p role="alert" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="alert" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900">
+        <p role="status" className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900">
           {message}
         </p>
       ) : null}
@@ -159,7 +159,7 @@ export default function WhopSecret() {
       {etat?.test ? (
         <p
           role="status"
-          className="mt-4 rounded-2xl bg-violet-50 p-3 text-sm text-violet-900"
+          className="mt-4 rounded-2xl bg-marine-50 p-3 text-sm text-marine-900"
         >
           {etat.test.ok
             ? `Connexion établie. ${etat.test.abonnements} abonnement${(etat.test.abonnements ?? 0) > 1 ? 's' : ''} valide${(etat.test.abonnements ?? 0) > 1 ? 's' : ''} chez Whop.`

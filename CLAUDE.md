@@ -19,16 +19,16 @@ App Router), marché français, cible technique **390 px de viewport**.
 
 ## Direction artistique
 
-- Fond **blanc pur dominant**, séparateurs `border-line`. Le violet porte les actions et
-  les titres ; il ne sert jamais de fond de page.
-- **Aucun dégradé.** Les boutons principaux sont en violet plein (`.btn-primary`), les
+- Fond **blanc pur dominant**, séparateurs `border-line`. Le **bleu marine** porte les
+  actions et les titres ; il ne sert jamais de fond de page.
+- **Aucun dégradé.** Les boutons principaux sont en marine plein (`.btn-primary`), les
   secondaires en contour (`.btn-outline`). `.btn-sm` pour le header.
 - Cards et boutons en `rounded-2xl` / `rounded-3xl`, pas de `rounded-full`.
 - Pas d'ombres : la structure passe par les bordures, comme la référence produit.
 - Échelle typographique : `48/40/32/18/16/14`. **Sentence case partout**, jamais de
   majuscules.
 - Tailwind ne sait pas appliquer d'opacité (`/85`) à une couleur définie via `var()` :
-  pour une pastille sur image, utiliser `.badge-dark`, pas `bg-violet-900/85`.
+  pour une pastille sur image, utiliser `.badge-dark`, pas `bg-marine-900/85`.
 - Le catalogue est le seul endroit à densité visuelle élevée. Tout le reste respire.
 
 ## Motion
@@ -63,9 +63,12 @@ simple fade d'opacité. Easing standard `[0.16, 1, 0.3, 1]`. Jamais de scale ni 
 
 ## Interface
 
-Aucun avis client n'est inventé : `lib/testimonials.ts` est vide et la section ne s'affiche
-pas tant qu'elle l'est. Idem pour le compteur de preuve sociale du hero, alimenté par un
-vrai `count` en base (`lib/stats.ts`) et masqué sous 50.
+Aucun avis client n'est inventé. `lib/testimonials.ts` ne contient que des avis réellement
+reçus — aujourd'hui ceux du site précédent du même propriétaire, repris tels qu'ils y
+étaient publiés — et la section disparaît si la liste se vide. Jamais de personnalité
+publique dans la vitrine : une photo librement accessible n'est pas un accord, et montrer
+une célébrité avec une coupe générée lui fait dire qu'elle utilise le produit. Le compteur
+du hero reste alimenté par un vrai `count` en base (`lib/stats.ts`) et masqué sous 50.
 
 Quatre états, aucun optionnel : **vide**, **chargement**, **rempli**, **erreur**. Jamais de
 spinner nu, jamais d'écran blanc. Les messages d'erreur sont fixés dans

@@ -28,7 +28,7 @@ export default function Header({ ctaHref }: { ctaHref: string }) {
           onClick={() => setOpen((value) => !value)}
           className="-ml-1 grid h-12 w-12 shrink-0 place-items-center rounded-xl"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" stroke="var(--violet-900)" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" stroke="var(--marine-900)" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
           </svg>
         </motion.button>
@@ -70,7 +70,7 @@ export default function Header({ ctaHref }: { ctaHref: string }) {
                   <Link
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="flex min-h-[52px] items-center border-b border-line text-base font-medium text-violet-900 last:border-b-0"
+                    className="flex min-h-[52px] items-center border-b border-line text-base font-medium text-marine-900 last:border-b-0"
                   >
                     {item.label}
                   </Link>

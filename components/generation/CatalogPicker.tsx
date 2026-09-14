@@ -55,7 +55,7 @@ export default function CatalogPicker({
                     disabled={locked}
                     aria-pressed={active}
                     onClick={() => onToggle(item)}
-                    className="relative flex aspect-square flex-col items-center justify-end overflow-hidden rounded-2xl bg-violet-50 p-2 text-center disabled:opacity-45"
+                    className="relative flex aspect-square flex-col items-center justify-end overflow-hidden rounded-2xl bg-marine-50 p-2 text-center disabled:opacity-45"
                   >
                     <StyleIllustration slug={item.slug} category={item.category} />
 
@@ -63,15 +63,15 @@ export default function CatalogPicker({
                       <motion.span
                         layoutId={`catalog-selection-${category}`}
                         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                        className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-violet-600"
+                        className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-marine-600"
                       />
                     ) : null}
 
-                    <span className="relative z-10 rounded-md bg-white/85 px-1 text-[11px] font-medium leading-tight text-violet-900">
+                    <span className="relative z-10 rounded-md bg-white/85 px-1 text-[11px] font-medium leading-tight text-marine-900">
                       {item.label}
                     </span>
                     {locked ? (
-                      <span className="relative z-10 mt-1 text-[9px] uppercase text-violet-600">
+                      <span className="relative z-10 mt-1 text-[9px] uppercase text-marine-600">
                         premium
                       </span>
                     ) : null}

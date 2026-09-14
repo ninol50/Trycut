@@ -181,7 +181,7 @@ export default function OnboardingFlow({ variant, recommendedCount }: Onboarding
                   onChange={(event) =>
                     persist({ ...answers, first_name: event.target.value.slice(0, 40) })
                   }
-                  className="mt-6 w-full rounded-2xl border border-violet-200 px-4 py-4 text-lg"
+                  className="mt-6 w-full rounded-2xl border border-marine-200 px-4 py-4 text-lg"
                 />
                 <div className="mt-auto pt-8">
                   <motion.button
@@ -271,12 +271,12 @@ function SingleOrMulti({
               onClick={() => toggle(choice.value)}
               className={`flex min-h-[56px] w-full items-center justify-between rounded-2xl border px-5 py-4 text-left text-base transition-colors ${
                 active
-                  ? 'border-violet-600 bg-violet-50 font-semibold text-violet-900'
-                  : 'border-violet-200 bg-white text-ink'
+                  ? 'border-marine-600 bg-marine-50 font-semibold text-marine-900'
+                  : 'border-marine-200 bg-white text-ink'
               }`}
             >
               {choice.label}
-              {active ? <span className="text-violet-600">✓</span> : null}
+              {active ? <span className="text-marine-600">✓</span> : null}
             </motion.button>
           );
         })}
@@ -334,15 +334,15 @@ function Summary({
             initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: reduced ? 0 : position * 0.06, duration: 0.32, ease: EASE }}
-            className="flex items-center justify-between rounded-2xl bg-violet-50 px-4 py-3 text-sm"
+            className="flex items-center justify-between rounded-2xl bg-marine-50 px-4 py-3 text-sm"
           >
             <span className="text-slate-500">{SUMMARY_LABELS[line.id]}</span>
-            <span className="font-semibold text-violet-900">{line.labels}</span>
+            <span className="font-semibold text-marine-900">{line.labels}</span>
           </motion.li>
         ))}
       </ul>
 
-      <p className="mt-6 font-display text-lg font-bold text-violet-900">
+      <p className="mt-6 font-display text-lg font-bold text-marine-900">
         {recommendedCount} styles sélectionnés pour toi
       </p>
 
