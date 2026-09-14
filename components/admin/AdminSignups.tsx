@@ -37,6 +37,16 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Un seul chemin d'écriture pour l'offre et pour le statut : la ligne est
+   * mise à jour tout de suite, puis remise à son état précédent si le serveur
+   * n'a rien écrit.
+   *
+   * Le corps de la réponse compte autant que son code : la route rend 200 avec
+   * `ok: false` quand la fonction en base n'a touché aucune ligne. L'ignorer
+   * laissait l'écran annoncer un changement qui n'avait pas eu lieu, jusqu'au
+   * prochain chargement.
+   */
   const envoyer = async (userId: string, corps: Record<string, string>, apres: () => void) => {
     setBusyId(userId);
     setError(null);
@@ -49,12 +59,16 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ userId, ...corps }),
       });
-      if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { ok?: boolean } | null;
+
+      if (!response.ok || data?.ok !== true) {
         setRows(precedent);
         setError(
           response.status === 403
             ? 'Ton compte n’est pas administrateur.'
-            : 'La mise à jour a échoué. Réessaie.',
+            : response.status === 401
+              ? 'Ta session a expiré. Reconnecte-toi puis réessaie.'
+              : 'La mise à jour a échoué. Réessaie.',
         );
       }
     } catch {
@@ -81,36 +95,13 @@ export default function AdminSignups({ initial }: { initial: readonly Signup[] }
       ),
     );
 
-  const setStatus = async (userId: string, status: Signup['access_status']) => {
-    setBusyId(userId);
-    setError(null);
-
-    const previous = rows;
-    setRows((current) =>
-      current.map((row) => (row.id === userId ? { ...row, access_status: status } : row)),
+  /** Accorde, retire ou bloque l'accès. Les coupes ne bougent pas. */
+  const setStatus = (userId: string, status: Signup['access_status']) =>
+    envoyer(userId, { status }, () =>
+      setRows((current) =>
+        current.map((row) => (row.id === userId ? { ...row, access_status: status } : row)),
+      ),
     );
-
-    try {
-      const response = await fetch('/api/admin', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ userId, status }),
-      });
-      if (!response.ok) {
-        setRows(previous);
-        setError(
-          response.status === 403
-            ? 'Ton compte n’est pas administrateur.'
-            : 'La mise à jour a échoué. Réessaie.',
-        );
-      }
-    } catch {
-      setRows(previous);
-      setError('La connexion a été interrompue. Réessaie.');
-    } finally {
-      setBusyId(null);
-    }
-  };
 
   if (rows.length === 0) {
     return (
