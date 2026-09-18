@@ -107,6 +107,14 @@ export default function WhopCheckout({ planId, href, label, onClose }: WhopCheck
             </p>
           ) : null}
 
+          {/* Au-dessus du formulaire, pas en dessous : l'adresse se saisit dans
+              le formulaire, un avertissement lu après coup ne sert plus à rien.
+              C'est le seul geste du client qui peut lui coûter ses coupes. */}
+          <p className="mb-4 rounded-2xl border border-marine-200 bg-marine-50 p-3 text-sm font-semibold text-marine-900">
+            ⚠️ Utilise la même adresse email que ton compte Trycut, sinon tes coupes ne
+            seront pas créditées.
+          </p>
+
           <div ref={zone} data-whop-checkout-plan-id={planId} data-whop-checkout-theme="light" />
 
           {/* Le lien vers la page du vendeur disparaît dès que le formulaire est
