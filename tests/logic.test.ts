@@ -1170,3 +1170,35 @@ test('le nombre de styles annoncé est celui du catalogue', () => {
     );
   }
 });
+
+test('un paiement finit toujours par ouvrir l’accès, même sans webhook', () => {
+  // Le webhook est un point de panne unique : s'il n'arrive pas, le client a
+  // payé et reste devant un cadenas sans recours. Trois chemins doivent donc
+  // mener au même résultat.
+  const reconcile = readFileSync(join(process.cwd(), 'lib/whop-reconcile.ts'), 'utf8');
+
+  // 1. C'est Whop qui décide, jamais le client.
+  assert.ok(
+    reconcile.includes('listValidMemberships'),
+    'l’accès doit être accordé sur la réponse de Whop, pas sur une déclaration',
+  );
+  // 2. Repasser ne crédite pas deux fois.
+  assert.ok(
+    reconcile.includes("eq('reason', 'subscription_grant')"),
+    'le grand livre doit empêcher un double crédit',
+  );
+
+  // 3. La route agit sur le compte de la session, jamais sur un identifiant reçu.
+  const route = readFileSync(join(process.cwd(), 'app/api/whop/verifier/route.ts'), 'utf8');
+  assert.ok(
+    route.includes('session.user.id') && !route.includes('request.json'),
+    'personne ne doit pouvoir débloquer le compte d’un autre',
+  );
+
+  // Et le cron rattrape ceux qui ne reviennent pas sur le site.
+  const cron = readFileSync(join(process.cwd(), 'app/api/cron/cleanup/route.ts'), 'utf8');
+  assert.ok(
+    cron.includes('rattraperPaiements'),
+    'le cron doit rattraper les paiements restés sans accès',
+  );
+});

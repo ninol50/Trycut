@@ -1,6 +1,6 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { env } from '@/lib/env';
-import { WHOP_PLAN_IDS, CREDITS_BY_PLAN } from '@/lib/pricing';
+import { WHOP_PLAN_IDS, CREDITS_BY_PLAN, type PaidPlanId } from '@/lib/pricing';
 
 /**
  * Adresses candidates pour lister les abonnements.
@@ -25,7 +25,7 @@ const CACHE_MS = 60_000;
 
 export interface WhopMembership {
   email: string;
-  plan: 'pack' | 'pass';
+  plan: PaidPlanId;
 }
 
 let cache: { at: number; rows: WhopMembership[] } | null = null;
@@ -58,14 +58,14 @@ async function readApiKey(): Promise<string | null> {
  * échouer silencieusement tous les abonnements.
  */
 export function extractMemberships(payload: unknown): WhopMembership[] {
-  const connus = new Map<string, 'pack' | 'pass'>(
-    Object.entries(WHOP_PLAN_IDS).map(([plan, id]) => [id, plan as 'pack' | 'pass']),
+  const connus = new Map<string, PaidPlanId>(
+    Object.entries(WHOP_PLAN_IDS).map(([plan, id]) => [id, plan as PaidPlanId]),
   );
 
   /** Email et offre portés par ce nœud, en descendant dans ses enfants. */
   const lire = (noeud: unknown): WhopMembership | null => {
     let email: string | null = null;
-    let plan: 'pack' | 'pass' | null = null;
+    let plan: PaidPlanId | null = null;
 
     const parcourir = (valeur: unknown): void => {
       if (Array.isArray(valeur)) {
@@ -107,7 +107,7 @@ export function extractMemberships(payload: unknown): WhopMembership[] {
   // Réponse sans liste — un abonnement seul, par exemple.
   if (candidats.length === 0) candidats.push(payload);
 
-  const parEmail = new Map<string, 'pack' | 'pass'>();
+  const parEmail = new Map<string, PaidPlanId>();
   for (const candidat of candidats) {
     const row = lire(candidat);
     if (!row) continue;
@@ -158,7 +158,7 @@ export async function listValidMemberships(force = false): Promise<WhopMembershi
 }
 
 /** Offre en cours pour cette adresse, ou null si aucun abonnement valide. */
-export async function planForEmail(email: string | null): Promise<'pack' | 'pass' | null> {
+export async function planForEmail(email: string | null): Promise<PaidPlanId | null> {
   if (!email) return null;
   const rows = await listValidMemberships();
   if (!rows) return null;

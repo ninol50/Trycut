@@ -14,6 +14,7 @@ import { rankCatalog } from '@/lib/catalog';
 import { readAnswers, answerAsString } from '@/lib/onboarding';
 import { track } from '@/lib/analytics';
 import { PRICING } from '@/lib/pricing';
+import VerifierAcces from '@/components/VerifierAcces';
 import type { PublicCatalogItem } from '@/types/db';
 
 interface PhotoStudioProps {
@@ -339,6 +340,15 @@ export default function PhotoStudio({
                 <Link href="/tarifs" className="btn-primary mt-5 w-full">
                   {authenticated ? 'Choisir mon offre' : 'Créer mon compte et m’abonner'}
                 </Link>
+
+                {/* Quelqu'un qui a déjà payé et voit encore ce cadenas n'a
+                    sinon aucun recours : le message du prestataire s'est perdu
+                    et il devrait écrire pour être débloqué. */}
+                {authenticated ? (
+                  <div className="mt-3">
+                    <VerifierAcces discret />
+                  </div>
+                ) : null}
               </div>
             ) : null}
 

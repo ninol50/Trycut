@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import DeleteAccountButton from '@/components/DeleteAccountButton';
-import { loadProfile } from '@/lib/profile';
+import VerifierAcces from '@/components/VerifierAcces';
+import { hasPaidAccess, loadProfile } from '@/lib/profile';
 import type { Plan, SubscriptionStatus } from '@/types/db';
 
 export const metadata = { title: 'Mon compte — Trycut' };
@@ -58,9 +59,21 @@ export default async function AccountPage({
       </dl>
 
       <div className="mt-8 space-y-3">
-        <Link href="/tarifs" className="btn-primary w-full">
-          Voir les offres
-        </Link>
+        {hasPaidAccess(profile) ? (
+          <Link href="/app" className="btn-primary w-full">
+            Générer une coupe
+          </Link>
+        ) : (
+          <>
+            <Link href="/tarifs" className="btn-primary w-full">
+              Voir les offres
+            </Link>
+            {/* C'est ici qu'atterrit quelqu'un qui revient de son paiement.
+                Si le message du prestataire s'est perdu, ce bouton va le
+                chercher au lieu de le laisser devant un compte vide. */}
+            <VerifierAcces discret />
+          </>
+        )}
       </div>
 
       <div className="mt-10 border-t border-marine-50 pt-6">

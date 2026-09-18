@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { env, isSupabaseConfigured } from '@/lib/env';
 import { RESULT_BUCKET, UPLOAD_BUCKET, removeObjects } from '@/lib/storage';
+import { listValidMemberships } from '@/lib/whop-api';
+import { accorderDepuisWhop } from '@/lib/whop-reconcile';
 import type { Generation } from '@/types/db';
 
 export const runtime = 'nodejs';
@@ -45,16 +47,59 @@ export async function GET(request: NextRequest) {
 
   const purgeUsers = await purge(admin, 'user', cutoffUsers);
   const purgeAnon = await purge(admin, 'anon', cutoffAnon);
+  const rattrapes = await rattraperPaiements(admin);
 
   return NextResponse.json({
     ok: true,
     comptes: purgeUsers,
     anonymes: purgeAnon,
     rendus_debloques: typeof swept === 'number' ? swept : null,
+    paiements_rattrapes: rattrapes,
   });
 }
 
 type Admin = NonNullable<ReturnType<typeof createAdminSupabase>>;
+
+/**
+ * Dernier filet : tous les abonnements valides chez Whop sont confrontés aux
+ * comptes du site, et tout retard est rattrapé.
+ *
+ * Le webhook crédite en quelques secondes et le bouton « j'ai déjà payé »
+ * couvre celui qui revient sur le site. Restent ceux qui paient et ne
+ * reviennent pas, le jour où le message se perd : sans ce passage, ils
+ * resteraient bloqués sans que personne le sache. La fonction appelée est
+ * idempotente — repasser ici ne crédite pas deux fois.
+ *
+ * Sans clé API Whop, la liste est nulle et ce passage ne fait rien.
+ */
+async function rattraperPaiements(admin: Admin): Promise<number> {
+  const rows = await listValidMemberships(true);
+  if (!rows || rows.length === 0) return 0;
+
+  const emails = rows.map((row) => row.email);
+  const comptes = new Map<string, { email: string | null; billing_email: string | null }>();
+
+  for (const colonne of ['email', 'billing_email'] as const) {
+    const { data } = await admin
+      .from('profiles')
+      .select('id, email, billing_email')
+      .in(colonne, emails);
+
+    for (const ligne of (data as
+      | { id: string; email: string | null; billing_email: string | null }[]
+      | null) ?? []) {
+      comptes.set(ligne.id, { email: ligne.email, billing_email: ligne.billing_email });
+    }
+  }
+
+  let accordes = 0;
+  for (const [id, compte] of comptes) {
+    const etat = await accorderDepuisWhop(id, [compte.email, compte.billing_email]);
+    if (etat === 'accorde') accordes += 1;
+  }
+
+  return accordes;
+}
 
 async function purge(admin: Admin, scope: 'user' | 'anon', cutoff: string): Promise<number> {
   const query = admin
