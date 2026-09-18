@@ -24,9 +24,9 @@ interface WhopCheckoutProps {
  *
  * L'intégration est chargée depuis chez eux et peut ne pas aboutir — script
  * bloqué, identifiant refusé, format changé. Un formulaire de paiement muet
- * étant la pire panne possible, le lien vers la page Whop reste visible en
- * permanence : au pire le client y va comme avant, au mieux il ne quitte
- * jamais le site.
+ * étant la pire panne possible, le lien vers leur page apparaît alors, et
+ * alors seulement : tant que le formulaire s'affiche, rien n'invite à quitter
+ * le site.
  *
  * Aucun conseil sous le formulaire : à cet instant, le client a décidé de
  * payer, et une ligne de plus le fait hésiter. Le cas qu'elle prévenait — payer
@@ -109,12 +109,16 @@ export default function WhopCheckout({ planId, href, label, onClose }: WhopCheck
 
           <div ref={zone} data-whop-checkout-plan-id={planId} data-whop-checkout-theme="light" />
 
-          <a
-            href={href}
-            className={`${charge ? 'btn-outline' : 'btn-primary'} mt-5 w-full`}
-          >
-            {charge ? 'Ouvrir la page de paiement' : 'Payer sur la page sécurisée'}
-          </a>
+          {/* Le lien vers la page du vendeur disparaît dès que le formulaire est
+              là : le proposer à côté d'un paiement qui fonctionne ne fait que
+              tenter le client de quitter le site au dernier moment. Il ne
+              revient que si le formulaire ne charge pas — sans lui, il n'y
+              aurait plus aucun moyen de payer. */}
+          {charge ? null : (
+            <a href={href} className="btn-primary mt-5 w-full">
+              Payer sur la page sécurisée
+            </a>
+          )}
 
         </div>
       </motion.div>
