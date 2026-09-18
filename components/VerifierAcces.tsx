@@ -17,7 +17,7 @@ const MESSAGES: Record<Etat, string> = {
   accorde: 'C’est bon, tes coupes sont créditées.',
   deja: 'Ton accès est déjà actif.',
   introuvable:
-    'Aucun paiement trouvé pour cette adresse. Si tu viens de payer, attends une minute et réessaie. Si tu as payé avec une autre adresse, écris-nous.',
+    'Aucun paiement trouvé pour l’adresse de ton compte. Si tu viens de payer, attends une minute et réessaie — ou indique ci-dessous l’adresse avec laquelle tu as payé.',
   indisponible: 'La vérification est indisponible pour le moment. Réessaie dans un instant.',
 };
 
@@ -34,10 +34,11 @@ export default function VerifierAcces({ discret = false }: { discret?: boolean }
   const tap = useTapScale();
   const [busy, setBusy] = useState(false);
   const [etat, setEtat] = useState<Etat | null>(null);
+  const [autreEmail, setAutreEmail] = useState('');
 
-  const verifier = async () => {
+  const verifier = async (silencieux = false) => {
     setBusy(true);
-    setEtat(null);
+    if (!silencieux) setEtat(null);
 
     try {
       const response = await fetch('/api/whop/verifier', { method: 'POST' });
@@ -53,6 +54,38 @@ export default function VerifierAcces({ discret = false }: { discret?: boolean }
     } finally {
       setBusy(false);
     }
+  };
+
+  /**
+   * L'adresse du paiement n'est pas toujours celle du compte : la page de
+   * paiement pré-remplit celle du compte Whop, pas celle de Trycut. Sans ce
+   * champ, ces clients-là paient et ne sont jamais crédités — aucun rattrapage
+   * automatique ne peut deviner une adresse qu'il n'a jamais vue.
+   */
+  const enregistrerEmail = async () => {
+    const email = autreEmail.trim();
+    if (!email.includes('@')) return;
+
+    setBusy(true);
+    try {
+      const response = await fetch('/api/billing-email', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) {
+        setEtat('indisponible');
+        return;
+      }
+    } catch {
+      setEtat('indisponible');
+      return;
+    } finally {
+      setBusy(false);
+    }
+
+    // Enregistrée : on retente aussitôt, sinon il faudrait appuyer deux fois.
+    await verifier(true);
   };
 
   return (
@@ -74,6 +107,33 @@ export default function VerifierAcces({ discret = false }: { discret?: boolean }
         >
           {MESSAGES[etat]}
         </p>
+      ) : null}
+
+      {etat === 'introuvable' ? (
+        <div className="mt-3">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-marine-900">
+              Adresse utilisée pour payer
+            </span>
+            <input
+              value={autreEmail}
+              onChange={(event) => setAutreEmail(event.target.value)}
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              className="w-full rounded-2xl border border-marine-200 px-4 py-3 text-base"
+            />
+          </label>
+          <motion.button
+            type="button"
+            whileTap={tap}
+            disabled={busy || !autreEmail.includes('@')}
+            onClick={() => void enregistrerEmail()}
+            className="btn-outline mt-2 w-full disabled:opacity-60"
+          >
+            {busy ? 'Vérification…' : 'Vérifier avec cette adresse'}
+          </motion.button>
+        </div>
       ) : null}
     </div>
   );

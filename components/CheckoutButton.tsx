@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useTapScale } from '@/components/motion';
 import { track } from '@/lib/analytics';
-import { withCheckoutReference, type PaidPlanId } from '@/lib/pricing';
+import { WHOP_PLAN_IDS, withCheckoutReference, type PaidPlanId } from '@/lib/pricing';
+import WhopCheckout from '@/components/WhopCheckout';
 
 interface CheckoutButtonProps {
   plan: PaidPlanId;
@@ -34,6 +35,8 @@ export default function CheckoutButton({
   const tap = useTapScale();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Lien ouvert dans la fenêtre du site plutôt que sur le domaine du vendeur. */
+  const [surPlace, setSurPlace] = useState<string | null>(null);
 
   const start = async () => {
     // Pas de compte : on passe par l'inscription. Sans identifiant, le webhook
@@ -45,9 +48,18 @@ export default function CheckoutButton({
 
     track('checkout_completed', { plan, stage: 'redirect' });
 
-    // Lien de paiement Stripe : le plus direct, aucune clé serveur requise.
     if (paymentLink) {
-      window.location.href = withCheckoutReference(paymentLink, userId, email);
+      const lien = withCheckoutReference(paymentLink, userId, email);
+
+      // Whop sait afficher son paiement dans une fenêtre du site : le client ne
+      // part plus sur un autre domaine au moment le plus fragile du parcours.
+      // Les autres encaisseurs gardent la redirection.
+      if (paymentLink.includes('whop.com')) {
+        setSurPlace(lien);
+        return;
+      }
+
+      window.location.href = lien;
       return;
     }
 
@@ -93,6 +105,15 @@ export default function CheckoutButton({
         <p role="alert" className="mt-2 text-sm text-marine-900">
           {error}
         </p>
+      ) : null}
+
+      {surPlace ? (
+        <WhopCheckout
+          planId={WHOP_PLAN_IDS[plan]}
+          href={surPlace}
+          label={label}
+          onClose={() => setSurPlace(null)}
+        />
       ) : null}
     </>
   );
