@@ -27,6 +27,11 @@ interface WhopCheckoutProps {
  * étant la pire panne possible, le lien vers la page Whop reste visible en
  * permanence : au pire le client y va comme avant, au mieux il ne quitte
  * jamais le site.
+ *
+ * Aucun conseil sous le formulaire : à cet instant, le client a décidé de
+ * payer, et une ligne de plus le fait hésiter. Le cas qu'elle prévenait — payer
+ * sous une autre adresse que celle du compte — est rattrapé après coup par la
+ * vérification « j'ai déjà payé », qui demande alors l'adresse utilisée.
  */
 export default function WhopCheckout({ planId, href, label, onClose }: WhopCheckoutProps) {
   const tap = useTapScale();
@@ -111,10 +116,6 @@ export default function WhopCheckout({ planId, href, label, onClose }: WhopCheck
             {charge ? 'Ouvrir la page de paiement' : 'Payer sur la page sécurisée'}
           </a>
 
-          <p className="mt-3 text-xs text-slate-500">
-            Paiement traité par Whop. Utilise de préférence l’adresse email de ton compte
-            Trycut : c’est elle qui rattache le paiement à tes coupes.
-          </p>
         </div>
       </motion.div>
     </div>
